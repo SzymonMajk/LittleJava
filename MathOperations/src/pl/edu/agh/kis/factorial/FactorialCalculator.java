@@ -23,7 +23,7 @@ public class FactorialCalculator {
 	 * Dodaje nowe zlecenie do kolejki zleceń
 	 * @param i wartość która ma zostać dodana
 	 */
-	void add(int i)
+	public void add(int i)
 	{
 		if(!queueImplementation.exist(i))
 		{
@@ -83,7 +83,7 @@ public class FactorialCalculator {
 	 * @return String w którym kolejne pary liczba = wartość znajdują się
 	 * w nowych liniach
 	 */
-	String calculate()
+	public String calculate()
 	{
 		//dopóki kolejka nie jest pusta zwracamy kolejne wyniki
 		String result = "";

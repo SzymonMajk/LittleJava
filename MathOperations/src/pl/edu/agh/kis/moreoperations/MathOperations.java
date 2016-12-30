@@ -2,20 +2,39 @@ package pl.edu.agh.kis.moreoperations;
 /**: Object/pl/edu/agh/kis/smmoreoperations/MathOperations */
 
 import java.math.BigInteger;
+import java.util.regex.Pattern;
 
-/** Klasa implementuje interfejs odpowiedzialny za 
+/** Główna klasa odpowiedzialna za możliwość przeprowadzenia operacji dodawanie,
+ * mnożenie oraz podnoszenia do potęgi dla dużych liczb w swoim mainie, dodatkowo
+ * będą dziedziczyć po niej konkretne operacje implementujące interfejs Operation,
  * @author Szymon Majkut
- * @version 1.1
+ * @version 1.2
  * */
 public abstract class MathOperations implements Operation {
 
 	/**
-	 * Punkt wyjśćia aplikacji
+	 * Funkcja obsługująca aplikację, sprawdza czy podano właściwe dane, tworzy
+	 * odpowiednie obiekty do przeprowadzenia odpowiednich operacji na dobrych danych
 	 * @param args pierwszy parametr odpowiada za nazwę operacji, dwa kolejne
-	 * odpowiadają za wynik
+	 * to pierwszy i drugi argument wybranej operacji
 	 */
 	public static void main(String[] args)
 	{
+		if(args.length < 3)
+		{
+			System.out.println("Podałeś niewłaściwą liczbę argumentów!");
+			return;
+		}
+		
+		Pattern bigNumberRegex = Pattern.compile("-?\\d+$");
+		
+		if(!(bigNumberRegex.matcher(args[1]).find() && 
+				bigNumberRegex.matcher(args[2]).find()))
+		{
+			System.out.println("Liczby zostały podane nieprawidłowo!");
+			return;
+		}
+		
 		BigInteger first = new BigInteger(args[1]);
 		BigInteger second = new BigInteger(args[2]);
 			
@@ -35,7 +54,7 @@ public abstract class MathOperations implements Operation {
 		}
 		else
 		{
-			System.out.println("Podałeś złe parametry...");
+			System.out.println("Podałeś niewłaściwą nazwę operacji");
 		}
 		
 		

@@ -16,7 +16,8 @@ public class DBCash implements Cashable {
 	/**
 	 * Przechowuje liczby i wyniki ich oblicze�
 	 */
-	private HashMap<Integer, BigInteger> calculatedNumbersWithResults = new HashMap<Integer, BigInteger>();
+	private HashMap<Integer, BigInteger> calculatedNumbersWithResults =
+			new HashMap<Integer, BigInteger>();
 	
 	/**
 	 * Przechowuje liczby, dla kt�rych jeste�my w stanie znalezc wynik
@@ -64,7 +65,8 @@ public class DBCash implements Cashable {
 
             stmt = dbConnection.createStatement();
 
-            stmt.executeUpdate("create table IF NOT EXISTS factorial(id INT auto_increment, number INT, "
+            stmt.executeUpdate("create table IF NOT EXISTS factorial" +
+            		"(id INT auto_increment, number INT, "
             		+ " result ARRAY");
 
         } catch (SQLException e) {
@@ -99,7 +101,8 @@ public class DBCash implements Cashable {
 	 */
 	public static void main(String[] args) throws SQLException, ClassNotFoundException {
 		// wczytanie sterownika bazy danych (z pliku h2-[wersja].jar)
-		// problem w tym pakiecie, dlatego sprawdzanie odbędzie się tam gdzie zadania z bazy danych
+		// problem w tym pakiecie, dlatego sprawdzanie odbędzie się tam 
+		// gdzie zadania z bazy danych
         Class.forName("org.h2.Driver");
 
         Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWD); 

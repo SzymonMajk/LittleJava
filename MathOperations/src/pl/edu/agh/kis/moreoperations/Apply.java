@@ -15,13 +15,14 @@ class Apply
 	 * Funkcja otrzymuje jako parametry dane potrzebne do zaprzęgnięcia
 	 * odpowiedniej klasy i wykonania w niej operacji
 	 * @param o Referencja na klasę implementującą interfejs Operation
-	 * której implementacja ma zostać wykonana
+	 * której implementacja ma zostać wykonana, dostęp pakietowy, ponieważ
+	 * funkcja ma działać tylko w swoim pakiecie
 	 * @param first pierwsza duża liczba do operacji
 	 * @param second druga duża liczba do operacji
 	 */
 	static void procces(Operation o, BigInteger first, BigInteger second)
 	{
-		System.out.println("Wykonuje " + o.name());
+		System.out.println("Wykonuje " + o.getName());
 		System.out.println(o.operation(first,second));
 	}
 }/* Output brak

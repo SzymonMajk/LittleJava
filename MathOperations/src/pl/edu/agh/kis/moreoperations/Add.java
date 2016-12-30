@@ -15,7 +15,7 @@ public class Add extends MathOperations
 	 * Funkcja zwraca nazwę operacji
 	 * @return String z nazwą operacji
 	 */
-	public String name()
+	public String getName()
 	{
 		return "Dodaję!";
 	}

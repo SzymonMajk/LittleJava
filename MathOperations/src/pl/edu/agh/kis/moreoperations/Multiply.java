@@ -16,12 +16,12 @@ public class Multiply extends MathOperations
 	 * Funkcja zwraca nazwę operacji
 	 * @return String z nazwą operacji
 	 */
-	public String name()
+	public String getName()
 	{
 		return "Mnożę!";
 	}
 	/**
-	 * Funkcja odpowiedzialna za przeprowadzenie samej operacji
+	 * Funkcja odpowiedzialna za przeprowadzenie samej operacji mnożenia
 	 * @param first pierwsza duża liczba
 	 * @param second druga duża liczba
 	 * @return zwraca iloczyn parametrów

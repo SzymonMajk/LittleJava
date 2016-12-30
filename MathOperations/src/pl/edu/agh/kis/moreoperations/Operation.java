@@ -15,7 +15,7 @@ interface Operation {
 	 * Prototyp funkcji zwracającej nazwe operacji matematycznej
 	 * @return string z nazwą operacji matematycznej
 	 */
-	String name();
+	String getName();
 	
 	/**
 	 * Prototyp funkcji wykonania operacji matematycznej
