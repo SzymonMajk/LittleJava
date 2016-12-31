@@ -7,12 +7,13 @@ import java.util.TreeSet;
 public class SimpleCash implements Cashable {
 
 	/**
-	 * Przechowuje liczby i wyniki ich oblicze�
+	 * Przechowuje liczby i wyniki ich obliczeń
 	 */
-	private HashMap<Integer, BigInteger> calculatedNumbersWithResults = new HashMap<Integer, BigInteger>();
+	private HashMap<Integer, BigInteger> calculatedNumbersWithResults =
+			new HashMap<Integer, BigInteger>();
 	
 	/**
-	 * Przechowuje liczby, dla kt�rych jeste�my w stanie znalezc wynik
+	 * Przechowuje liczby, dla których jesteśmy w stanie znaleźć wynik
 	 */
 	private TreeSet<Integer> calculatedNumbers = new TreeSet<Integer>();
 	
@@ -24,11 +25,11 @@ public class SimpleCash implements Cashable {
 	public void add(int i, BigInteger b) {
 		
 		/**
-		 * Mapa nadpisuje warto�ci istniej�ce
+		 * Mapa nadpisuje wartości istniejące
 		 */
 		calculatedNumbersWithResults.put(i,b);
 		/**
-		 * Zbi�r nadpisuje warto�ci istniej�ce
+		 * Zbiór nadpisuje wartości istniejące
 		 */
 		calculatedNumbers.add(i);
 	}
@@ -36,6 +37,7 @@ public class SimpleCash implements Cashable {
 	/**
 	 * Najprostrze pobranie wartości z mapy
 	 * @param i liczba dla której mamy zwrócić wartość
+	 * @return wartość dla danej liczby lub null jeżeli takowa nie istnieje
 	 */
 	public BigInteger get(int i) {
 		
@@ -54,20 +56,4 @@ public class SimpleCash implements Cashable {
 		 */
 		return calculatedNumbers.contains(i);
 	}
-
-	/**
-	 * Kilka testów
-	 * @param args nie używamy
-	 */
-	public static void main(String[] args) {
-		
-		SimpleCash sC = new SimpleCash();
-		
-		sC.add(5,new BigInteger("3"));
-		sC.add(5,new BigInteger("5"));
-		sC.add(5,new BigInteger("6"));
-		sC.add(3,new BigInteger("5"));
-		
-	}
-
 }

@@ -124,7 +124,7 @@ public class PriorityQueueCash implements Cashable {
 		
 		return false;
 	}
-
+	
 }
 
 /**
@@ -201,5 +201,4 @@ class TimePackedNumber implements Comparable<TimePackedNumber>
 		number = i;
 		result = r;
 	}
-	
 }

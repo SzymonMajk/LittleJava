@@ -15,8 +15,9 @@ public class TempCash implements Cashable {
 		= new HashMap<Integer, BigInteger>();
 	
 	/**
-	 * Kolejność elementów w kolejce odpowiada kolejności umieszczania ich w cashu
-	 * każdorazowe użycie któregoś z elementów, powoduje przesunięcie go na początek kolejki
+	 * Kolejność elementów w kolejce odpowiada kolejności umieszczania ich
+	 * w cashu każdorazowe użycie któregoś z elementów, powoduje przesunięcie
+	 * go na początek kolejki
 	 */
 	public Queue<Integer> timeStatusInfo = new LinkedList<Integer>();
 	
@@ -42,11 +43,20 @@ public class TempCash implements Cashable {
 		}
 	}
 	
+	/**
+	 * Funkcja sprawdza czy istnieje dostatecznie wiele wolnej pamięci w cashu
+	 * dla liczby zadanej w parametrze
+	 * @param b liczba dla której sprawdzamy czy zmieści się w cashu
+	 * @return informacja logiczna o tym czy liczba z parametru zmieści się w cashu
+	 */
 	private boolean enoughtMemoryForNumber(BigInteger b)
 	{
 		return Runtime.getRuntime().freeMemory() > b.byteValue();
 	}
 	
+	/**
+	 * Funkcja odpowiada za usunięcie najdawniej używanej wartości
+	 */
 	private void removeOldest()
 	{
 		if (timeStatusInfo.size() > 0)
@@ -59,8 +69,10 @@ public class TempCash implements Cashable {
 	}
 	
 	/**
-	 * Dodawnie elementu z uwzględnieniem niewystarczalności pamięci
+	 * Dodawanie elementu z uwzględnieniem niewystarczalności pamięci
 	 * w związku z czym koniecznością usunięcia dawno nie używanych zmiennych
+	 * @param i liczba której wartość będziemy składować
+	 * @param b wartość silni dla liczby danej w pierwszym parametrze
 	 */
 	public void add(int i, BigInteger b) {
 		
@@ -79,7 +91,7 @@ public class TempCash implements Cashable {
 		 */
 		calculatedNumbers.add(i);
 		/**
-		 * określna moment dodania elementu względem pozostałych
+		 * Określna moment dodania elementu względem pozostałych
 		 */
 		changeNumberStatus(i);
 	}

@@ -109,17 +109,17 @@ public class FactorialCalculator {
 	}
 	
 	/**
-	 * kilka testów
+	 * Przykład użycia
 	 * @param args nieużywane
 	 */
 	public static void main(String[] args) {
-		/*
-		NFactorialCalculator n1 = new NFactorialCalculator(new SimpleCash(), new SimpleQueue());
+		
+		FactorialCalculator n1 = new FactorialCalculator(new SimpleCash(), new SimpleQueue());
 		n1.add(5);
 		n1.add(3);
 		n1.add(6);
 		System.out.println(n1.calculate());
-		*//*
+		
 		FactorialCalculator n2 = new FactorialCalculator(new TempCash(), new SimpleQueue());
 		n2.add(5);
 		n2.add(3);
@@ -137,7 +137,7 @@ public class FactorialCalculator {
 			}
 		}
 
-		System.out.println(n2.calculate());*/
+		System.out.println(n2.calculate());
 		FactorialCalculator n3 
 			= new FactorialCalculator(new PriorityQueueCash(), new SimpleQueue());
 	
