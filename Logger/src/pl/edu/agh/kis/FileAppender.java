@@ -70,7 +70,7 @@ public class FileAppender implements Appends {
 	 * Sparametryzowany konstruktor pozwalający na określenie nazwy pliku z logami
 	 * @param name ciąg znaków w postaci Stringa określający nazwę pliku z logami
 	 */
-	FileAppender(String name)
+	public FileAppender(String name)
 	{
 		result = new File("logs/"+name);
 		
@@ -90,7 +90,7 @@ public class FileAppender implements Appends {
 	 * Domyślny konstrukor, wykorzystujący sparametryzowaną wersję, z domyślną
 	 * nazwą pliku
 	 */
-	FileAppender()
+	public FileAppender()
 	{
 		this("log");
 	}

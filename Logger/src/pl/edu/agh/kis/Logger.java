@@ -147,7 +147,7 @@ public class Logger {
 	 * wysyłania logów
 	 * @param startAppender
 	 */
-	Logger(Appends startAppender)
+	public Logger(Appends startAppender)
 	{
 		append = startAppender;
 		append.clear();
@@ -156,7 +156,7 @@ public class Logger {
 	/**
 	 * Domyślny konstruktor wykorzystujący swój sparametryzowany odpowiednik
 	 */
-	Logger()
+	public Logger()
 	{
 		this(new ConsoleAppender());
 	}
