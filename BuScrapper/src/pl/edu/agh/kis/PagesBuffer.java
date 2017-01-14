@@ -5,7 +5,7 @@ package pl.edu.agh.kis;
  * zawartoœci oraz sprawdzenia pustoœci oraz sprawdzenia zape³nienia synchronizowanego
  * bufora, na którym oprzemy metodê producent-konsument przy przetwarzaniu stron
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1a
  *
  */
 public interface PagesBuffer {
@@ -34,5 +34,5 @@ public interface PagesBuffer {
 	 * u¿ytkownik sam powinien zatroszczyæ siê o sprawdzenie pustoœci
 	 * @return Strona w HTML, która zosta³a pobrana z bufora
 	 */
-	public String pollPage();
+	public String takePage();
 }

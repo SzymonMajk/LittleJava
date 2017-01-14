@@ -10,7 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * BlockingQueue, udostêpnia równie¿ informacje o pustoœci oraz zape³nieniu bufora
  * oraz pozwala poprzez konstruktor sparametryzowany ustaliæ jego rozmiar
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1a
  *
  */
 public class BlockingQueuePagesBuffer implements PagesBuffer {
@@ -31,7 +31,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 */
 	@Override
 	public boolean isEmpty() {
-		return buffer.remainingCapacity()==0;
+		return buffer.isEmpty();
 	}
 
 	/**
@@ -40,7 +40,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 */
 	@Override
 	public boolean isFull() {
-		return buffer.isEmpty();
+		return buffer.remainingCapacity()==0;
 	}
 
 	/** 
@@ -51,6 +51,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	@Override
 	public void addPage(String pageHTML) {
 		try {
+			//metoda put u¿ywa wait oraz notify
 			buffer.put(pageHTML);
 		} catch (InterruptedException e) {
 			// Trzeba coœ wymyœleæ...
@@ -64,8 +65,19 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * @return Pierwsza strona pobrana z kolejki
 	 */
 	@Override
-	public String pollPage() {
-		return buffer.poll();
+	public String takePage() {
+		//metoda take u¿ywa wait oraz notify
+
+		String result = "";
+		
+		try {
+			result = buffer.take();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return result;
 	}
 	
 	/**

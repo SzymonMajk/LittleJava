@@ -20,6 +20,11 @@ public class BuScrapper {
 	private Logger scrapperLogger;
 	
 	/**
+	 * Pole przechowuj¹ce obiekt udostêpniaj¹ce przetworzone dane konfiguracyjne
+	 */
+	private static Configurator configurator = new Configurator();
+	
+	/**
 	 * Pole przechowuj¹ce informacjê o iloœci nadal pracuj¹cych w¹tków
 	 * jest static, aby ka¿dy w¹tek móg³ siê do niego ³atwo odwo³aæ
 	 */
@@ -47,7 +52,9 @@ public class BuScrapper {
 	 */
 	public String work()
 	{
-		//Utworzenie w¹tków producentów
+		//Utworzenie w¹tków producentów na tym etapie musimy znaæ nazwê hosta i numer portu
+		//no i na tym w³aœnie etapie ju¿ utworzymy kilka odpowiednich socketów dla w¹tków i
+		//wyœlemy do nich te sockety, ka¿dy w¹tek musi posiadaæ unikalne sockety!
 		
 		//Utworzenie w¹tków konsumentów
 		

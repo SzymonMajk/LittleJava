@@ -8,7 +8,7 @@ package pl.edu.agh.kis;
  * informacji, posiada równie¿ swój w³asny system logów, z wyjœciem do pliku o nazwie równej 
  * id dzia³aj¹cego w¹tku
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1a
  *
  */
 public class SnatchThread extends Thread{
@@ -43,20 +43,24 @@ public class SnatchThread extends Thread{
 	private String prepareXMLPage(String pageHTML)
 	{
 		//zabawa, ¿eby dodaæ XML...
-		return null;
+		
+		snatchLogger.info("Utworzy³em dokument XHTML z dokumentu HTML");
+		return "";
 	}
 	
 	/**
 	 * Funkcja odpowiedzialna za zaimplementowanie interfejsu AnalizePage, jej zadaniem
 	 * jest wyodrêbnienie przydatnych informacji z pe³nego kodu Ÿród³owego strony przy
 	 * pomocy odpowiednich XPath, oraz zwrócenie ich w postaci jednego Stringa do dalszej
-	 * obróbki
+	 * obróbki, publiczna do testowania
 	 * @param pageXHTML pe³ny kod Ÿród³owy strony, z którego bêdziemy wyodrêbniaæ
 	 * @return zesk³adowane informacje wyodrêbnione ze strony podanej w parametrze
 	 */
-	private String analiseXMLPage(String pageXHTML) {
+	public String analiseXMLPage(String pageXHTML) {
 		// zabawy z XPath...
-		return null;
+		
+		snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
+		return "";
 	}
 	
 	/**
@@ -67,26 +71,26 @@ public class SnatchThread extends Thread{
 	 */
 	public void run()
 	{		
-		//Najszersza pêtla do while z warunkiem czy jakiekolwiek w¹tki jeszcze pracuj¹
+		String tmpSite = "";
 		
-		//Sprawdzamy ca³y czas czy kolejka pusta, póki pusta to yieldujemy
+		do
+		{
+			BuScrapper.numberOfWorkingThreads.incrementAndGet();
+			
+			snatchLogger.info("Pobieram z kolejki stron");
+			tmpSite = analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage()));
+			
+			if(tmpSite != "")
+			{
+				snatchLogger.info("Sk³adujê wyci¹gniête informacje");
+				infoSaving.storeInfo(tmpSite);
+			}
+
+			snatchLogger.execute();
+			BuScrapper.numberOfWorkingThreads.decrementAndGet();
+			yield();
+		}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
 		
-		//jeœli nie jest, to zaznaczamy, ¿e w¹tek pracuje
-		//BuScrapper.numberOfWorkingThreads.incrementAndGet();
-		
-		//pobieramy zawartoœæ z kolejki jeœli nadal nie jest pusta, gdyby teraz
-		//okaza³a siê pusta, to robimy zmniejszenie liczby pracuj¹cych w¹tków i continue
-		
-		//Get HTML page
-		
-		//Prepare XHTML page
-		
-		//Get Info from XHTML page
-		
-		//Store infos
-		
-		//po zakoñczonej pracy informujemy ¿e w¹tek skoñczy³ pracê
-	    //BuScrapper.numberOfWorkingThreads.decrementAndGet();
 	}
 	
 	/**
@@ -101,9 +105,20 @@ public class SnatchThread extends Thread{
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving)
 	{
 		threadName = "SnatchThread number " + id;
-		snatchLogger = new Logger();
-		snatchLogger.changeAppender(new FileAppender(threadName));
 		this.pagesToAnalise = pagesToAnalise;
 		this.infoSaving = infoSaving;
+		snatchLogger = new Logger();
+		snatchLogger.changeAppender(new FileAppender(threadName));
+		snatchLogger.info("SnatchThread o imieniu "+threadName+" rozpoczyna pracê!");
+		snatchLogger.execute();
 	}
 }
+
+/* Wszystkie wyci¹gniête informacje musz¹ byæ odpowiednio sk³¹dowane,
+ * w programie u¿ywam konwencji, ¿e coœ=wartoœæ/r/n, wraz z unikatowoœci¹
+ * mo¿e byæ
+ * name=nazwaPrzystanku
+ * number=numerLinii
+ * hour=[0-2]godzina,kolejne minuty, po przecinkach; 0-2 oznacza rodzaj dnia
+ * pozosta³e dane bêd¹ wrzucane jako warningi
+ */

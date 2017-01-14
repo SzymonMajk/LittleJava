@@ -1,15 +1,21 @@
 package pl.edu.agh.kis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.concurrent.BlockingQueue;
 
 /**
- * Klasa w¹tków, których zadaniem jest umieszczenie odpowiedniej zawartoœci w bufofrze
+ * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej zawartoœci w bufofrze,
  * metod tej klasy nie interesuje co dalej stanie siê z otrzyman¹ przez ni¹ treœci¹,
- * a problemami które musi pokonaæ jest wykonywanie odpowiednich zapytañ w celu pozyskania
- * tej treœci
+ * zak³ada te¿, ¿e otrzymana w konstruktorze kolejka zapytañ zawiera poprawnie utworzone
+ * zapytania do servera, wiêc w¹tki tej klasy odpowiadaj¹ wy³¹cznie za samo pobranie zasobów
+ * z servera
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1a
  */
 public class DownloadThread extends Thread {
 
@@ -24,6 +30,16 @@ public class DownloadThread extends Thread {
 	private String threadName;
 	
 	/**
+	 * Referencja do kolejki zapytañ, które w¹tek powinieñ wykonaæ
+	 */
+	private BlockingQueue<String> requests;
+	
+	/**
+	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
+	 */
+	private PagesBuffer pagesToAnalise;
+	
+	/**
 	 * Pole przechowuj¹ce na czas pobierania zawartoœci strumieñ wejœcia od hosta
 	 */
 	private InputStream input;
@@ -34,48 +50,130 @@ public class DownloadThread extends Thread {
 	private OutputStream output;
 	
 	/**
-	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
+	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedz,
+	 * któr¹ od niego otrzymuje, jest public, aby mo¿na j¹ by³o przetestowaæ
+	 * @param request poprawne zapytanie do servera o zasób
+	 * @return para nag³ówek oraz zawartoœæ strony w HTML
 	 */
-	private PagesBuffer pagesToAnalise;
+	public String[] respond(String request)
+	{
+		PrintWriter to = new PrintWriter(output);
+		to.write(request);
+		to.flush();
+		to.close();
+		
+		BufferedReader from = new BufferedReader(new InputStreamReader(input));
+		
+		String line = "";
+		String respond = "";
+		String header = "";
+		
+		try {
+			while((line = from.readLine()) != null)
+			{
+				header += line;
+				if(line.equals(""))
+				{
+					break;
+				}
+			}
+			
+			while((line = from.readLine()) != null)
+			{
+				respond += line;
+			}
+			
+			from.close();
+			downloadLogger.info("Pobrano odpowiedz servera");
+			
+		} catch (IOException e) {
+			downloadLogger.error("Problem z czytaniem odpowiedzi servera");
+		}
+		
+		String result[] = {header,respond};
+		
+		return result;
+	}
 	
 	/**
-	 * G³ówna pêtla w¹tku - producenta, jej zadaniem jest oddawanie czasu procesora w przypadku
-	 * pe³nego bufora, w przeciwnym wypadku dodawanie do niego strony, która zostaje pobrana
-	 * poprzez odpowiednio nastawiony strumieñ wejœcia, je¿eli to konieczne, wysy³aj¹c strumieniem
-	 * wyjœcia odpowiednie zapytanie o zasób
+	 * Funkcja s³u¿y do odfiltrowania od niepoprawnych zasób tych, które posiadaj¹ HTTP 200 OK
+	 * tak aby nie zaœmiecaæ bufora niepotrzebnymi danymi, co wiêcej zapewniæ w buforze istnienie
+	 * tylko poprawnych stron
+	 * @param header nag³ówek zasobu otrzymany dla poprawnego zapytania
+	 * @return informacja czy pobrany zasób jest zasobem poprawnym z punktu widzenia u¿ytkownika
+	 */
+	private boolean isCorrectRespond(String respond)
+	{
+		if(respond == null)
+		{
+			downloadLogger.warning("Zamiast zasobu otrzyma³em null");
+			return false;
+		}
+		else if(respond.contains("HTTP/1.1 200 OK") || respond.contains("HTTP/1.0 200 OK"))
+		{
+			downloadLogger.info("Pobrano poprawny zasób");
+			return true;
+		}
+		else
+		{
+			downloadLogger.info("Nie zwrócono poprawnego zasobu, nie wstawiam go do kolejki");
+			return false;
+		}
+	}
+	
+	/**
+	 * G³ówna pêtla w¹tku - producenta, jej zadaniem jest zasypianie w przypadku pe³nego bufora
+	 * oraz budzenie w¹tków dzia³aj¹cych na buforze, je¿eli sama umieœci w nim jakieœ dane, 
+	 * otrzymane poprzez poprzez odpowiednio nastawiony strumieñ wejœcia, wysy³aj¹c uprzednio
+	 * strumieniem wyjœcia odpowiednie zapytanie o zasób, które jest pobierane z kolejki
+	 * przygotowanej przez Configurator i udostêpnione w postaci kolejki requests
 	 */
 	public void run()
 	{		
-		//Najszersza pêtla do while z warunkiem czy jakiekolwiek w¹tki jeszcze pracuj¹
-		
-			//zaznaczamy, ¿e w¹tek pracuje ( np. jeœli pozosta³ jeszcze jakieœ wolne zapytania)
-			//BuScrapper.numberOfWorkingThreads.incrementAndGet();
+		do
+		{
+			BuScrapper.numberOfWorkingThreads.incrementAndGet();
+			
+			//Pobiera kolejne zapytanie z kolejki zapytañ
+			if(!requests.isEmpty())
+			{
+				String[] respondFromServer = respond(requests.poll());
 				
-			//Najogólniej dzia³amy z zapytaniem, aby uzyskaæ zasób, np. pod³¹czamy nowe strumienie
-		
-			//Otrzymujemy stronê i zapisujemy j¹ w pamiêci lokalnej w¹tku
-		
-			//Wci¹¿ sprawdzamy sprawdzamy czy kolejka pe³na, jeœli tak to yield
-		
-			//Gdy kolejka pozwoli na w³o¿enie, to wk³adamy i powtarzamy ca³¹ akcjê
-				
-			//po zakoñczonej pracy informujemy ¿e w¹tek skoñczy³ pracê
-			//BuScrapper.numberOfWorkingThreads.decrementAndGet();
+				if(isCorrectRespond(respondFromServer[0]))
+				{
+					//Wystarczy dziêki specyfikacji BlockingQueue
+					pagesToAnalise.addPage(respondFromServer[1]);
+					downloadLogger.info("Dodajê now¹ stronê do kolejki stron");
+				}
+			}
+			downloadLogger.execute();
+			BuScrapper.numberOfWorkingThreads.decrementAndGet();
+			yield();
+		}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów
+	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do komunikacji,
+	 * mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ z Configurator'a
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
+	 * @param requests snychronizowana kolejka zapytañ
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod
+	 * @param input strumieñ wejœcia przez który bêd¹ przychodziæ odpowiedzi servera
+	 * @param output strumieñ wyjœcia przez który wysy³amy zapytania do servera
 	 */
-	DownloadThread(int id)
+	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
+			InputStream input, OutputStream output)
 	{
 		threadName = "DownloadThread number " + id;
+		this.requests = requests;
+		this.pagesToAnalise = pagesToAnalise;
+		this.input = input;
+		this.output = output;
 		downloadLogger = new Logger();
 		downloadLogger.changeAppender(new FileAppender(threadName));
+		downloadLogger.info("DownloadThread o imieniu "+threadName+" rozpoczyna pracê!");
+		downloadLogger.execute();
 	}
 }
-
-//Do zrobienia jest pod³¹czenie tutaj czegoœ, co bêdzie mia³o przechodziæ po kolejnych
-//elementach strony, czy tam zapytania wysy³aæ kolejne... nie wiem
