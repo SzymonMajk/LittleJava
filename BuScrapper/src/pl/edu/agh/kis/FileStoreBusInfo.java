@@ -108,7 +108,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			{
 				String hour = s.substring(5);
 				
-				if(hour == null || hour == "")
+				if(hour == null || hour.equals(""))
 				{
 					continue;
 				}

@@ -22,14 +22,22 @@ public class SnatchThreadTest {
 	 * Sprawdzamy czy utworzony plik jest to¿samy w oczekiwanym
 	 */
 	@Test
-	public void testRun() throws IOException {
+	public void testRun() throws IOException, InterruptedException {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5,new NullAppender());
 		FileStoreBusInfo storer = new FileStoreBusInfo(new NullAppender());
-		String[] expresions = {"//div/p[@style=' font-size: 40px;']",
+		String[] expresions = {"//div/p[@style=' font-size: 40px;']|"
+				+ "//div/p[@style='font-size: 40px;']|"
+				+ "//div/p[@style='font-size: 40px; ']",
 				"//p[@style=' font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex;']",
-				"//tr[@style='border-bottom: solid lightgray; border-width: 1px;']"};
+				+ "nowrap; display: inline-flex;']|"
+				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
+				+ "nowrap; display: inline-flex;']|"
+				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
+				+ "nowrap; display: inline-flex; ']",
+				"//tr[@style=' border-bottom: solid lightgray; border-width: 1px;']|"
+				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px;']|"
+				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px; ']"};
 		
 		SnatchThread testSnatch = new SnatchThread(999,pages,storer,expresions,new NullAppender());
 		//SnatchThread testSnatch2 = new SnatchThread(998,pages,storer,expresions,
@@ -56,11 +64,12 @@ public class SnatchThreadTest {
 		} catch (IOException e) {
 			//e.printStackTrace();
 		}
-		
+				
 		pages.addPage(XMLDocument);
 		
 		//Odpalmy to!
-		testSnatch.run();
+		testSnatch.start();
+		testSnatch.join();
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		
@@ -73,11 +82,6 @@ public class SnatchThreadTest {
 		if(!expectedFile.exists())
 		{
 			fail("Brak pliku testowego, sprawdz katalog Tests");
-		}
-		
-		if(!gotFile.exists())
-		{
-			fail("Nie utworzono pliku!");
 		}
 		
 		from = new BufferedReader(new InputStreamReader

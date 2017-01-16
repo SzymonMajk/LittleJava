@@ -148,7 +148,7 @@ public class DownloadThread extends Thread {
 			}
 			downloadLogger.execute();
 			BuScrapper.numberOfWorkingThreads.decrementAndGet();
-			yield();
+			
 		}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
 	}
 	

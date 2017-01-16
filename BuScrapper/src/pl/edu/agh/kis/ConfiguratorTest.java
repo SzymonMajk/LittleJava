@@ -31,12 +31,18 @@ public class ConfiguratorTest {
 		
 		assertEquals(3,paths.length);
 		
-		assertEquals("//div/p[@style=' font-size: 40px;']",paths[0]);
-		assertEquals("//p[@style=' font-size: 24px; text-align: center;"
-				+ " white-space: nowrap; display: inline-flex;']",
-				paths[1]);
-		assertEquals("//tr[@style='border-bottom: solid lightgray; border-width: 1px;']",
-				paths[2]);
+		assertEquals("//div/p[@style=' font-size: 40px;']|"
+				+ "//div/p[@style='font-size: 40px;']|"
+				+ "//div/p[@style=' font-size: 40px; ']",paths[0]);
+		assertEquals("//p[@style=' font-size: 24px; text-align: center; white-space: "
+				+ "nowrap; display: inline-flex;']|"
+				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
+				+ "nowrap; display: inline-flex;']|"
+				+ "//p[@style=' font-size: 24px; text-align: center; white-space: "
+				+ "nowrap; display: inline-flex; ']",paths[1]);
+		assertEquals("//tr[@style=' border-bottom: solid lightgray; border-width: 1px;']|"
+				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px;']|"
+				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px; ']",paths[2]);
 	}
 
 	/**

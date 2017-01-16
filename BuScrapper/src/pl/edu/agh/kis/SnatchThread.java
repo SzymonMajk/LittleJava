@@ -68,6 +68,7 @@ public class SnatchThread extends Thread{
 	 */
 	private String prepareHoursLines(String allTime)
 	{
+		System.out.println(allTime);
 		String result = "";
 		//Rozdzielamy otrzyman¹ paczkê danych
 		String[] tmpResults = allTime.split("\n");
@@ -170,19 +171,19 @@ public class SnatchThread extends Thread{
 		    lineNumber = xPath.compile(xPathExpressions[0]).evaluate(docXML).replaceAll("\\s","");
 		    
 		    buStopname = xPath.compile(xPathExpressions[1]).evaluate(docXML).replaceAll("\\s","");
-		    
+		   
 		    //Tutaj bêdziemy wyci¹gaæ ca³e wiersze, aby wyci¹gn¹æ z nich nastêpnie odpowiednie czasy
 		    NodeList hourss = (NodeList) xPath.compile(xPathExpressions[2]).evaluate(docXML, XPathConstants.NODESET);
 		    
 		    //Przelatujê po wszystkich linijkach pasuj¹cych do XPath
 		    for (int i = 0;null!=hourss && i < hourss.getLength(); ++i) 
 		    {
-
+		    	
 	    		Node nod = hourss.item(i);
 	    		if(nod.getNodeType() == Node.ELEMENT_NODE)
 	    		{
 	    			String tmpTimes = "";
-	    			if((tmpTimes = prepareHoursLines(nod.getTextContent())) != "")
+	    			if(!(tmpTimes = prepareHoursLines(nod.getTextContent())).equals(""))
 	    			{
 		    			hours += tmpTimes;
 	    			}
@@ -216,14 +217,11 @@ public class SnatchThread extends Thread{
 
 			snatchLogger.info("Pobieram z kolejki stron");
 			
-			if(!pagesToAnalise.isEmpty())
-			{
-				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
-			}
-
+			infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
+			
 			snatchLogger.execute();
 			BuScrapper.numberOfWorkingThreads.decrementAndGet();
-			yield();
+			
 		}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
 		
 	}
