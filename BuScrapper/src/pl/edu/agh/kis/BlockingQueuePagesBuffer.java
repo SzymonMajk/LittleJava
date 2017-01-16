@@ -10,7 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * BlockingQueue, udostêpnia równie¿ informacje o pustoœci oraz zape³nieniu bufora
  * oraz pozwala poprzez konstruktor sparametryzowany ustaliæ jego rozmiar
  * @author Szymon Majkut
- * @version 1.1a
+ * @version 1.1b
  *
  */
 public class BlockingQueuePagesBuffer implements PagesBuffer {
@@ -81,14 +81,18 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	}
 	
 	/**
-	 * Konstruktor domyœlny, którego zadaniem jest utworzenie obiektu odpowiedzialnego
-	 * za buforowanie stron, posiada domyœlny rozmiar równy 10
+	 * Konstruktor sparametryzowany, którego zadaniem jest utworzenie 
+	 * obiektu odpowiedzialnego za buforowanie stron, pozwalaj¹cy na 
+	 * ustalenie rozmiaru bufora jest w w¹tku nadrzêdnym oraz okreœlenie
+	 * rodzaju obiektu wysy³aj¹cego logi
+	 * @param size rozmiar bufora podany przez u¿ytkownika
+	 * @param appender obiekt s³u¿¹cy do wysy³ania logów
 	 */
-	BlockingQueuePagesBuffer()
+	BlockingQueuePagesBuffer(int size, Appends appender)
 	{
 		bufferLogger = new Logger();
-		bufferLogger.changeAppender(new FileAppender("Buffer"));
-		buffer = new ArrayBlockingQueue<String>(10);
+		bufferLogger.changeAppender(appender);
+		buffer = new ArrayBlockingQueue<String>(size);
 	}
 	
 	/**
@@ -99,9 +103,15 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 */
 	BlockingQueuePagesBuffer(int size)
 	{
-		bufferLogger = new Logger();
-		bufferLogger.changeAppender(new FileAppender("Buffer"));
-		buffer = new ArrayBlockingQueue<String>(size);
+		this(size, new FileAppender(("Buffer")));
 	}
-
+	
+	/**
+	 * Konstruktor domyœlny, którego zadaniem jest utworzenie obiektu odpowiedzialnego
+	 * za buforowanie stron, posiada domyœlny rozmiar równy 10
+	 */
+	BlockingQueuePagesBuffer()
+	{
+		this(10, new FileAppender(("Buffer")));
+	}
 }

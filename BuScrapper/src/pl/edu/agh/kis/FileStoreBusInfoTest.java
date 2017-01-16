@@ -9,6 +9,11 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+/**
+ * Kilka prostych testów
+ * @author Szymon Majkut
+ * @version 1.1b
+ */
 public class FileStoreBusInfoTest {
 
 	/**
@@ -22,54 +27,54 @@ public class FileStoreBusInfoTest {
 		
 		FileStoreBusInfo f = new FileStoreBusInfo(new NullAppender());
 		
-		String s0 = "name=Manierskiego/r/nhour=220,05,75/nnumber=996/n"
-				+ "name=Manierskiego/r/nhour=114,04,75,63/nnumber=996/n"
-				+ "name=Manierskiego/r/nhour=113,03,23/nnumber=996/n"
-				+ "name=Manierskiego/r/nhour=120,02,75/nnumber=996/n"
-				+ "name=Manierskiego/r/nhour=001,01,34/nnumber=996/n";
+		String s0 = "name=Manierskiego\nhour=220,05,75\nnumber=996\n"
+				+ "name=Manierskiego\r\nhour=114,04,75,63\nnumber=996\n"
+				+ "name=Manierskiego\r\nhour=113,03,23\nnumber=996\n"
+				+ "name=Manierskiego\r\nhour=120,02,75\nnumber=996\n"
+				+ "name=Manierskiego\r\nhour=001,01,34\nnumber=996\n";
 
 		f.storeInfo(s0);
 		
-		String s1 = "name=Przystanek1/nhour=220,06,75/nnumber=999/n"
-				+ "name=Przystanek1/r/nhour=114,04,75,63/nnumber=999/n"
-				+ "name=Przystanek1/r/nhour=113,03,23/nnumber=999/n"
-				+ "name=Przystanek1/r/nhour=120,02,75/nnumber=999/n"
-				+ "name=Przystanek1/r/nhour=001,01,34/nnumber=999/n";
+		String s1 = "name=Przystanek1\nhour=220,06,75\nnumber=999\n"
+				+ "name=Przystanek1\r\nhour=114,04,75,63\nnumber=999\n"
+				+ "name=Przystanek1\r\nhour=113,03,23\nnumber=999\n"
+				+ "name=Przystanek1\r\nhour=120,02,75\nnumber=999\n"
+				+ "name=Przystanek1\r\nhour=001,01,34\nnumber=999\n";
 		
 		f.storeInfo(s1);
 		
-		String s2 = "name=Przystanek2/nhour=220,05,75/nnumber=999/n"
-				+ "name=Przystanek2/r/nhour=114,04,75,63/nnumber=999/n"
-				+ "name=Przystanek2/r/nhour=113,03,23/nnumber=999/n"
-				+ "name=Przystanek2/r/nhour=120,02,75/nnumber=999/n"
-				+ "name=Przystanek2/r/nhour=002,01,34/nnumber=999/n";
+		String s2 = "name=Przystanek2\nhour=220,05,75\nnumber=999\n"
+				+ "name=Przystanek2\r\nhour=114,04,75,63\nnumber=999\n"
+				+ "name=Przystanek2\r\nhour=113,03,23\nnumber=999\n"
+				+ "name=Przystanek2\r\nhour=120,02,75\nnumber=999\n"
+				+ "name=Przystanek2\r\nhour=002,01,34\nnumber=999\n";
 		
 		f.storeInfo(s2);
 		
 		//Przypadek - niepoprawna nazwa przystanku
-		String s3 = "name=Przystanek1;/nhour=220,05,75/nnumber=998/n"
-				+ "name=Przystanek1;/r/nhour=114,04,75,63/nnumber=998/n"
-				+ "name=Przystanek1;/r/nhour=113,03,23/nnumber=998/n"
-				+ "name=Przystanek1;/r/nhour=120,02,75/nnumber=998/n"
-				+ "name=Przystanek1;/r/nhour=001,01,34/nnumber=998/n";
+		String s3 = "name=Przystanek1;\nhour=220,05,75\nnumber=998\n"
+				+ "name=Przystanek1;\r\nhour=114,04,75,63\nnumber=998\n"
+				+ "name=Przystanek1;\r\nhour=113,03,23\nnumber=998\n"
+				+ "name=Przystanek1;\r\nhour=120,02,75\nnumber=998\n"
+				+ "name=Przystanek1;\r\nhour=001,01,34\nnumber=998\n";
 		
 		f.storeInfo(s3);
 		
 		//Przypadek - niepoprawny format godziny
-		String s4 = "name=Przystanek2/nhour=220,0t5,75/nnumber=998/n"
-				+ "name=Przystanek2/r/nhour=114t,04,75,63/nnumber=998/n"
-				+ "name=Przystanek2/r/nhour=113,03t,23/nnumber=998/n"
-				+ "name=Przystanek2/r/nhour=120,02,75t/nnumber=998/n"
-				+ "name=Przystanek2/r/nhour=0051, 01,34/nnumber=998/n";
+		String s4 = "name=Przystanek2\nhour=220,0t5,75\nnumber=998\n"
+				+ "name=Przystanek2\r\nhour=114t,04,75,63\nnumber=998\n"
+				+ "name=Przystanek2\r\nhour=113,03t,23\nnumber=998\n"
+				+ "name=Przystanek2\r\nhour=120,02,75t\nnumber=998\n"
+				+ "name=Przystanek2\r\nhour=0051, 01,34\nnumber=998\n";
 		
 		f.storeInfo(s4);
 		
 		//Przypadek - niepoprawny numer przystanku
-		String s5 = "name=Przystanek1/nhour=220,05,75/nnumber=9978/n"
-				+ "name=Przystanek1/r/nhour=114,04,75,63/nnumber=9978/n"
-				+ "name=Przystanek1/r/nhour=113,03,23/nnumber=9978/n"
-				+ "name=Przystanek1/r/nhour=120,02,75/nnumber=9978/n"
-				+ "name=Przystanek1/r/nhour=001,01,34/nnumber=9978/n";
+		String s5 = "name=Przystanek1\nhour=220,05,75\nnumber=9978\n"
+				+ "name=Przystanek1\r\nhour=114,04,75,63\nnumber=9978\n"
+				+ "name=Przystanek1\r\nhour=113,03,23\nnumber=9978\n"
+				+ "name=Przystanek1\r\nhour=120,02,75\nnumber=9978\n"
+				+ "name=Przystanek1\r\nhour=001,01,34\nnumber=9978\n";
 		
 		f.storeInfo(s5);
 		

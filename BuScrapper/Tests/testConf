@@ -1,0 +1,4 @@
+XPATHNAZWA=//div/p[@style=' font-size: 40px;']
+XPATHNUMER=//p[@style=' font-size: 24px; text-align: center; white-space: nowrap; display: inline-flex;']
+XPATHCZASY=//tr[@style='border-bottom: solid lightgray; border-width: 1px;']
+DOWNLOADMETHOD=POST // czyli mamy to co ma być wytyczne 

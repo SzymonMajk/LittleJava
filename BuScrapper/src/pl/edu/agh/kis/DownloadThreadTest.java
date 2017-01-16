@@ -19,7 +19,7 @@ import org.junit.Test;
 /**
  * Dwa proste testy dla klasy DownloadThread
  * @author Szymon Majkut
- * @varsion 1.1a
+ * @varsion 1.1b
  *
  */
 public class DownloadThreadTest {
@@ -51,7 +51,7 @@ public class DownloadThreadTest {
 		InputStream in2 = new FileInputStream(testFileIn2);
 		OutputStream out2 = new FileOutputStream(testFileOut2);
 				
-		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer();
+		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5, new NullAppender());
 		BlockingQueue<String> request = new ArrayBlockingQueue<String>(3);
 		request.add("Zapytanie1");
 		request.add("Zapytanie2");
@@ -70,8 +70,10 @@ public class DownloadThreadTest {
 		to.close();
 		
 		//Tworzenie dwóch obiektów i wykonywanie zapytañ 
-		DownloadThread testThread1 = new DownloadThread(999,request,buffer,in1, out1);
-		DownloadThread testThread2 = new DownloadThread(998,request,buffer,in2, out2);
+		DownloadThread testThread1 = new DownloadThread(999,request,buffer,
+				in1, out1, new NullAppender());
+		DownloadThread testThread2 = new DownloadThread(998,request,buffer,
+				in2, out2, new NullAppender());
 
 		testThread1.start();
 		testThread2.start();
@@ -139,7 +141,7 @@ public class DownloadThreadTest {
 		InputStream in = new FileInputStream(testFileIn);
 		OutputStream out = new FileOutputStream(testFileOut);
 		
-		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer();
+		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5, new NullAppender());
 	
 		//Przygotowanie pliku z odpowiedzi¹
 		
@@ -151,7 +153,7 @@ public class DownloadThreadTest {
 		
 		//Tworzymy nowy obiekt w¹tku, podpinaj¹c do niego strumienie do plików-testów
 		DownloadThread testThread = new DownloadThread(997,new ArrayBlockingQueue<String>(5),
-				buffer,in, out);
+				buffer,in, out, new NullAppender());
 		
 		String[] respondFromServer = testThread.respond("Zapytanie");
 		
@@ -165,7 +167,7 @@ public class DownloadThreadTest {
 		try {
 			while((line = from.readLine()) != null)
 			{
-				requestToServer = line;
+				requestToServer += line;
 			}
 			
 			from.close();

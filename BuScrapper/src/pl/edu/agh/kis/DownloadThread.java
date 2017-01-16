@@ -15,7 +15,7 @@ import java.util.concurrent.BlockingQueue;
  * zapytania do servera, wiêc w¹tki tej klasy odpowiadaj¹ wy³¹cznie za samo pobranie zasobów
  * z servera
  * @author Szymon Majkut
- * @version 1.1a
+ * @version 1.1b
  */
 public class DownloadThread extends Thread {
 
@@ -153,7 +153,34 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
+	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do komunikacji,
+	 * mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ z Configurator'a, dodatkowo
+	 * ustala równie¿ sposób sk³adowania logów
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
+	 * @param requests snychronizowana kolejka zapytañ
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod
+	 * @param input strumieñ wejœcia przez który bêd¹ przychodziæ odpowiedzi servera
+	 * @param output strumieñ wyjœcia przez który wysy³amy zapytania do servera
+	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
+	 */
+	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
+			InputStream input, OutputStream output, Appends appender)
+	{
+		threadName = "DownloadThread number " + id;
+		this.requests = requests;
+		this.pagesToAnalise = pagesToAnalise;
+		this.input = input;
+		this.output = output;
+		downloadLogger = new Logger();
+		downloadLogger.changeAppender(appender);
+		downloadLogger.info("DownloadThread o imieniu "+threadName+" rozpoczyna pracê!");
+		downloadLogger.execute();
+	}
+	
+	/**
+	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
 	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do komunikacji,
 	 * mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ z Configurator'a
@@ -166,14 +193,6 @@ public class DownloadThread extends Thread {
 	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
 			InputStream input, OutputStream output)
 	{
-		threadName = "DownloadThread number " + id;
-		this.requests = requests;
-		this.pagesToAnalise = pagesToAnalise;
-		this.input = input;
-		this.output = output;
-		downloadLogger = new Logger();
-		downloadLogger.changeAppender(new FileAppender(threadName));
-		downloadLogger.info("DownloadThread o imieniu "+threadName+" rozpoczyna pracê!");
-		downloadLogger.execute();
+		this(id,requests,pagesToAnalise,input,output,new FileAppender("DownloadThread number " + id));
 	}
 }

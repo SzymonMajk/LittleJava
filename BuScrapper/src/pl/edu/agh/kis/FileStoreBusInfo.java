@@ -3,7 +3,6 @@ package pl.edu.agh.kis;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -12,7 +11,7 @@ import java.util.Queue;
  * otrzymywane dane w katalogach, których nazwy sugeruj¹ numer linii, w plikach
  * których nazwy bêd¹ odpowiada³y nazwom przystanków
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1b
  */
 public class FileStoreBusInfo implements StoreBusInfo {
 
@@ -55,14 +54,14 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		boolean alreadySetLine = false;
 		boolean atLeastOneHour = false;
 		
-		String[] infos = allInformations.replace("/r", "").split("/n");
+		String[] infos = allInformations.replace("\r", "").split("\n");
 		
 		for(String s : infos)
 		{
 			if(s.startsWith("name="))
 			{
 				String name = s.substring(5);
-				
+
 				if(name == null || name.matches("\\s"))
 				{
 					continue;
@@ -72,7 +71,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 					storeLogger.warning("Zdublowana nazwa linii: ",name);
 					continue;
 				}
-				else if(name == null || name.matches("^\\w+$"))
+				else if(name == null || name.matches("\\w+"))
 				{
 					storeLogger.info("Znalaz³em nazwê linii: ",name);
 					buStopName = name;
@@ -233,17 +232,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Konstruktor domyœlny, który obs³uguje domyœlne przygotowania pod system logów
-	 */
-	FileStoreBusInfo()
-	{
-		storeLogger = new Logger();
-		storeLogger.changeAppender(new FileAppender("FileStore"));
-		storeLogger.info("Czas rozpocz¹æ pracê!");
-		storeLogger.execute();
-	}
-	
-	/**
 	 * Konstruktor sparametryzowany, pozwalaj¹cy na okreœlenie sposoby sk³adowana
 	 * logów, stworzony dla u³atwienia sprz¹tania po testach
 	 */
@@ -253,6 +241,14 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		storeLogger.changeAppender(appender);
 		storeLogger.info("Czas rozpocz¹æ pracê!");
 		storeLogger.execute();
+	}
+	
+	/**
+	 * Konstruktor domyœlny, który obs³uguje domyœlne przygotowania pod system logów
+	 */
+	FileStoreBusInfo()
+	{
+		this(new FileAppender("FileStore"));
 	}
 }
 

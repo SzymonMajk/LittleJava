@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * konsumentów, którzy bêd¹ pobieraæ zawartoœci stron oraz je przetwarzaæ, oraz obs³ugiwaæ
  * ca³oœæ
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.1a
  *
  */
 public class BuScrapper {
@@ -22,7 +22,7 @@ public class BuScrapper {
 	/**
 	 * Pole przechowuj¹ce obiekt udostêpniaj¹ce przetworzone dane konfiguracyjne
 	 */
-	private static Configurator configurator = new Configurator();
+	private static Configurator configurator = new Configurator("Conf/Conf");
 	
 	/**
 	 * Pole przechowuj¹ce informacjê o iloœci nadal pracuj¹cych w¹tków
@@ -63,6 +63,24 @@ public class BuScrapper {
 		//Rozpisz wnioski i zakoñcz dzia³anie
 		
 		return "BuScrapper nie zosta³ jeszcze dokoñczony!";
+	}
+	
+	/**
+	 * Konstruktor sparametryzowany pozwalaj¹cy na zmianê sposobu wysy³ania logów
+	 * @param appender obiekt odpowiedzialny za wysy³anie logów
+	 */
+	BuScrapper(Appends appender)
+	{
+		scrapperLogger = new Logger();
+		scrapperLogger.changeAppender(appender);
+	}
+	
+	/**
+	 * Konstruktor domyœlny, ustalaj¹cy typowy sposób wysy³ania logów
+	 */
+	BuScrapper()
+	{
+		this(new FileAppender("BuScrapper"));
 	}
 	
 	/**

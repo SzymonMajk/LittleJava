@@ -1,5 +1,22 @@
 package pl.edu.agh.kis;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.tidy.Tidy;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
 /**
  * Klasa w¹tków, których zadaniem jest wyodrêbnienie zawartoœci ze strony, która znajduje
  * siê ju¿ w buforze, metod tej klasy nie interesuje pochodzenie stron, a jedynie ustalony
@@ -8,7 +25,7 @@ package pl.edu.agh.kis;
  * informacji, posiada równie¿ swój w³asny system logów, z wyjœciem do pliku o nazwie równej 
  * id dzia³aj¹cego w¹tku
  * @author Szymon Majkut
- * @version 1.1a
+ * @version 1.1b
  *
  */
 public class SnatchThread extends Thread{
@@ -24,6 +41,14 @@ public class SnatchThread extends Thread{
 	private String threadName;
 	
 	/**
+	 * Zestaw wyra¿eñ XPath, z których bêdziemy korzystaæ
+	 * W tej wersji programu, powinniœmy otrzymaæ szeœæ wyra¿eñ, w kolejnoœci: pierwsze
+	 * odpowiada za numer linii, druga za nazwê przystanku, trzecia za godzinê, czwarta
+	 * za minuty dnia powszedniego, pi¹ta sobotê, a szósta niedzieli
+	 */
+	private String[] xPathExpressions;
+	
+	/**
 	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
 	 */
 	private PagesBuffer pagesToAnalise;
@@ -35,17 +60,81 @@ public class SnatchThread extends Thread{
 	private StoreBusInfo infoSaving;
 	
 	/**
+	 * Funkcja otrzymuje zwart¹ postaæ liczb: godzina i minuty powszedni, soboty, niedziele,
+	 * które rozdziela i umieszcza w tablicy Stringów, o szerokoœci zale¿nej od tego
+	 * czy wystêpuj¹ jakieœ jazdy dla danej godziny
+	 * @param allTime paczka informacji, któr¹ musimy przetworzyæ
+	 * @return paczka informacji przygotowana do sk³adowania
+	 */
+	private String prepareHoursLines(String allTime)
+	{
+		String result = "";
+		//Rozdzielamy otrzyman¹ paczkê danych
+		String[] tmpResults = allTime.split("\n");
+
+		String hour = tmpResults[1].replaceAll("[^\\d] [^\\d]", "");
+		
+		if(hour.length() == 1)
+		{
+			hour = "0"+hour;
+		}
+		String firstMinutes = tmpResults[2].replaceAll("[^\\d] [^\\d]", "").replace(" ",",");
+		String secondMinutes = tmpResults[3].replaceAll("[^\\d] [^\\d]", "").replace(" ",",");
+		String thirdMinutes = tmpResults[4].replaceAll("[^\\d] [^\\d]", "").replace(" ",",");
+		
+		if(!firstMinutes.equals(""))
+		{
+			result += "hour=0"+hour+","+firstMinutes+"\n";
+		}
+		if(!secondMinutes.equals(""))
+		{
+			result += "hour=1"+hour+","+secondMinutes+"\n";
+		}
+		if(!thirdMinutes.equals(""))
+		{
+			result += "hour=2"+hour+","+thirdMinutes+"\n";
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * Funkcja s³u¿y do przetworzenia stron zapisanych w jêzyku HTML na strony XHTML,
-	 * na których mo¿emy korzystaæ z przechodzenia poprzez XPath
+	 * na których mo¿emy korzystaæ z przechodzenia poprzez XPath, wykorzystuje mo¿liwoœci
+	 * pakietu JTidy, s³u¿¹cego do przetwarzania stron HTML, wyniki zapisuje w pliku
+	 * o unikatowej nazwie w¹tku, 
 	 * @param pageHTML pe³ny kod Ÿród³owy strony, któr¹ bêdziemy przetwarzaæ
 	 * @return pe³ny kod Ÿród³owy strony przetworzony do formy XHTML'a
 	 */
 	private String prepareXMLPage(String pageHTML)
-	{
-		//zabawa, ¿eby dodaæ XML...
+	{		
+		String result = "";
 		
-		snatchLogger.info("Utworzy³em dokument XHTML z dokumentu HTML");
-		return "";
+		//Oczyszczamy z totalnych œmieci...
+		pageHTML = pageHTML.replace("<csption> </csption>", "");
+		
+		Tidy tidy = new Tidy();
+		//tidy.setXHTML(true);
+		tidy.setInputEncoding("UTF-8");
+	    tidy.setOutputEncoding("UTF-8");
+	    tidy.setWraplen(Integer.MAX_VALUE);
+	    tidy.setPrintBodyOnly(true);
+	    tidy.setXmlOut(true);
+	    tidy.setSmartIndent(true);
+		ByteArrayInputStream inputStream;
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		
+		try {
+			inputStream = new ByteArrayInputStream(pageHTML.getBytes("UTF-8"));
+		    tidy.parseDOM(inputStream, outputStream);
+			result = outputStream.toString("UTF-8");
+			snatchLogger.info("Utworzy³em dokument XHTML z dokumentu HTML");
+		} catch (UnsupportedEncodingException e) {
+			snatchLogger.warning("Nie uda³o siê utworzyæ dokumentu XHTML z HTML");
+		}
+		
+		return result;
+		
 	}
 	
 	/**
@@ -56,11 +145,60 @@ public class SnatchThread extends Thread{
 	 * @param pageXHTML pe³ny kod Ÿród³owy strony, z którego bêdziemy wyodrêbniaæ
 	 * @return zesk³adowane informacje wyodrêbnione ze strony podanej w parametrze
 	 */
-	public String analiseXMLPage(String pageXHTML) {
-		// zabawy z XPath...
+	private String analiseXMLPage(String pageXHTML) {
 		
-		snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
-		return "";
+		//Przygotowujê zmienne, do przechowywania wyodrêbnionych informacji
+		String lineNumber = "";
+		String buStopname = "";
+		String hours = "";
+
+		if(xPathExpressions.length<3)
+		{
+			snatchLogger.error("Podano niew³aœciw¹ iloœæ zapytañ XPATH!");
+			return "";
+		}
+		
+		try {
+
+		    DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+		    DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+		    Document docXML = docBuilder.parse(new ByteArrayInputStream(pageXHTML.getBytes()));
+
+		    XPath xPath =  XPathFactory.newInstance().newXPath();
+
+		    //Tutaj wyci¹gamy pojedyncze String nazwy linii i przystanku
+		    lineNumber = xPath.compile(xPathExpressions[0]).evaluate(docXML).replaceAll("\\s","");
+		    
+		    buStopname = xPath.compile(xPathExpressions[1]).evaluate(docXML).replaceAll("\\s","");
+		    
+		    //Tutaj bêdziemy wyci¹gaæ ca³e wiersze, aby wyci¹gn¹æ z nich nastêpnie odpowiednie czasy
+		    NodeList hourss = (NodeList) xPath.compile(xPathExpressions[2]).evaluate(docXML, XPathConstants.NODESET);
+		    
+		    //Przelatujê po wszystkich linijkach pasuj¹cych do XPath
+		    for (int i = 0;null!=hourss && i < hourss.getLength(); ++i) 
+		    {
+
+	    		Node nod = hourss.item(i);
+	    		if(nod.getNodeType() == Node.ELEMENT_NODE)
+	    		{
+	    			String tmpTimes = "";
+	    			if((tmpTimes = prepareHoursLines(nod.getTextContent())) != "")
+	    			{
+		    			hours += tmpTimes;
+	    			}
+	    		}
+	    	}
+		    
+		    snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
+		} catch (SAXParseException err) {
+			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML");
+		} catch (SAXException e) {
+			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML");
+		} catch (Throwable t) {
+			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML");
+		}
+		
+		return "name="+buStopname+"\nnumber="+lineNumber+"\n"+hours;
 	}
 	
 	/**
@@ -71,19 +209,16 @@ public class SnatchThread extends Thread{
 	 */
 	public void run()
 	{		
-		String tmpSite = "";
 		
 		do
 		{
 			BuScrapper.numberOfWorkingThreads.incrementAndGet();
-			
+
 			snatchLogger.info("Pobieram z kolejki stron");
-			tmpSite = analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage()));
 			
-			if(tmpSite != "")
+			if(!pagesToAnalise.isEmpty())
 			{
-				snatchLogger.info("Sk³adujê wyci¹gniête informacje");
-				infoSaving.storeInfo(tmpSite);
+				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
 			}
 
 			snatchLogger.execute();
@@ -97,28 +232,45 @@ public class SnatchThread extends Thread{
 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
 	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
+	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, dodatkowo
+	 * posiada mo¿liwoœæ ustalenia w³asnego systemu logów
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
+	 * @param pagesToAnalise referencja do synchronizowanego bufora z pobranymi stronami
+	 * @param infoSaving referencja do obiektu, któremu nale¿y delegowaæ sk³adowanie informacji
+	 * @param appender obiekt odpowiedzialny za wysy³anie logów
+	 */
+	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
+			String[] xPathExpressions,Appends appender)
+	{
+		threadName = "SnatchThread number " + id;
+		this.pagesToAnalise = pagesToAnalise;
+		this.infoSaving = infoSaving;
+		this.xPathExpressions = xPathExpressions;
+		snatchLogger = new Logger();
+		snatchLogger.changeAppender(appender);
+		snatchLogger.info("SnatchThread o imieniu "+threadName+" rozpoczyna pracê!");
+		String regexs = "";
+		for(String s : xPathExpressions)
+		{
+			regexs += s;
+		}
+		snatchLogger.info("Otrzyma³em œcie¿ki XPath:",regexs);
+		snatchLogger.execute();
+	}
+	
+	/**
+	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
+	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
 	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
 	 * @param pagesToAnalise referencja do synchronizowanego bufora z pobranymi stronami
 	 * @param infoSaving referencja do obiektu, któremu nale¿y delegowaæ sk³adowanie informacji
 	 */
-	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving)
+	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
+			String[] xPathExpressions)
 	{
-		threadName = "SnatchThread number " + id;
-		this.pagesToAnalise = pagesToAnalise;
-		this.infoSaving = infoSaving;
-		snatchLogger = new Logger();
-		snatchLogger.changeAppender(new FileAppender(threadName));
-		snatchLogger.info("SnatchThread o imieniu "+threadName+" rozpoczyna pracê!");
-		snatchLogger.execute();
+		this(id,pagesToAnalise,infoSaving,xPathExpressions,
+				new FileAppender("SnatchThread number " + id));
 	}
 }
-
-/* Wszystkie wyci¹gniête informacje musz¹ byæ odpowiednio sk³¹dowane,
- * w programie u¿ywam konwencji, ¿e coœ=wartoœæ/r/n, wraz z unikatowoœci¹
- * mo¿e byæ
- * name=nazwaPrzystanku
- * number=numerLinii
- * hour=[0-2]godzina,kolejne minuty, po przecinkach; 0-2 oznacza rodzaj dnia
- * pozosta³e dane bêd¹ wrzucane jako warningi
- */
