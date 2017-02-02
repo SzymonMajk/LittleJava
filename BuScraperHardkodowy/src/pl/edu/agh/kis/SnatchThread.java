@@ -27,7 +27,7 @@ import org.xml.sax.SAXParseException;
  * informacji, posiada równie¿ swój w³asny system logów, z wyjœciem do pliku o nazwie równej 
  * id dzia³aj¹cego w¹tku
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.3
  *
  */
 public class SnatchThread extends Thread{
@@ -105,16 +105,15 @@ public class SnatchThread extends Thread{
 	}
 	
 	/**
-	 * Funkcja odpowiedzialna za zaimplementowanie interfejsu AnalizePage, jej zadaniem
-	 * jest wyodrêbnienie przydatnych informacji z pe³nego kodu Ÿród³owego strony przy
-	 * pomocy odpowiednich XPath, oraz zwrócenie ich zesk³adowanych w mapie
-	 * @param pageXHTML pe³ny kod Ÿród³owy strony, z którego bêdziemy wyodrêbniaæ
-	 * @return zesk³adowane informacje wyodrêbnione ze strony podanej w parametrze
+	 * Funkcja odpowiedzialna jest za wyodrêbnienie przydatnych informacji 
+	 * z pe³nego kodu Ÿród³owego strony przy pomocy przechowywanych XPath, 
+	 * oraz zwrócenie wyniku wyodrêbnienia zesk³adowanego w mapie
+	 * @param pageXHTML kod Ÿród³owy strony w formacie XHTML
+	 * @return mapa wyodrêbnionych danych
 	 */
 	private Map<String,String> analiseXMLPage(String pageXHTML) {
 		
-		/*Wiemy ¿e kluczami musz¹ byæ direction, lineNumber, buStopName, hours,
-		 * pózniej bedziemy to dostawaæ razem z XPathami, wiêc bêdzie jeszcze ³atwiej*/
+		//Wiemy ¿e kluczami musz¹ byæ direction, lineNumber, buStopName, hours
 		
 		//Przygotowujê zmienne, do przechowywania wyodrêbnionych informacji
 		Map<String,String> results = new HashMap<String,String>();
@@ -122,6 +121,7 @@ public class SnatchThread extends Thread{
 		String lineNumber = "";
 		String buStopName = "";
 		String hours = "";
+		StringBuilder buildHours = new StringBuilder();
 		
 		try {
 
@@ -153,10 +153,12 @@ public class SnatchThread extends Thread{
 	    			String tmpTimes = "";
 	    			if(!(tmpTimes = nod.getTextContent()).equals(""))
 	    			{
-		    			hours += tmpTimes;
+	    				buildHours.append(tmpTimes);
 	    			}
 	    		}
 	    	}
+		    
+		    hours = buildHours.toString();
 		    
 		    snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
 		} catch (SAXParseException err) {
@@ -179,21 +181,23 @@ public class SnatchThread extends Thread{
 	}
 	
 	/**
-	 * G³ówna pêtla w¹tku - konsumenta, jej zadaniem jest oddawanie czasu procesora w przypadku
-	 * pustego bufora, w przeciwnym wypadku pobieranie z niego strony, oraz przetworzenie zawartych
-	 * na stronie informacji, oraz pózniejsze zesk³adowanie ich, oddelegowuj¹c zadanie do
-	 * odpowiedniego obiektu implementuj¹cego interfejs StoreBusInfo
+	 * G³ówna pêtla w¹tku - konsumenta, jej zadaniem jest pobieranie strony z bufora, oraz 
+	 * wœród zawartych na niej danych, wyodrêbnienie danych pasuj¹cych do posiadanych przez
+	 * w¹tek wyra¿eñ XPath oraz pózniejsze zesk³adowanie ich, oddelegowuj¹c zadanie do
+	 * odpowiedniego obiektu implementuj¹cego interfejs StoreBusInfo, w przypadku pustego
+	 * Bufora, maj¹ zostaæ obudzeni producenci
 	 */
 	public void run()
 	{		
-		
 		do
 		{
 			BuScrapper.numberOfWorkingThreads.incrementAndGet();
 			snatchLogger.info("Pobieram z kolejki stron");
 			
-			infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
-			
+			if(!pagesToAnalise.isEmpty())
+			{
+				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
+			}
 			snatchLogger.execute();
 			BuScrapper.numberOfWorkingThreads.decrementAndGet();
 			
@@ -237,7 +241,8 @@ public class SnatchThread extends Thread{
 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
 	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
-	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych
+	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, ustala
+	 * domyœln¹ nazwê dla pliku do systemu logów
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
 	 * @param pagesToAnalise referencja do synchronizowanego bufora z pobranymi stronami
 	 * @param infoSaving referencja do obiektu, któremu nale¿y delegowaæ sk³adowanie informacji

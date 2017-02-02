@@ -10,13 +10,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej zawartoœci w bufofrze,
- * metod tej klasy nie interesuje co dalej stanie siê z otrzyman¹ przez ni¹ treœci¹,
- * zak³ada te¿, ¿e otrzymana w konstruktorze kolejka zapytañ zawiera poprawnie utworzone
- * zapytania do servera, wiêc w¹tki tej klasy odpowiadaj¹ wy³¹cznie za samo pobranie zasobów
- * z servera
+ * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej odpowiedzi w bufofrze,
+ * wykorzystuj¹c do tego celu strumienie uzyskane przez obiekt implementuj¹cy Downloader, oraz
+ * kolejkê zapytañ, utworzon¹ przez RequestCreator poprzez BuScrappera
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.3
  */
 public class DownloadThread extends Thread {
 
@@ -41,13 +39,14 @@ public class DownloadThread extends Thread {
 	private PagesBuffer pagesToAnalise;
 	
 	/**
-	 * Obiekt udostêpniaj¹cy strumienie do komunikacji z serverem
+	 * Obiekt udostêpniaj¹cy strumienie do wysy³ania zapytañ oraz odbierania odpowiedzi
 	 */
 	private Downloader downloader;
 	
 	/**
-	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedz,
-	 * któr¹ od niego otrzymuje, jest public, aby mo¿na j¹ by³o przetestowaæ
+	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedŸ,
+	 * któr¹ od niego otrzymuje. Funckja jest publiczna, poniewa¿ w ten sposób pozwala
+	 * na dogodne testowanie, posiada na sztywno ustalone kodowanie UTF-8
 	 * @param request poprawne zapytanie do servera o zasób
 	 * @return para nag³ówek oraz zawartoœæ strony w HTML
 	 */
@@ -60,7 +59,7 @@ public class DownloadThread extends Thread {
 		String respond = "";
 		String header = "";
 		
-		if(downloader.createSocket())
+		if(downloader.createStreams())
 		{
 			input = downloader.getInputSteam();
 			output = downloader.getOutputStream();
@@ -73,7 +72,6 @@ public class DownloadThread extends Thread {
 							
 			try {
 				
-				//pózniej zrobimy, ¿ê u¿ytkownik podaje kodowanie
 				from = new BufferedReader(new InputStreamReader(input,"UTF-8"));
 				
 				while((line = from.readLine()) != null)
@@ -112,10 +110,8 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * Funkcja s³u¿y do odfiltrowania od niepoprawnych zasób tych, które posiadaj¹ HTTP 200 OK
-	 * tak aby nie zaœmiecaæ bufora niepotrzebnymi danymi, co wiêcej zapewniæ w buforze istnienie
-	 * tylko poprawnych stron
-	 * @param header nag³ówek zasobu otrzymany dla poprawnego zapytania
+	 * Funkcja s³u¿y do odfiltrowania od niepoprawnych odpowiedzi
+	 * @param header nag³ówek zasobu otrzymanego z poprawnego zapytania
 	 * @return informacja czy pobrany zasób jest zasobem poprawnym z punktu widzenia u¿ytkownika
 	 */
 	private boolean isCorrectRespond(String[] respond)
@@ -139,11 +135,12 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * G³ówna pêtla w¹tku - producenta, jej zadaniem jest zasypianie w przypadku pe³nego bufora
-	 * oraz budzenie w¹tków dzia³aj¹cych na buforze, je¿eli sama umieœci w nim jakieœ dane, 
-	 * otrzymane poprzez poprzez odpowiednio nastawiony strumieñ wejœcia, wysy³aj¹c uprzednio
-	 * strumieniem wyjœcia odpowiednie zapytanie o zasób, które jest pobierane z kolejki
-	 * przygotowanej przez Configurator i udostêpnione w postaci kolejki requests
+	 * G³ówna pêtla w¹tku - producenta, jej zadaniem budzenie w¹tków dzia³aj¹cych na buforze,
+	 * je¿eli sama umieœci w nim jakieœ dane otrzymane poprzezodpowiednio nastawiony strumieñ
+	 * wejœcia, wysy³aj¹c uprzednio strumieniem wyjœcia odpowiednie zapytanie, które jest 
+	 * pobierane z kolejki przygotowanej przez RequestCreator za poœrednictwem BuScrapper,
+	 * zasypia gdy bufor oka¿e siê przepe³niony, funkcja dzia³a dopóki pozostaj¹ jeszcze jakieœ
+	 * zapytania do wys³ania
 	 */
 	public void run()
 	{		
@@ -164,9 +161,8 @@ public class DownloadThread extends Thread {
 				}
 			}
 			downloadLogger.execute();
-			//System.out.println("dupa");
+
 			BuScrapper.numberOfWorkingThreads.decrementAndGet();
-		//}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
 		}while(!requests.isEmpty());
 		
 		downloadLogger.info("DownloadThread o imieniu "+threadName+" koñczy pracê!");
@@ -176,13 +172,13 @@ public class DownloadThread extends Thread {
 	/**
 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do komunikacji,
-	 * mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ z Configurator'a, dodatkowo
-	 * ustala równie¿ sposób sk³adowania logów
+	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do
+	 * komunikacji, mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ
+	 * przygotowanych przez RequestCreator, dodatkowo ustala równie¿ sposób sk³adowania logów
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
 	 * @param requests snychronizowana kolejka zapytañ
 	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod
-	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹ce strumienie do komunikacji z serverem
+	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹ce strumienie do pobierania zasobów
 	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
 	 */
 	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
@@ -201,8 +197,9 @@ public class DownloadThread extends Thread {
 	/**
 	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do komunikacji,
-	 * mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ z Configurator'a
+	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do
+	 * komunikacji, mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ
+	 * przygotowanych przez RequestCreator, ustala sposób sk³adowania logów na domyœlny
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
 	 * @param requests snychronizowana kolejka zapytañ
 	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod

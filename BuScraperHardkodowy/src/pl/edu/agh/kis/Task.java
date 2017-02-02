@@ -4,7 +4,7 @@ package pl.edu.agh.kis;
  * Klasa przechowuj¹ca pojedyncze zadanie do wykonania dla BuScrappera
  * mo¿e zwracaæ szczegó³y zadania, a jego stan jest ustalany w konstruktorze
  * @author Szymon Majkut
- * @version 1.2
+ * @version 1.3
  *
  */
 public class Task {
@@ -95,5 +95,4 @@ public class Task {
 		this.method = method;
 		this.host = host;
 	}
-	
 }

@@ -1,23 +1,21 @@
 package pl.edu.agh.kis;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
  * G³ownym zadaniem klasy jest odpowiednia analiza plików konfiguracyjnych, uzupe³nianych
- * przez u¿ytkownika, a nastêpnie przygotowanie do prostego udostêpnienia dla DownloadThread
- * oraz SnatchThread tych danych, które je interesuj¹. Musi sam utworzyæ kolejkê kolejnych
- * zapytañ GET/POST, które bêdzie udostêpnia³ dla DownloadThread, wyodrêbniæ grupê wyra¿eñ
- * XPath, dla SnatchThread, w zwi¹zku z mo¿liwoœci¹ istnienia wiêcej ni¿ jednego w¹tku
- * ka¿dego rodzaju, operacje pobrania nowego zapytania powinny byæ synchronizowane
+ * przez u¿ytkownika, a nastêpnie wyodrêbnienie wszystkich informacji potrzebnych dla
+ * pozosta³ych komponentów BuScrappera oraz mo¿liwoœæ prostego udostêpniania ich poprzez
+ * funkcje publiczne get
  * Korzysta z plików w katalogu Conf
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.3
  *
  */
 public class Configurator {
@@ -28,6 +26,16 @@ public class Configurator {
 	private Logger configuratorLogger;
 	
 	/**
+	 * Pole przechowuj¹ce nazwê pliku konfiguracyjnego
+	 */
+	private String configurationFileName;
+	
+	/**
+	 * Adres URL strony pocz¹tkowej
+	 */
+	private String startPageURL;
+	
+	/**
 	 * Pole przechowuj¹ce tablicê zapytañ XPath
 	 */
 	private String[] XPaths;
@@ -36,6 +44,35 @@ public class Configurator {
 	 * Kolejka blokuj¹ca przechowywuj¹ca zadania
 	 */
 	private LinkedList<Task> tasks;
+	
+	/**
+	 * Lista wyszukiwañ zapisanych przez u¿ytkownika
+	 */
+	private ArrayList<String> toSearch;
+	
+	/**
+	 * Pole informuj¹ce o tym czy klasa ma zaktualizowaæ dane
+	 */
+	private boolean updateData = false;
+	
+	/**
+	 * Funkcja ma za zadanie zwróciæ adres strony URL rozpoczynaj¹cej pracê
+	 * @return adres URL strony rozpoczynaj¹cej pracê
+	 */
+	public String getStartPageURL()
+	{
+		return startPageURL;
+	}
+	
+	/**
+	 * Zwraca informacjê o tym czy dane powinny byæ zaktualizowane otrzyman¹ z pliku
+	 * konfiguracyjnego
+	 * @return informacja o tym czy dane powinny byæ zaktualizowane
+	 */
+	public boolean getUpdateData()
+	{
+		return updateData;
+	}
 	
 	/**
 	 * Funkcja ma zwracaæ tablicê z XPath'ami pochodz¹cymi z pliku konfiguracyjnego
@@ -49,10 +86,22 @@ public class Configurator {
 	}
 	
 	/**
-	 * Funkcja ma za zadanie odpowiednio przypisaæ dla Configuratora tablicê XPath
-	 * @param configurationFileName nazwa pliku konfiguracyjnego
+	 * Funkcja zwraca listê z zapytaniami, które bêdzie wykonywa³ Browser
+	 * sprawdzenie poprawnoœci spoczywa na Browser
+	 * @return lista z linijkami które nale¿y wyszukaæ dla Browser
 	 */
-	private void parseXPath(String configurationFileName)
+	public ArrayList<String> getToSerach()
+	{
+		configuratorLogger.info("Zwracam tablicê toSearch!");
+		configuratorLogger.execute();
+		return toSearch;
+	}
+	
+	/**
+	 * Funkcja ma za zadanie odpowiednio przypisaæ z pliku konfiguracjnego wszystkie
+	 * linijki z wyra¿eniami XPath
+	 */
+	private void parseInfo()
 	{
 		File conf = new File(configurationFileName);
 		
@@ -77,7 +126,22 @@ public class Configurator {
 		
 		for(String s : toCheck)
 		{
-			if(s.startsWith("XPATHNAZWA="))
+			if(s.startsWith("PAGEURL="))
+			{
+				startPageURL = s.substring(8);
+				
+				configuratorLogger.info("Znalaz³em URL!",startPageURL);
+			}
+			else if(s.startsWith("UPDATE="))
+			{
+				String update = s.substring(7);
+				if(update.equals("TRUE"))
+				{
+					updateData = true;
+				}
+				configuratorLogger.info("Wiem czy aktualizowaæ!",update);
+			}
+		    else if(s.startsWith("XPATHNAZWA="))
 			{
 				xPaths[0] = s.substring(11);
 				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths[0]);
@@ -107,10 +171,10 @@ public class Configurator {
 	}
 	
 	/**
-	 * Funkcja przygotowania zadania z pliku konfiguracyjnego
-	 * @param configurationFileName nazwa pliku konfiguracyjnego
+	 * Funkcja ma za zadanie wyci¹gn¹æ z pliku konfiguracyjnego odpowiednie dane oraz na
+	 * ich podstawie utworzyæ kolejkê zadañ
 	 */
-	private void prepareTasks(String configurationFileName)
+	private void prepareTasks()
 	{
 		File conf = new File(configurationFileName);
 		
@@ -160,10 +224,6 @@ public class Configurator {
 				taskDetails[4] = s.substring(13);
 				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[4]);
 			}
-			else
-			{
-				configuratorLogger.warning("W tym kontekcie niezrozumia³a liijka konfiguracyjna",s);
-			}
 		}
 		
 		//Wyodrêbniamy zarkes linii
@@ -181,6 +241,46 @@ public class Configurator {
 	}
 	
 	/**
+	 * Funkcja ma za zadanie wyodrêbniæ z pliku konfiguracyjnego wszystkie wyszukiwania
+	 * i wstawiæ je do listy wyszukiwañ dla Browser
+	 */
+	private void preapareSearch()
+	{
+		File conf = new File(configurationFileName);
+		
+		ArrayList<String> search = new ArrayList<String>();
+		ArrayList<String> toCheck = new ArrayList<String>();
+		BufferedReader reader;
+		
+		try {
+			reader = new BufferedReader(
+					new InputStreamReader(new FileInputStream(conf)));
+			
+			String line = "";
+			
+			while((line = reader.readLine()) != null)
+			{
+				toCheck.add(line);
+			}
+			
+		} catch (IOException e) {
+			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+		}
+		
+		for(String s : toCheck)
+		{
+			if(s.startsWith("SEARCH="))
+			{
+				String searchLine = s.substring(7);
+				search.add(searchLine);
+				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",searchLine);
+			}
+		}
+		
+		toSearch = search;
+	}
+	
+	/**
 	 * Konstruktor sparametryzowany, którego zadaniem jest ustalenie pocz¹tkowego stanu
 	 * Configurator'a, pozwalaj¹cy dodatkowo na ustalenie sposobu wysy³ania logów
 	 * @param configurationFileName nazwa œcie¿ki pliku konfiguracyjnego
@@ -191,6 +291,8 @@ public class Configurator {
 		configuratorLogger = new Logger();
 		configuratorLogger.changeAppender(appender);
 		configuratorLogger.info("Configurator rozpoczyna pracê!");
+		
+		this.configurationFileName = configurationFileName;
 		
 		File conf = new File(configurationFileName);
 		
@@ -208,9 +310,11 @@ public class Configurator {
 		this.tasks = tasks;
 
 		//Przygotowujemy XPath
-		parseXPath(configurationFileName);
+		parseInfo();
 		//Przygotowujemy zapytania dla downloaderów
-		prepareTasks(configurationFileName);
+		prepareTasks();
+		//przygotowujemy zapytania do wyszukiwania
+		preapareSearch();
 		
 		configuratorLogger.execute();
 	}

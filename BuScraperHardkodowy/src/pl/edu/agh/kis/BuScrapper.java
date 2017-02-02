@@ -1,18 +1,12 @@
 package pl.edu.agh.kis;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * G³ówna klasa programu, jej zadaniem jest zaimportowanie potrzebnych plików oraz okreœlenie
- * nazwy strony, z której bêdziemy pobieraæ, nastêpnie przygotowanie odpowiedniego bufora
- * dla producentów oraz konsumentów, nastêpnie utworzenie osobnych w¹tków producentów oraz
- * konsumentów, którzy bêd¹ pobieraæ zawartoœci stron oraz je przetwarzaæ, oraz obs³ugiwaæ
- * ca³oœæ
+ * G³ówna klasa programu, jej zadaniem jest odpowiednia obs³uga 
  * @author Szymon Majkut
- * @version 1.1a
+ * @version 1.3
  *
  */
 public class BuScrapper {
@@ -49,62 +43,72 @@ public class BuScrapper {
 	private StoreBusInfo infoSaver = new FileStoreBusInfo();
 	
 	/**
+	 * Pole prywatne przechowuj¹ce wyszukiwarkê po³¹czeñ
+	 */
+	private Browser browser = new Browser();
+	
+	/**
 	 * Pole przechowuj¹ce informacjê o iloœci nadal pracuj¹cych w¹tków
 	 * jest static, aby ka¿dy w¹tek móg³ siê do niego ³atwo odwo³aæ
 	 */
 	static AtomicInteger numberOfWorkingThreads = new AtomicInteger(0);
 	
 	/**
-	 * Funkcja przygotowuje ca³oœæ aplikacji do dzia³ania, oraz informuje
-	 * czy przygotowania przebieg³y pomyœlnie
-	 * @return informacja o tym, czy obiekt zosta³ w³aœciwie przygotowany
+	 * Funkcja zwraca informacjê o tym, czy powinna zostaæ wykonana aktualizacja
+	 * danych
+	 * @return informacja o tym czy wykonaæ aktualizacjê danych
 	 */
-	public boolean isPrepared()
+	public boolean doUpdate(boolean b)
 	{
-		scrapperLogger = new Logger();
-		scrapperLogger.changeAppender(new FileAppender("BuScrapper"));
-		
-		return true;
+		return b;
 	}
 	
 	/**
 	 * Funkcja uruchamia potrzebne w¹tki producentów-konsumentów, pozwala im
 	 * funkcjonowaæ na przygotowanym wczeœniej buforze, dopóki nie skoñcz¹ wszystkich
-	 * zadañ oraz informuje o zakoñczeniu pracy
-	 * @return tekst koñcz¹cy pracê, informuje przy tym o zaistnia³ych mo¿liwoœciach
-	 * @throws IOException B³¹d zwi¹zany z korzystaniem z URL oraz Socketu
-	 * @throws UnknownHostException Gdy podamy z³ego hosta
-	 * @throws InterruptedException W przypadku gdyby nie uda³o siê zrobiæ join()
+	 * powierzonych im zadañ
 	 */
-	public String work() throws UnknownHostException, IOException, InterruptedException
+	public void updateData()
 	{
-		//Utworzenie w¹tków producentów na tym etapie musimy znaæ nazwê hosta i numer portu
-		//no i na tym w³aœnie etapie ju¿ utworzymy kilka odpowiednich socketów dla w¹tków i
-		//wyœlemy do nich te sockety, ka¿dy w¹tek musi posiadaæ unikalne sockety!
-		
-		String pageURL = "http://rozklady.mpk.krakow.pl/";
-
 		while(!tasks.isEmpty())
 		{
 		
 	    DownloadThread d1 = new DownloadThread(0,requestCreator.getRequests(),buffer,
-	    		new SocketDownloader(pageURL));
-		
-		//Utworzenie w¹tków konsumentów
+	    		new SocketDownloader(configurator.getStartPageURL()));
+	   /* DownloadThread d2 = new DownloadThread(1,requestCreator.getRequests(),buffer,
+	    		new SocketDownloader(configurator.getStartPageURL()));
+		*/
 		
 	    SnatchThread s1 = new SnatchThread(0,buffer,infoSaver,configurator.getXPaths());
-		     
-		//Dopóki wszystkie w¹tki pracuj¹ czekaj na nie
-	    d1.start();
-	    s1.start();
+	   /* SnatchThread s2 = new SnatchThread(1,buffer,infoSaver,configurator.getXPaths());
+	    SnatchThread s3 = new SnatchThread(2,buffer,infoSaver,configurator.getXPaths());
+	    SnatchThread s4 = new SnatchThread(3,buffer,infoSaver,configurator.getXPaths());
+		*/        
 	    
+	    d1.start();
+	    //d2.start();
+	    s1.start();
+	   /* s2.start();
+	    s3.start();
+	    s4.start();*/
+	    
+	    try {
+	    	
 	    d1.join();
+	    //d2.join();
 	    s1.join();
-		//Rozpisz wnioski i zakoñcz dzia³anie
+	   /* s2.join();
+	    s3.join();
+	    s4.join();*/
+	    
+	    } catch (InterruptedException e) {
+		    scrapperLogger.error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
+	    }
+	    
+	    scrapperLogger.info("Zakoñczy³em aktualizacjê danych)");
+	    scrapperLogger.execute();
 	    
 		}
-	    
-		return "Wnioski... Zerknij do katalogu i sprawdz katalogi!";
 	}
 	
 	/**
@@ -127,26 +131,20 @@ public class BuScrapper {
 	
 	/**
 	 * Przyk³adowy sposób uruchomienia programu
-	 * @param args podajemy pliki z konfiguracj¹ XPath oraz adres strony
+	 * @param args nieu¿ywane
 	 */
 	public static void main(String[] args) {
 
 		BuScrapper b = new BuScrapper();
-		if(b.isPrepared())
+		
+		//Opcjonalna aktualizacja zasobów
+		if(b.doUpdate(b.configurator.getUpdateData()))
 		{
-			try {
-				System.out.println(b.work());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		else
-		{
-			System.out.println("Wyst¹pi³ problem podczas przygotowywania klasy!");
+			b.updateData();
 		}	
+		
+		//Teraz wyszukujemy zgodnie z zaleceniami u¿ytkownika
+		b.browser.serch(b.configurator.getToSerach());
+		
 	}
 }

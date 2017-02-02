@@ -23,42 +23,45 @@ public class RequestCreator {
 	 */
 	private BlockingQueue<String> prepareNewRequests(BlockingQueue<String> requests)
 	{
-		Task newTask = tasks.poll();
-		
-		String lineNumber = newTask.getLineNumber();
-		int maxBuStop = Integer.parseInt(newTask.getMaxBuStop());
-		int maxDirection = Integer.parseInt(newTask.getMaxDirection());
-		String method = newTask.getmethod();
-		String host = newTask.getHost();
-		
-		requests = new ArrayBlockingQueue<String>(maxBuStop*maxDirection);
-		
-		if(method.equals("GET"))
+		if(!tasks.isEmpty())
 		{
-			for(int i = 0; i < maxDirection; ++i)
+			Task newTask = tasks.poll();
+			
+			String lineNumber = newTask.getLineNumber();
+			int maxBuStop = Integer.parseInt(newTask.getMaxBuStop());
+			int maxDirection = Integer.parseInt(newTask.getMaxDirection());
+			String method = newTask.getmethod();
+			String host = newTask.getHost();
+			
+			requests = new ArrayBlockingQueue<String>(maxBuStop*maxDirection);
+			
+			if(method.equals("GET"))
 			{
-				for(int j = 0; j < maxBuStop; ++j)
+				for(int i = 0; i < maxDirection; ++i)
 				{
-					StringBuilder builder = new StringBuilder();
-					builder.append(method);
-					builder.append(" /?lang=PL&rozklad=20170120&linia=");
-					builder.append(lineNumber);
-					builder.append("__");
-					builder.append(i);
-					builder.append("__");
-					builder.append(j);
-					builder.append(" HTTP/1.1\r\n");
-					builder.append("Host: ");
-					builder.append(host);
-					builder.append("\r\n");
-					builder.append("Connection: close\r\n\r\n");
-					requests.add(builder.toString());
+					for(int j = 0; j < maxBuStop; ++j)
+					{
+						StringBuilder builder = new StringBuilder();
+						builder.append(method);
+						builder.append(" /?lang=PL&rozklad=20170120&linia=");
+						builder.append(lineNumber);
+						builder.append("__");
+						builder.append(i);
+						builder.append("__");
+						builder.append(j);
+						builder.append(" HTTP/1.1\r\n");
+						builder.append("Host: ");
+						builder.append(host);
+						builder.append("\r\n");
+						builder.append("Connection: close\r\n\r\n");
+						requests.add(builder.toString());
+					}
 				}
 			}
-		}
-		else
-		{
-			//POST nie gotowy jeszcze...
+			else
+			{
+				//POST nie gotowy jeszcze...
+			}
 		}
 		
 		return requests;

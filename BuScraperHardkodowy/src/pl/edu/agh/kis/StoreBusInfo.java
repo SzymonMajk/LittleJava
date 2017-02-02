@@ -7,7 +7,7 @@ import java.util.Map;
  * zapisywaæ w sobie ustalony sposób, wszystkie informacje, podawane jako paramtr odpowiedniej
  * metody, sposób sk³adowania oraz jego obs³uga nale¿y klasy implementuj¹cej interfejs
  * @author Szymon Majkut
- * @version 1.0
+ * @version 1.3
  *
  */
 public interface StoreBusInfo {

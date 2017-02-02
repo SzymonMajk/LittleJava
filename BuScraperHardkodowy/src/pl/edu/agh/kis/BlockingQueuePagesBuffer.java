@@ -10,7 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * BlockingQueue, udostêpnia równie¿ informacje o pustoœci oraz zape³nieniu bufora
  * oraz pozwala poprzez konstruktor sparametryzowany ustaliæ jego rozmiar
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.2
  *
  */
 public class BlockingQueuePagesBuffer implements PagesBuffer {

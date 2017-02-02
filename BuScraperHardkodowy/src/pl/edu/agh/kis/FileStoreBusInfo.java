@@ -2,16 +2,20 @@ package pl.edu.agh.kis;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.io.FileReader;
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Map;
+import java.io.IOException;
 
 /**
  * Klasa ma za zadanie implementowaæ metodê interfejsu StoreBusInfo, zapisuj¹c
  * otrzymywane dane w katalogach, których nazwy sugeruj¹ numer linii, w plikach
- * których nazwy bêd¹ odpowiada³y nazwom przystanków
+ * których nazwy bêd¹ odpowiada³y nazwom przystanków oraz tworz¹c katalog plików
+ * o nazwach przystanków, w których znajd¹ siê numery linii przeje¿dzaj¹cych przez
+ * przystanek wraz z kierunkiem
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.3
  */
 public class FileStoreBusInfo implements StoreBusInfo {
 
@@ -62,7 +66,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie nazwy przystanku z surowych danych otrzymanych
+	 * Zadaniem funkcji jest przygotowanie numeru linii z surowych danych otrzymanych
 	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
 	 * @param infoLineNumber numer linii wyodrêbniony przez XPath
 	 * @return informacja czy uda³o siê przygotowaæ poprawny numer linii
@@ -83,7 +87,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie kierunku przystanku z surowych danych otrzymanych
+	 * Zadaniem funkcji jest przygotowanie kierunku linii z surowych danych otrzymanych
 	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
 	 * @param infoDirection surowe dane dotycz¹ce kierunku linii
 	 * @return informacja czy uda³o siê przygotowaæ poprawny kierunek linii
@@ -113,10 +117,8 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	private boolean prepareHours(String infoHours)
 	{
 		//Odcinamy od góry wszystko do s³owa kluczowego godzina
-
 		String timeLine;
 		int hoursNumber = 24;
-		
 		
 		if(infoHours.contains("Godzina"))
 		{
@@ -127,13 +129,16 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			return false;
 		}
 		
+		//Sprwadzamy czy mamy do czynienia z lini¹ nocn¹
 		if(!infoHours.contains("15\n"))
 		{
 			hoursNumber = 8;
 		}
 		
 		timeLine = timeLine.replaceAll(" ", ",").replaceAll(",,", "");
+	
 		String[] splitedTimeLine = timeLine.split("\n");
+		
 		ArrayList<String> hoursWithMinutes = new ArrayList<String>();
 		//W tym momencie mamy 4 linijki danych ( mog¹ byæ puste ), nastêpnie dwie linijki przerwy
 		
@@ -168,17 +173,16 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		}
 		
-		//Teraz hoursWithMinutes zawiera w ka¿dym elemencie godzinê i minuty dla poszczególnych sekji
-		
+		//Teraz hoursWithMinutes zawiera w ka¿dym elemencie godzinê i minuty dla poszczególnych sekji	
 		hours = hoursWithMinutes;
 		
 		return true;
 	}
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie kierunku przystanku z surowych danych otrzymanych
-	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
-	 * @param infoHour surowe dane dotycz¹ce kierunku linii
+	 * Zadaniem funkcji jest przygotowanie pojedynczej linijki z danymi czasowymi z surowych 
+	 * danych otrzymanych w parametrze oraz poinformowanie o poprawnoœci tych danych
+	 * @param infoHour linijka, w której bêdziemy poszukiwaæ informacji dotycz¹cych czasu
 	 * @return informacja czy uda³o siê przygotowaæ poprawn¹ godzinê i minuty
 	 */
 	private boolean prepareHour(String infoHour)
@@ -198,15 +202,17 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Funkcja ma za zadanie wys³aæ przygotowane wczeœniej dane do okreœlonego pliku
-	 * w okreœlonym folderze, nie k³opocz¹c siê o rozdzielanie oraz segregacjê danych
+	 * Funkcja ma za zadanie wys³aæ przygotowane i sprawdzone wczeœniej dane do odpowiednich
+	 * katalogów, pamiêtaj¹c o tym, ¿eby zapisaæ w³aœciwe godziny odjazdów oraz zale¿noœci
+	 * pomiêdzy poszczególnymi przestankami, a liniami
 	 */
 	private void sendInfos()
-	{
+	{	
 		String fileName = lineNumber+direction+"/"+buStopName;
 		
 		File toSend = new File(fileName);
 		new File(toSend.getParent()).mkdir();
+		
 		try {
 			toSend.createNewFile();
 			storeLogger.info("Utworzy³em plik!",fileName);
@@ -230,11 +236,60 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			e.printStackTrace();
 		} 
 		
+		//Dodanie nazwy linii do linii danego przystanku
+		
+		fileName = "buStops/"+buStopName;
+		toSend = new File(fileName);
+		new File(toSend.getParent()).mkdir();
+		
+		BufferedReader output;
+		FileWriter input;
+		String line;
+		StringBuilder builder;
+		
+		try {
+			if(!toSend.exists())
+			{
+				toSend.createNewFile();
+			}
+			
+			storeLogger.info("Utworzy³em plik!",fileName);
+		} catch (IOException e) {
+			storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+			e.printStackTrace();
+		}
+
+		try {
+			
+			output = new BufferedReader(new FileReader(toSend));
+			
+			line = "";
+			builder = new StringBuilder(line);
+			
+			while((line = output.readLine()) != null)
+			{
+				builder.append(line);
+			}
+			
+			if(!builder.toString().contains(lineNumber+direction))
+			{
+				input = new FileWriter(toSend,true); //chcemy nadpisywaæ
+				input.write(lineNumber+direction+"\n");
+				input.close();
+			}
+			
+			
+			storeLogger.info("Nadpisa³em plik!",fileName);
+		} catch (IOException e) {
+			storeLogger.error("Problem z zapisem do pliku!",fileName);
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
-	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie kolejnej
-	 * porcji informacji
+	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz przetworzenie
+	 * kolejnej porcji informacji
 	 */
 	private void clear()
 	{
@@ -244,11 +299,11 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 
 	/**
-	 * Funkcja otrzymuje paczkê informacji zesk³adowanych w stringu, jest to rozk³ad
-	 * jednego przystanku dla jednej linii, przy czym te dane równie¿ musz¹ siê tam
-	 * znajdowaæ w odpowiedniej konwencji
-	 * @param allInformations paczka informacji, które musimy zapisaæ w jednym z plików
-	 * 			oprócz rozk³adu musi siê tam znajdowaæ nazwa przystanku oraz numer linii i kierunek
+	 * Funkcja otrzymuje paczkê danych wyodrêbnionych przez XPath, ma za zadanie sprawdziæ
+	 * poprawnoœæ tych danych, a je¿eli uda siê z nich wyci¹gn¹æ przydatne informacje, zapisaæ
+	 * je w okreœlony przez funkcjê SendInfo() sposób
+	 * @param allInformations paczka danych, których poprawnoœæ musimy sprawdziæ oraz wyci¹gn¹æ
+	 * z nich przydatne informacje
 	 */
 	@Override
 	public void storeInfo(Map<String,String> allInformations) {
@@ -256,7 +311,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		boolean wellPrepared = true;
 		
 		//Uruchamiamy funkcje, których zadaniem jest odpowiednie przygotowanie danych
-		
 		if(!prepareBuStopName(allInformations.get("buStopName")))
 		{
 			wellPrepared = false;
@@ -284,6 +338,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 				}
 			}
 		}
+		
 		//Uruchamiamy funkcjê wysy³aj¹c¹, je¿eli dane zosta³y przygotowane prawid³owo
 		if(wellPrepared)
 		{
@@ -297,6 +352,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	/**
 	 * Konstruktor sparametryzowany, pozwalaj¹cy na okreœlenie sposoby sk³adowana
 	 * logów, stworzony dla u³atwienia sprz¹tania po testach
+	 * @param appender okreœla sposób sk³adowania logów
 	 */
 	FileStoreBusInfo(Appends appender)
 	{
@@ -307,7 +363,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Konstruktor domyœlny, który obs³uguje domyœlne przygotowania pod system logów
+	 * Konstruktor domyœlny, który ustala domyœln¹ nazwê pliku z logami
 	 */
 	FileStoreBusInfo()
 	{
