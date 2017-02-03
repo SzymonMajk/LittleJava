@@ -76,6 +76,7 @@ public class HourBrowserTest {
 		if(testFileBuStop1.exists())
 		{
 			testFileBuStop1.delete();
+			testFileBuStop1.getParentFile().delete();
 		}
 		else
 		{
@@ -85,6 +86,7 @@ public class HourBrowserTest {
 		if(testFileBuStop2.exists())
 		{
 			testFileBuStop2.delete();
+			testFileBuStop2.getParentFile().delete();
 		}
 		else
 		{

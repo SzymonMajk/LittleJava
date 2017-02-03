@@ -1,4 +1,4 @@
-UPDATE=TRUEe
+UPDATE=TRUE
 XPATHNAZWA=//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']
 XPATHNUMER=//td/div/p[@style=' font-size: 40px;']
 XPATHCZASY=//td[@style=' vertical-align: top; text-align: left;']/table/tr/td[@style=' vertical-align: top;']/table/tr
@@ -6,7 +6,7 @@ XPATHDIREC=//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space:
 DOWNLOADMETHOD=GET
 PAGEURL=http://rozklady.mpk.krakow.pl/
 HOSTNAME=rozklady.mpk.krakow.pl
-ZAKRESLINI=4:4
+ZAKRESLINI=105:297
 MAXPRZYSTANKOW=70
 MAXKIERUNKOW=5
-SEARCH=Czarnowiejska:MiasteczkoStudenckieAGH:0:12:31:2
+eSEARCH=Czarnowiejska:MiasteczkoStudenckieAGH:0:12:31:2
