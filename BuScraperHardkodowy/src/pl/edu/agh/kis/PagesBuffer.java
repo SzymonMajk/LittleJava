@@ -25,14 +25,16 @@ public interface PagesBuffer {
 	/**
 	 * Implementacja ma za zadanie dodaæ stronê do bufora, u¿ytkownik
 	 * sam powinien zatroszczyæ siê sprawdzenie zape³nienia
+	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 * @param pageHTML Strona w HTML, któr¹ zamierzamy dodaæ do bufora
 	 */
-	public void addPage(String pageHTML);
+	public void addPage(String pageHTML) throws InterruptedException;
 	
 	/**
 	 * Implementacja ma za zadanie zwróciæ oraz usun¹æ stronê z bufora,
 	 * u¿ytkownik sam powinien zatroszczyæ siê o sprawdzenie pustoœci
+	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 * @return Strona w HTML, która zosta³a pobrana z bufora
 	 */
-	public String takePage();
+	public String takePage() throws InterruptedException;
 }

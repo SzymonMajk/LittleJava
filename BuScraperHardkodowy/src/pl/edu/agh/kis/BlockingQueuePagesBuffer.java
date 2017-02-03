@@ -30,7 +30,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * @return informacja czy kolejka jest pusta
 	 */
 	@Override
-	public boolean isEmpty() {
+	synchronized public boolean isEmpty() {
 		return buffer.isEmpty();
 	}
 
@@ -39,7 +39,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * @return informacja czy kolejka jest zape³niona
 	 */
 	@Override
-	public boolean isFull() {
+	synchronized public boolean isFull() {
 		return buffer.remainingCapacity()==0;
 	}
 
@@ -47,40 +47,28 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * Zadaniem funkcji jest umieszczenie otrzymanej w argumencie strony w buforze
 	 * w sposób bezpieczny, maj¹c ju¿ œwiadomoœæ istnienia wolnego miejsca w buforze
 	 * @param pageHTML Strona, która ma zostaæ umieszczona w buforze
+	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 */
 	@Override
-	public void addPage(String pageHTML) {
+	public void addPage(String pageHTML) throws InterruptedException {
 		bufferLogger.info("Podali mi stronê!");
 		bufferLogger.execute();
-		try {
-			//metoda put u¿ywa wait oraz notify
-			buffer.put(pageHTML);
-		} catch (InterruptedException e) {
-			// Trzeba coœ wymyœleæ...
-			e.printStackTrace();
-		}
+		buffer.put(pageHTML);
 	}
 
 	/**
 	 * Zadaniem funkcji jest pobranie oraz usuniêcie pierwszej strony z bufora
 	 * i zwrócenie jej, zak³adaj¹c ¿e coœ ju¿ znajduje siê w kolejce
 	 * @return Pierwsza strona pobrana z kolejki
+	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 */
 	@Override
-	public String takePage() {
+	public String takePage() throws InterruptedException {
 		//metoda take u¿ywa wait oraz notify
 		bufferLogger.info("Zabrali mi stronê!");
 		bufferLogger.execute();
-		String result = "";
-		
-		try {
-			result = buffer.take();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return result;
+
+		return buffer.take();
 	}
 	
 	/**

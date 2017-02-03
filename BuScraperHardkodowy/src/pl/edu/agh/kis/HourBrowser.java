@@ -60,6 +60,7 @@ public class HourBrowser {
 					result.add(line);
 				}
 				
+				buffReader.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -202,7 +203,7 @@ public class HourBrowser {
 								}
 							}
 							
-							if(builder.equals(""))
+							if(!builder.toString().equals(""))
 							{
 								builder.replace(builder.length()-1, builder.length(), "");
 							}
@@ -312,7 +313,7 @@ public class HourBrowser {
 	 * @return godziny i minuty ³¹cz¹ce przystanek koñcowy z pocz¹tkowym dla okreœlonych
 	 * kryteriów
 	 */
-	public boolean searchHours(String firstBuStopName, String secondBuStopName, String line,
+	public boolean searchHours(String firstBuStopName, String secondBuStopName,
 			int hour, int minutes, int maxTime, int typeOfDay)
 	{
 		hours.clear();
@@ -320,8 +321,8 @@ public class HourBrowser {
 		String firstLineOfSecondStop = "";
 		
 		//Wyodrêbniamy surowe dane z plików dla odpowiednich przystanków
-		ArrayList<String> timeOfStartStop = readLinesFromFile(line+"/"+firstBuStopName);
-		ArrayList<String> timeOfEndStop = readLinesFromFile(line+"/"+secondBuStopName);
+		ArrayList<String> timeOfStartStop = readLinesFromFile(firstBuStopName);
+		ArrayList<String> timeOfEndStop = readLinesFromFile(secondBuStopName);
 		firstLineOfFirstStop = firstLineOfStop(timeOfStartStop,typeOfDay);
 		firstLineOfSecondStop = firstLineOfStop(timeOfEndStop,typeOfDay);
 

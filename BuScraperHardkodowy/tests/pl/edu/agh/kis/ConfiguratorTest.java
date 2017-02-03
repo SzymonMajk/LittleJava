@@ -1,9 +1,9 @@
 package pl.edu.agh.kis;
 
 import static org.junit.Assert.*;
-
 import java.io.File;
-
+import java.util.HashMap;
+import java.util.LinkedList;
 import org.junit.Test;
 
 /**
@@ -20,47 +20,104 @@ public class ConfiguratorTest {
 	@Test
 	public void testGetXPaths() {
 		
-		Configurator conf = new Configurator("Tests/testConf",new NullAppender());
-		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		String[] paths = conf.getXPaths();
+		Configurator conf = new Configurator("Tests/testConf",
+				new LinkedList<Task>(),new NullAppender());
 		
-		assertEquals(3,paths.length);
+		HashMap<String,String> paths = conf.getXPaths();
 		
-		assertEquals("//div/p[@style=' font-size: 40px;']|"
-				+ "//div/p[@style='font-size: 40px;']|"
-				+ "//div/p[@style=' font-size: 40px; ']",paths[0]);
-		assertEquals("//p[@style=' font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex;']|"
-				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex;']|"
-				+ "//p[@style=' font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex; ']",paths[1]);
-		assertEquals("//tr[@style=' border-bottom: solid lightgray; border-width: 1px;']|"
-				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px;']|"
-				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px; ']",paths[2]);
+		assertEquals(4,paths.size());
+		
+		assertEquals("//td/p[@style=' font-size: 24px; text-align: left; "
+				+ "white-space: nowrap;']",paths.get("buStopName"));
+		assertEquals("//td/div/p[@style=' font-size: 40px;']",paths.get("lineNumber"));
+		assertEquals("//td[@style=' vertical-align: top; text-align: "
+				+ "left;']/table/tr/td[@style=' vertical-align: "
+				+ "top;']/table/tr",paths.get("hours"));
+		assertEquals("//table/tr/td/table/tr/td/div[@style=' text-align: left; "
+				+ "white-space: nowrap; border-left: solid black; border-radius: "
+				+ "20px; padding: 10px;']",paths.get("direction"));
 	}
 
 	/**
 	 * Sprawdzamy czy kolejka zapytañ tworzy siê poprawnie
 	 */
 	@Test
-	public void testGetRequests() {
+	public void testTasks() {
 		
-		Configurator conf = new Configurator("Tests/testConf",new NullAppender());
+		if(!new File("Tests/testConf").exists())
+		{
+			fail("Nie odnaleziono pliku testowego!");
+		}
 		
-		String testRequest = "POST /index.php HTTP/1.1\r\n" +
-				"Host: rozklady.mpk.krakow.pl\r\n" +
-				"Connection: close\r\n" +
-				"Content-Type: application/x-www-form-urlencoded\r\nContent-Disposition: form-data\r\n" +
-				"Content-Length: 29\r\n\r\n" +
-				"tabliczka=203__1__1\r\n";
+		LinkedList<Task> tasks = new LinkedList<Task>();
+		Configurator conf = new Configurator("Tests/testConf",
+				tasks,new NullAppender());
 		
-		assertEquals(testRequest,conf.getRequests().poll());
+		assertEquals(3,tasks.size());
+		
+		assertEquals("rozklady.mpk.krakow.pl",tasks.get(0).getHost());
+		assertEquals("4",tasks.get(0).getLineNumber());
+		assertEquals("5",tasks.get(0).getMaxBuStop());
+		assertEquals("5",tasks.get(0).getMaxDirection());
+		assertEquals("GET",tasks.get(0).getMethod());
+		
+		assertEquals("rozklady.mpk.krakow.pl",tasks.get(1).getHost());
+		assertEquals("5",tasks.get(1).getLineNumber());
+		assertEquals("5",tasks.get(1).getMaxBuStop());
+		assertEquals("5",tasks.get(1).getMaxDirection());
+		assertEquals("GET",tasks.get(1).getMethod());
+		
+		assertEquals("rozklady.mpk.krakow.pl",tasks.get(2).getHost());
+		assertEquals("6",tasks.get(2).getLineNumber());
+		assertEquals("5",tasks.get(2).getMaxBuStop());
+		assertEquals("5",tasks.get(2).getMaxDirection());
+		assertEquals("GET",tasks.get(2).getMethod());
 	}
-
+	
+	/**
+	 * Sprawdzamy czy otrzymamy dobre wyszukiwania
+	 */
+	@Test
+	public void testGetToSearch() {
+		
+		Configurator conf = new Configurator("Tests/testConf",
+				new LinkedList<Task>(),new NullAppender());
+		
+		String expected = "Czarnowiejska:MiasteczkoStudenckieAGH:0:12:51:2";
+		
+		assertEquals(expected,conf.getToSerach().get(0));
+	}
+	
+	/**
+	 * Sprawdzamy czy otrzymamy dobry pageURL
+	 */
+	@Test
+	public void testGetStartPageURL() {
+		
+		Configurator conf = new Configurator("Tests/testConf",
+				new LinkedList<Task>(),new NullAppender());
+		
+		String expected = "http://rozklady.mpk.krakow.pl/";
+		
+		assertEquals(expected,conf.getStartPageURL());
+	}
+	
+	/**
+	 * Sprawdzamy czy otrzymamy odpowiedz na pytanie czy aktualizowaæ
+	 */
+	@Test
+	public void testGetUpdateData() {
+		
+		Configurator conf = new Configurator("Tests/testConf",
+				new LinkedList<Task>(),new NullAppender());
+		
+		Boolean expected = true;
+		
+		assertEquals(expected,conf.getUpdateData());
+	}
 }

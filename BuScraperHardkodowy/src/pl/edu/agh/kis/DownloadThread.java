@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.BlockingQueue;
 
@@ -56,27 +56,27 @@ public class DownloadThread extends Thread {
 		OutputStream output;
 		
 		String line = "";
-		String respond = "";
-		String header = "";
+		StringBuilder respond = new StringBuilder();
+		StringBuilder header = new StringBuilder();
 		
 		if(downloader.createStreams())
 		{
 			input = downloader.getInputSteam();
 			output = downloader.getOutputStream();
-			
-			PrintWriter to = new PrintWriter(output);
-			to.print(request);
-			to.flush();
-			downloadLogger.info("req",request);
-			BufferedReader from;
-							
 			try {
+				
+				OutputStreamWriter to = new OutputStreamWriter(output,"UTF-8");
+				to.write(request);
+				to.flush();
+			
+				downloadLogger.info("Request:",request);
+				BufferedReader from;
 				
 				from = new BufferedReader(new InputStreamReader(input,"UTF-8"));
 				
 				while((line = from.readLine()) != null)
 				{
-					header += line;
+					header.append(line);
 					if(line.equals(""))
 					{
 						break;
@@ -85,16 +85,17 @@ public class DownloadThread extends Thread {
 				
 				while((line = from.readLine()) != null)
 				{
-					respond += line;
+					respond.append(line);
 				}
 				
+				to.close();
 				from.close();
-				
 				downloadLogger.info("Pobrano odpowiedz servera");
 			} catch (UnsupportedEncodingException e1) {
 				downloadLogger.error("Niew³aœciwe kodowanie dokumentu");
 				e1.printStackTrace();		
 			} catch (IOException e) {
+				
 				downloadLogger.error("Problem z czytaniem odpowiedzi servera");
 			}
 			
@@ -104,7 +105,7 @@ public class DownloadThread extends Thread {
 			downloadLogger.error("Nie utworzono poprawnie socketu");
 		}
 		
-		String result[] = {header,respond};
+		String result[] = {header.toString(),respond.toString()};
 
 		return result;
 	}
@@ -144,26 +145,46 @@ public class DownloadThread extends Thread {
 	 */
 	public void run()
 	{		
-		do
-		{
-			BuScrapper.numberOfWorkingThreads.incrementAndGet();
-			
-			//Pobiera kolejne zapytanie z kolejki zapytañ
-			if(!requests.isEmpty())
+		
+		BuScrapper.numberOfWorkingThreads.incrementAndGet();
+		boolean alreadyDecrement = false;
+		
+		try {
+			do
 			{
-				String[] respondFromServer = respond(requests.poll());
-
-				if(isCorrectRespond(respondFromServer))
+				String[] respondFromServer = null;
+				//Pobiera kolejne zapytanie z kolejki zapytañ
+				if(!requests.isEmpty())
+				{
+					respondFromServer = respond(requests.take());
+				}
+				
+				if(respondFromServer != null && isCorrectRespond(respondFromServer))
 				{
 					//Wystarczy dziêki specyfikacji BlockingQueue
+						
 					pagesToAnalise.addPage(respondFromServer[1]);
 					downloadLogger.info("Dodajê now¹ stronê do kolejki stron");
 				}
-			}
-			downloadLogger.execute();
-
-			BuScrapper.numberOfWorkingThreads.decrementAndGet();
-		}while(!requests.isEmpty());
+				else if(!alreadyDecrement)
+				{
+					BuScrapper.numberOfWorkingThreads.decrementAndGet();
+					alreadyDecrement = true;
+				}
+				downloadLogger.execute();
+			}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
+		} catch (InterruptedException e) {
+			downloadLogger.info("Niepoprawnie wybudzony!",e.getMessage());
+		}
+		
+		if(downloader.closeStreams())
+		{
+			downloadLogger.info("Strumienie zosta³y zamkniête poprawnie");
+		}
+		else
+		{
+			downloadLogger.error("Strumienie nie zosta³y zamkniête poprawnie");
+		}
 		
 		downloadLogger.info("DownloadThread o imieniu "+threadName+" koñczy pracê!");
 		downloadLogger.execute();

@@ -48,7 +48,7 @@ public class SnatchThread extends Thread{
 	 * odpowiada za numer linii, druga za nazwê przystanku, trzecia za godzinê, czwarta
 	 * za minuty dnia powszedniego, pi¹ta sobotê, a szósta niedzieli
 	 */
-	private String[] xPathExpressions;
+	private HashMap<String,String> xPathExpressions;
 	
 	/**
 	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
@@ -83,8 +83,8 @@ public class SnatchThread extends Thread{
 	    tidy.setSmartIndent(true);
 	    
 	    tidy.setQuiet(true);
-	    //tidy.setErrout(null);
 	    tidy.setShowErrors(0);
+	    tidy.setShowWarnings(false);
 	    tidy.setForceOutput(true);
 	    
 		ByteArrayInputStream inputStream;
@@ -133,15 +133,18 @@ public class SnatchThread extends Thread{
  		    
 		    //Tutaj wyci¹gamy pojedyncze String nazwy linii, przystanku i kierunku
 		  
-		    buStopName = xPath.compile(xPathExpressions[0]).evaluate(docXML).replaceAll("\\s","");
+		    buStopName = xPath.compile(xPathExpressions.get("buStopName")).
+		    		evaluate(docXML).replaceAll("\\s","");
 		   
-		    lineNumber = xPath.compile(xPathExpressions[1]).evaluate(docXML).replaceAll("\\s","");
+		    lineNumber = xPath.compile(xPathExpressions.get("lineNumber")).
+		    		evaluate(docXML).replaceAll("\\s","");
 		    
-		    direction = xPath.compile(xPathExpressions[3])
+		    direction = xPath.compile(xPathExpressions.get("direction"))
 		    		.evaluate(docXML).replaceAll("\\s","");
 		    
 		    //Tutaj bêdziemy wyci¹gaæ ca³e wiersze, aby wyci¹gn¹æ z nich nastêpnie odpowiednie czasy
-		    NodeList hourss = (NodeList) xPath.compile(xPathExpressions[2]).evaluate(docXML, XPathConstants.NODESET);
+		    NodeList hourss = (NodeList) xPath.compile(xPathExpressions.get("hours")).
+		    		evaluate(docXML, XPathConstants.NODESET);
 		    		    
 		    //Przelatujê po wszystkich linijkach pasuj¹cych do XPath
 		    for (int i = 0;null!=hourss && i < hourss.getLength(); ++i) 
@@ -188,21 +191,19 @@ public class SnatchThread extends Thread{
 	 * Bufora, maj¹ zostaæ obudzeni producenci
 	 */
 	public void run()
-	{		
-		do
-		{
-			BuScrapper.numberOfWorkingThreads.incrementAndGet();
-			snatchLogger.info("Pobieram z kolejki stron");
-			
-			if(!pagesToAnalise.isEmpty())
+	{	
+		try {
+			do
 			{
 				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
-			}
+				snatchLogger.info("Pobieram z kolejki stron");
+				
+				snatchLogger.execute();
+			}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
+		} catch (InterruptedException e) {
+			snatchLogger.info("Niepoprawnie wybudzony!",e.getMessage());
 			snatchLogger.execute();
-			BuScrapper.numberOfWorkingThreads.decrementAndGet();
-			
-		}while(BuScrapper.numberOfWorkingThreads.intValue() > 0 || !pagesToAnalise.isEmpty());
-		
+		}
 		snatchLogger.info("SnatchThread o imieniu "+threadName+" koñczy pracê!");
 		snatchLogger.execute();
 	}
@@ -213,13 +214,14 @@ public class SnatchThread extends Thread{
 	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
 	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, dodatkowo
 	 * posiada mo¿liwoœæ ustalenia w³asnego systemu logów
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
-	 * @param pagesToAnalise referencja do synchronizowanego bufora z pobranymi stronami
-	 * @param infoSaving referencja do obiektu, któremu nale¿y delegowaæ sk³adowanie informacji
-	 * @param appender obiekt odpowiedzialny za wysy³anie logów
+	 * @param id unikalny numer w¹tku
+	 * @param pagesToAnalise bufor ze stronami do przetworzenia
+	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
+	 * @param xPathExpressions mapa wyra¿eñ Regex do przetworzenia
+	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
-			String[] xPathExpressions,Appends appender)
+			HashMap<String,String> xPathExpressions,Appends appender)
 	{
 		threadName = "SnatchThread number " + id;
 		this.pagesToAnalise = pagesToAnalise;
@@ -228,12 +230,12 @@ public class SnatchThread extends Thread{
 		snatchLogger = new Logger();
 		snatchLogger.changeAppender(appender);
 		snatchLogger.info("SnatchThread o imieniu "+threadName+" rozpoczyna pracê!");
-		String regexs = "";
-		for(String s : xPathExpressions)
+		StringBuilder regexs = new StringBuilder();
+		for(String s : xPathExpressions.keySet())
 		{
-			regexs += s;
+			regexs.append(s);
 		}
-		snatchLogger.info("Otrzyma³em œcie¿ki XPath:",regexs);
+		snatchLogger.info("Otrzyma³em œcie¿ki XPath:",regexs.toString());
 		snatchLogger.execute();
 	}
 	
@@ -243,12 +245,13 @@ public class SnatchThread extends Thread{
 	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
 	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, ustala
 	 * domyœln¹ nazwê dla pliku do systemu logów
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
-	 * @param pagesToAnalise referencja do synchronizowanego bufora z pobranymi stronami
-	 * @param infoSaving referencja do obiektu, któremu nale¿y delegowaæ sk³adowanie informacji
+	 * @param id unikalny numer w¹tku
+	 * @param pagesToAnalise bufor ze stronami do przetworzenia
+	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
+	 * @param xPathExpressions mapa wyra¿eñ Regex do przetworzenia
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
-			String[] xPathExpressions)
+			HashMap<String,String> xPathExpressions)
 	{
 		this(id,pagesToAnalise,infoSaving,xPathExpressions,
 				new FileAppender("SnatchThread number " + id));

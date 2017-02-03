@@ -1,20 +1,20 @@
 package pl.edu.agh.kis;
 
-import java.net.Socket;
-import java.net.URL;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.io.IOException;
 
 /**
  * Klasa implementuj¹ca interfejst Downloader, umo¿liwiaj¹ca udostêpnianie strumieni
- * przy u¿yciu socketów i po³¹czenia siê z hostem podanym w konstruktorze na porcie 80
+ * dzia³aj¹cych na plikach, przeznaczona g³ównie do testów
  * @author Szymon Majkut
  * @version 1.3
  *
  */
-public class SocketDownloader implements Downloader {
+public class FileDownloader implements Downloader {
 
 	/**
 	 * Pole przechowuj¹ce na czas pobierania zawartoœci strumieñ wejœcia od hosta
@@ -25,16 +25,16 @@ public class SocketDownloader implements Downloader {
 	 * Pole przechowuj¹ce na czas pobierania zawartoœci strumieñ wyjœcia do hosta
 	 */
 	private OutputStream output;
-
-	/**
-	 * Pole przechowuj¹ce nazwê hosta
-	 */
-	private String hostName;
 	
 	/**
-	 * Pole przechowuj¹ce numer portu
+	 * Pole przechowuj¹ce nazwê pliku dla strumienia wejœciowego
 	 */
-	private int portNumber = 80;
+	private String inputFileName;
+	
+	/**
+	 * Pole przechowuj¹ce nazwê pliku dla strumienia wyjœciowego
+	 */
+	private String outputFileName;
 	
 	/**
 	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w polu prywatnym
@@ -55,22 +55,21 @@ public class SocketDownloader implements Downloader {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest otwarcie po³¹czenia HTTP na nowym Sockecie z hostem przetrzymywanym
-	 * w polu prywatnym oraz pod³¹czenie strumieni tego Socketu do odpowiednich pól prywatnych
-	 * strumieni klasy, dodatkowo klasa informuje wartoœci¹ zwracan¹ o powodzeniu swojego dzia³ania
-	 * @return informacja o powodzeniu utworzenia nowego po³¹czenia z przechowywanym hostem
+	 * Zadaniem funkcji jest otworzenie strumieni dla plików podanych w konstruktorze
+	 * @return informacja o powodzeniu utworzenia strumieni z plików
 	 */
 	@Override
 	public boolean createStreams() {
 		boolean result = true;
-		Socket socket;
+		
 		try {
-			socket = new Socket(hostName, portNumber);
-			output = socket.getOutputStream();
-			input = socket.getInputStream();
-		} catch (IOException e) {
+			input = new FileInputStream(inputFileName);
+			output= new FileOutputStream(outputFileName);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			result = false;
 		}
+		
 		return result;
 	}
 	
@@ -97,14 +96,10 @@ public class SocketDownloader implements Downloader {
 	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie nazwy Hosta
 	 * @param pageURL adres URL strony, z której wyodrêbnimy nazwê hosta
 	 */
-	SocketDownloader(String pageURL) {
+	FileDownloader(String inputFileName, String outputFileName) {
 		
-		URL url;
-		try {
-			url = new URL(pageURL);
-			hostName = url.getHost();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} 
+		this.inputFileName = inputFileName;
+		this.outputFileName = outputFileName;
 	}
+
 }

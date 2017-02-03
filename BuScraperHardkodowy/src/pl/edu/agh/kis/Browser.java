@@ -65,7 +65,7 @@ public class Browser {
 		
 			ArrayList<String> lines = new ArrayList<String>();
 			
-			if(lineBrowser.searchConnectingLines(s1, s2))
+			if(lineBrowser.searchConnectingLines("buStops/"+s1, "buStops/"+s2))
 			{
 				for(String l : lineBrowser.getLines())	
 				{
@@ -74,7 +74,8 @@ public class Browser {
 				
 				for(String l : lines)
 				{
-					hourBrowser.searchHours(s1, s2, l, hour, minutes, maxTime, typeOfDay);
+					hourBrowser.searchHours(l+"/"+s1, l+"/"+s2, 
+							hour, minutes, maxTime, typeOfDay);
 					
 					StringBuilder answer = new StringBuilder();
 					

@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
  * Istot¹ istnienia klasy jest koniecznoœæ tworzenia zestawów zapytañ dla DownloadThread
  * bior¹ jako dane zawartoœæ kolejki zadañ tasks
  * @author Szymon Majkut
- * @version 1.2
+ * @version 1.3
  *
  */
 public class RequestCreator {
@@ -21,8 +21,10 @@ public class RequestCreator {
 	/**
 	 * Funkcja przypisuje dla kolejki zapytañ zapytania z nowego zadania
 	 */
-	private BlockingQueue<String> prepareNewRequests(BlockingQueue<String> requests)
+	private BlockingQueue<String> prepareNewRequests()
 	{
+		BlockingQueue<String> requests = new ArrayBlockingQueue<String>(1);
+		
 		if(!tasks.isEmpty())
 		{
 			Task newTask = tasks.poll();
@@ -30,7 +32,7 @@ public class RequestCreator {
 			String lineNumber = newTask.getLineNumber();
 			int maxBuStop = Integer.parseInt(newTask.getMaxBuStop());
 			int maxDirection = Integer.parseInt(newTask.getMaxDirection());
-			String method = newTask.getmethod();
+			String method = newTask.getMethod();
 			String host = newTask.getHost();
 			
 			requests = new ArrayBlockingQueue<String>(maxBuStop*maxDirection);
@@ -73,8 +75,7 @@ public class RequestCreator {
 	 */
 	public BlockingQueue<String> getRequests()
 	{
-		BlockingQueue<String> requests = null;
-		return prepareNewRequests(requests);
+		return prepareNewRequests();
 	}
 	
 	/**

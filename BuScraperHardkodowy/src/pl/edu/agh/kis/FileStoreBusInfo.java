@@ -96,7 +96,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	{	
 		infoDirection = infoDirection.replace(":", "");
 		
-		if(infoDirection != null && !infoDirection.equals("") && infoDirection.contains("Do"))
+		if(!infoDirection.equals("") && infoDirection.contains("Do"))
 		{
 			storeLogger.info("Znalaz³em kierunek linii: ",infoDirection);
 			direction = infoDirection;
@@ -209,20 +209,29 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	private void sendInfos()
 	{	
 		String fileName = lineNumber+direction+"/"+buStopName;
+		BufferedReader output;
+		FileWriter input;
+		String line;
+		StringBuilder builder;
 		
 		File toSend = new File(fileName);
-		new File(toSend.getParent()).mkdir();
+		if(!new File(toSend.getParent()).mkdir())
+		{
+			storeLogger.error("Nie uda³o mi siê utworzyæ folderu!",toSend.getParent());
+		}
 		
 		try {
-			toSend.createNewFile();
+			if(!toSend.createNewFile())
+			{
+				storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+			}
 			storeLogger.info("Utworzy³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
-			e.printStackTrace();
+			storeLogger.error("Wyj¹tek przy tworzeniu pliku!",fileName,e.getMessage());
 		}
 
 		try {
-			FileWriter input = new FileWriter(toSend);
+			input = new FileWriter(toSend);
 
 			for(String s : hours)
 			{
@@ -240,23 +249,24 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		fileName = "buStops/"+buStopName;
 		toSend = new File(fileName);
-		new File(toSend.getParent()).mkdir();
-		
-		BufferedReader output;
-		FileWriter input;
-		String line;
-		StringBuilder builder;
+		if(!new File(toSend.getParent()).mkdir())
+		{
+			storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+		}
 		
 		try {
 			if(!toSend.exists())
 			{
-				toSend.createNewFile();
+				if(!toSend.createNewFile())
+				{
+					storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+				}
 			}
 			
 			storeLogger.info("Utworzy³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
-			e.printStackTrace();
+			storeLogger.error("Rzuci³em wyj¹tek przy tworzeniu pliku!",fileName,
+					e.getMessage());
 		}
 
 		try {
@@ -278,13 +288,12 @@ public class FileStoreBusInfo implements StoreBusInfo {
 				input.close();
 			}
 			
-			
+			output.close();
 			storeLogger.info("Nadpisa³em plik!",fileName);
 		} catch (IOException e) {
 			storeLogger.error("Problem z zapisem do pliku!",fileName);
 			e.printStackTrace();
 		}
-		
 	}
 	
 	/**

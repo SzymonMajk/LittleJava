@@ -60,7 +60,7 @@ public class Task {
 	 * Zwraca nazwê metody dla zapytañ
 	 * @return nazwa metody dla zapytañ
 	 */
-	public String getmethod()
+	public String getMethod()
 	{
 		return method;
 	}

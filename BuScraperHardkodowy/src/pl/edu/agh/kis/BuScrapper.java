@@ -38,11 +38,6 @@ public class BuScrapper {
 	private PagesBuffer buffer = new BlockingQueuePagesBuffer(10);
 	
 	/**
-	 * Pole prywatne przechowuj¹ce obiekt odpowiedzialny za zapisywanie gotowych wyników
-	 */
-	private StoreBusInfo infoSaver = new FileStoreBusInfo();
-	
-	/**
 	 * Pole prywatne przechowuj¹ce wyszukiwarkê po³¹czeñ
 	 */
 	private Browser browser = new Browser();
@@ -75,29 +70,39 @@ public class BuScrapper {
 		
 	    DownloadThread d1 = new DownloadThread(0,requestCreator.getRequests(),buffer,
 	    		new SocketDownloader(configurator.getStartPageURL()));
-	   /* DownloadThread d2 = new DownloadThread(1,requestCreator.getRequests(),buffer,
+	    /*DownloadThread d2 = new DownloadThread(1,requestCreator.getRequests(),buffer,
+	    		new SocketDownloader(configurator.getStartPageURL()));
+	    DownloadThread d3 = new DownloadThread(2,requestCreator.getRequests(),buffer,
+	    		new SocketDownloader(configurator.getStartPageURL()));
+	    DownloadThread d4 = new DownloadThread(3,requestCreator.getRequests(),buffer,
 	    		new SocketDownloader(configurator.getStartPageURL()));
 		*/
-		
-	    SnatchThread s1 = new SnatchThread(0,buffer,infoSaver,configurator.getXPaths());
-	   /* SnatchThread s2 = new SnatchThread(1,buffer,infoSaver,configurator.getXPaths());
-	    SnatchThread s3 = new SnatchThread(2,buffer,infoSaver,configurator.getXPaths());
-	    SnatchThread s4 = new SnatchThread(3,buffer,infoSaver,configurator.getXPaths());
-		*/        
-	    
+	    SnatchThread s1 = new SnatchThread(0,buffer,new FileStoreBusInfo(
+	    		new FileAppender("File Store"+0)),configurator.getXPaths());
+	    /*SnatchThread s2 = new SnatchThread(1,buffer,new FileStoreBusInfo(
+	    		new FileAppender("File Store"+1)),configurator.getXPaths());
+	    SnatchThread s3 = new SnatchThread(2,buffer,new FileStoreBusInfo(
+	    		new FileAppender("File Store"+2)),configurator.getXPaths());
+	    SnatchThread s4 = new SnatchThread(3,buffer,new FileStoreBusInfo(
+	    		new FileAppender("File Store"+3)),configurator.getXPaths());
+	    */
 	    d1.start();
-	    //d2.start();
+	    /*d2.start();
+	    d3.start();
+	    d4.start();*/
 	    s1.start();
-	   /* s2.start();
+	    /*s2.start();
 	    s3.start();
 	    s4.start();*/
 	    
 	    try {
 	    	
 	    d1.join();
-	    //d2.join();
+	    /*d2.join();
+	    d3.join();
+	    d4.join();*/
 	    s1.join();
-	   /* s2.join();
+	    /*s2.join();
 	    s3.join();
 	    s4.join();*/
 	    

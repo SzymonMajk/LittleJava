@@ -27,24 +27,39 @@ public class BlockingQueuePagesBufferTest {
 		
 		assertEquals(true,b.isEmpty());
 		
-		b.addPage("Page");
+		try {
+			b.addPage("Page");
+		} catch (InterruptedException e) {
+			fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+		}
 		
 		assertEquals(false,b.isEmpty());
 		
+		try {
 		b.takePage();
-		
+		} catch (InterruptedException e) {
+			fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
+		}
 		assertEquals(true,b.isEmpty());
 
 		for(int i = 0; i < size; ++i)
 		{
-			b.addPage("Page");
+			try {
+				b.addPage("Page");
+			} catch (InterruptedException e) {
+				fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+			}
 			assertEquals(false,b.isEmpty());
 		}
 		
 		for(int i = 0; i < size; ++i)
 		{
 			assertEquals(false,b.isEmpty());
-			b.takePage();
+			try {
+				b.takePage();
+			} catch (InterruptedException e) {
+				fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
+			}
 		}
 
 		assertEquals(true,b.isEmpty());
@@ -63,25 +78,40 @@ public class BlockingQueuePagesBufferTest {
 		
 		assertEquals(false,b.isFull());
 		
-		b.addPage("Page");
-		
+		try {
+			b.addPage("Page");
+		} catch (InterruptedException e) {
+			fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+		}		
 		assertEquals(false,b.isFull());
 		
-		b.takePage();
+		try {
+			b.takePage();
+			} catch (InterruptedException e) {
+				fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
+			}
 		
 		assertEquals(false,b.isFull());
 
 		for(int i = 0; i < size; ++i)
 		{
 			assertEquals(false,b.isFull());
-			b.addPage("Page");
+			try {
+				b.addPage("Page");
+			} catch (InterruptedException e) {
+				fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+			}
 		}
 		
 		assertEquals(true,b.isFull());
 		
 		for(int i = 0; i < size; ++i)
 		{
-			b.takePage();
+			try {
+				b.takePage();
+				} catch (InterruptedException e) {
+					fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
+				}
 			assertEquals(false,b.isFull());
 		}
 
@@ -97,7 +127,7 @@ public class BlockingQueuePagesBufferTest {
 		//Przygotowanie obiektów
 		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
 		
-		String result = "";
+		StringBuilder result = new StringBuilder();
 		
 		TestThread first = new TestThread(b) {
 			
@@ -106,7 +136,11 @@ public class BlockingQueuePagesBufferTest {
 			{
 				for(int i = 0; i < 2; ++i)
 				{
-					b.addPage("Page"+i);
+					try {
+						b.addPage("Page"+i);
+					} catch (InterruptedException e) {
+						fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+					}
 				}
 			}
 		};
@@ -118,7 +152,11 @@ public class BlockingQueuePagesBufferTest {
 			{
 				for(int i = 3; i > 1; --i)
 				{
-					b.addPage("Page"+i);
+					try {
+						b.addPage("Page"+i);
+					} catch (InterruptedException e) {
+						fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+					}
 				}
 			}
 		};
@@ -134,16 +172,16 @@ public class BlockingQueuePagesBufferTest {
 		
 		while(!b.isEmpty())
 		{
-			result += b.takePage();
+			result.append(b.takePage());
 		}
 		
 		assertEquals(false,b.isFull());
 		
-		assertEquals(true,result.contains("Page0"));
-		assertEquals(true,result.contains("Page1"));
-		assertEquals(true,result.contains("Page2"));
-		assertEquals(true,result.contains("Page3"));
-		assertEquals(false,result.contains("Page4"));
+		assertEquals(true,result.toString().contains("Page0"));
+		assertEquals(true,result.toString().contains("Page1"));
+		assertEquals(true,result.toString().contains("Page2"));
+		assertEquals(true,result.toString().contains("Page3"));
+		assertEquals(false,result.toString().contains("Page4"));
 	}
 
 	@Test
@@ -167,7 +205,6 @@ public class BlockingQueuePagesBufferTest {
 					try {
 						result.put(b.takePage());
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -185,7 +222,6 @@ public class BlockingQueuePagesBufferTest {
 					try {
 						result.put(b.takePage());
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -237,7 +273,6 @@ public class BlockingQueuePagesBufferTest {
 					try {
 						result.put(b.takePage());
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					
@@ -252,16 +287,20 @@ public class BlockingQueuePagesBufferTest {
 			{
 				for(int i = 0; i < size*4; ++i)
 				{
-					b.addPage("Page");
+					try {
+						b.addPage("Page");
+					} catch (InterruptedException e) {
+						fail("W¹tek zosta³ niew³aœciwie wybudzony przy dodawaniu");
+					}
 				}
 			}
 		};
 		
-		consumer.start();
 		producer.start();
-		
-		consumer.join();
+		consumer.start();
+
 		producer.join();
+		consumer.join();
 		
 		assertEquals(true,b.isEmpty());
 		assertEquals(false,b.isFull());
@@ -270,9 +309,7 @@ public class BlockingQueuePagesBufferTest {
 		assertEquals(true,result.contains("Page"));
 		assertEquals(size*4,result.size());
 	}
-
 }
-
 /**
  * Pomocnicza klasa pomagaj¹ca przy testowaniu
  * @author Szymon Majkut
@@ -282,7 +319,6 @@ public class BlockingQueuePagesBufferTest {
 class TestThread extends Thread {
 	
 	private BlockingQueuePagesBuffer b;
-	
 	
 	public BlockingQueuePagesBuffer getB() {
 		return b;
@@ -314,5 +350,3 @@ class TestThread extends Thread {
 		this.setS(s);
 	}
 }
-
-

@@ -1,19 +1,19 @@
 package pl.edu.agh.kis;
 
 import static org.junit.Assert.*;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
 
 import org.junit.Test;
 
 /**
- * Dwa proste testy dla klasy SnatchThread
+ * Test klasy SnatchThread
  * @author Szymon Majkut
- * @version 1.1b
+ * @version 1.3
  *
  */
 public class SnatchThreadTest {
@@ -25,23 +25,19 @@ public class SnatchThreadTest {
 	public void testRun() throws IOException, InterruptedException {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5,new NullAppender());
-		FileStoreBusInfo storer = new FileStoreBusInfo(new NullAppender());
-		String[] expresions = {"//div/p[@style=' font-size: 40px;']|"
-				+ "//div/p[@style='font-size: 40px;']|"
-				+ "//div/p[@style='font-size: 40px; ']",
-				"//p[@style=' font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex;']|"
-				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex;']|"
-				+ "//p[@style='font-size: 24px; text-align: center; white-space: "
-				+ "nowrap; display: inline-flex; ']",
-				"//tr[@style=' border-bottom: solid lightgray; border-width: 1px;']|"
-				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px;']|"
-				+ "//tr[@style='border-bottom: solid lightgray; border-width: 1px; ']"};
 		
-		SnatchThread testSnatch = new SnatchThread(999,pages,storer,expresions,new NullAppender());
-		//SnatchThread testSnatch2 = new SnatchThread(998,pages,storer,expresions,
-		//new NullAppender()); mo¿e istnieæ! ale po co go robiæ?
+		if(!new File("Tests/testConf").exists())
+		{
+			fail("Nie odnaleziono pliku testowego!");
+		}
+		
+		Configurator configurator = new Configurator("Tests/testConf",
+				new LinkedList<Task>(),new NullAppender());
+		
+		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(
+	    		new NullAppender()),configurator.getXPaths(), new NullAppender());
+		/*SnatchThread s2 = new SnatchThread(998,pages,new FileStoreBusInfo(
+	    		new NullAppender()),configurator.getXPaths(), new NullAppender());*/
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/testAnaliseHTMLPage");
@@ -51,37 +47,40 @@ public class SnatchThreadTest {
 				(new FileInputStream(testFile)));
 		
 		String line = "";
-		String XMLDocument = "";
+		StringBuilder XMLDocument = new StringBuilder();
 		
 		try {
 			while((line = from.readLine()) != null)
 			{
-				XMLDocument += line;
+				XMLDocument.append(line);
 			}
 			
 			from.close();
 
 		} catch (IOException e) {
-			//e.printStackTrace();
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-				
-		pages.addPage(XMLDocument);
+		pages.addPage(XMLDocument.toString());
 		
 		//Odpalmy to!
-		testSnatch.start();
-		testSnatch.join();
+		s1.start();
+		s1.join();
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
+		StringBuilder expected = new StringBuilder();
+		StringBuilder got = new StringBuilder();
 		
-		String expected = "";
-		String got = "";
-		
-		File expectedFile = new File("Tests/testKombinatTest");
-		File gotFile = new File("999/KombinatTest");
+		File expectedFile = new File("Tests/testStrugaTest");
+		File gotFile = new File("999OdTestDoKierunek/Struga");
 		
 		if(!expectedFile.exists())
 		{
 			fail("Brak pliku testowego, sprawdz katalog Tests");
+		}
+		
+		if(!gotFile.exists())
+		{
+			fail("Brak pliku wynikowego, sprawdz katalog 999OdTestDoKierunek/Struga");
 		}
 		
 		from = new BufferedReader(new InputStreamReader
@@ -90,13 +89,13 @@ public class SnatchThreadTest {
 		try {
 			while((line = from.readLine()) != null)
 			{
-				expected += line;
+				expected.append(line);
 			}
 			
 			from.close();
 
 		} catch (IOException e) {
-			//e.printStackTrace();
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testStrugaTest");
 		}
 		
 		from = new BufferedReader(new InputStreamReader
@@ -105,16 +104,16 @@ public class SnatchThreadTest {
 		try {
 			while((line = from.readLine()) != null)
 			{
-				got += line;
+				got.append(line);
 			}
 
 			from.close();
 
 		} catch (IOException e) {
-			//e.printStackTrace();
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku StrugaTest");
 		}
 		
-		assertEquals(expected,got);
+		assertEquals(expected.toString(),got.toString());
 		
 		//Usuwamy utworzony plik
 		if(gotFile.exists())
@@ -126,9 +125,5 @@ public class SnatchThreadTest {
 		{
 			fail("Nie utworzono pliku! A raczej gdzieœ siê zapodzia³!");
 		}
-		
-		
-		//jakiœ assert wykombinuj, gdy ju¿ bêdzie wypisywa³o to co ma wypisywaæ
-		//albo gdy utworzy taki plik jak ma utworzyæ, ¿e numer linii itp
 	}
 }

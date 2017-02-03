@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -36,9 +37,9 @@ public class Configurator {
 	private String startPageURL;
 	
 	/**
-	 * Pole przechowuj¹ce tablicê zapytañ XPath
+	 * Pole przechowuj¹ce mapê z zapytaniami XPath
 	 */
-	private String[] XPaths;
+	private HashMap<String,String> XPaths = new HashMap<String,String>();
 	
 	/**
 	 * Kolejka blokuj¹ca przechowywuj¹ca zadania
@@ -75,10 +76,10 @@ public class Configurator {
 	}
 	
 	/**
-	 * Funkcja ma zwracaæ tablicê z XPath'ami pochodz¹cymi z pliku konfiguracyjnego
-	 * @return tablica zawieraj¹ca œcie¿ki XPath dla snatchThreadów
+	 * Funkcja ma zwracaæ mapê z XPath'ami pochodz¹cymi z pliku konfiguracyjnego
+	 * @return mapa zawieraj¹ca œcie¿ki XPath dla snatchThreadów
 	 */
-	public String[] getXPaths()
+	public HashMap<String,String> getXPaths()
 	{
 		configuratorLogger.info("Zwracam tablicê XPath!");
 		configuratorLogger.execute();
@@ -99,19 +100,19 @@ public class Configurator {
 	
 	/**
 	 * Funkcja ma za zadanie odpowiednio przypisaæ z pliku konfiguracjnego wszystkie
-	 * linijki z wyra¿eniami XPath
+	 * linijki konfiguracyjne
 	 */
 	private void parseInfo()
 	{
 		File conf = new File(configurationFileName);
 		
 		ArrayList<String> toCheck = new ArrayList<String>();
-		String[] xPaths = {"","","",""};
+		HashMap<String,String> xPaths = new HashMap<String,String>();
 		BufferedReader reader;
 		
 		try {
 			reader = new BufferedReader(
-					new InputStreamReader(new FileInputStream(conf)));
+					new InputStreamReader(new FileInputStream(conf),"UTF-8"));
 			
 			String line = "";
 			
@@ -119,7 +120,7 @@ public class Configurator {
 			{
 				toCheck.add(line);
 			}
-			
+			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
 		}
@@ -143,23 +144,23 @@ public class Configurator {
 			}
 		    else if(s.startsWith("XPATHNAZWA="))
 			{
-				xPaths[0] = s.substring(11);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths[0]);
+				xPaths.put("buStopName", s.substring(11));
+				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("buStopName"));
 			}
 			else if(s.startsWith("XPATHNUMER="))
 			{
-				xPaths[1] = s.substring(11);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths[1]);
+				xPaths.put("lineNumber", s.substring(11));
+				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("lineNumber"));
 			}
 			else if(s.startsWith("XPATHCZASY="))
 			{
-				xPaths[2] = s.substring(11);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths[2]);
+				xPaths.put("hours", s.substring(11));
+				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("hours"));
 			}
 			else if(s.startsWith("XPATHDIREC="))
 			{
-				xPaths[3] = s.substring(11);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths[3]);
+				xPaths.put("direction", s.substring(11));
+				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("direction"));
 			}
 			else
 			{
@@ -167,7 +168,7 @@ public class Configurator {
 			}
 		}
 		
-		XPaths = xPaths;
+		this.XPaths = xPaths;
 	}
 	
 	/**
@@ -184,7 +185,7 @@ public class Configurator {
 		
 		try {
 			reader = new BufferedReader(
-					new InputStreamReader(new FileInputStream(conf)));
+					new InputStreamReader(new FileInputStream(conf),"UTF-8"));
 			
 			String line = "";
 			
@@ -193,8 +194,10 @@ public class Configurator {
 				toCheck.add(line);
 			}
 			
+			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+			e.printStackTrace();
 		}
 		
 		for(String s : toCheck)
@@ -225,7 +228,8 @@ public class Configurator {
 				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[4]);
 			}
 		}
-		
+		configuratorLogger.execute();
+
 		//Wyodrêbniamy zarkes linii
 		int separatorIndex = taskDetails[2].indexOf(":");
 
@@ -254,7 +258,7 @@ public class Configurator {
 		
 		try {
 			reader = new BufferedReader(
-					new InputStreamReader(new FileInputStream(conf)));
+					new InputStreamReader(new FileInputStream(conf),"UTF-8"));
 			
 			String line = "";
 			
@@ -263,6 +267,7 @@ public class Configurator {
 				toCheck.add(line);
 			}
 			
+			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
 		}
@@ -326,7 +331,7 @@ public class Configurator {
 	 */
 	Configurator(String configurationFileName, LinkedList<Task> tasks)
 	{
-		this(configurationFileName,tasks,new NullAppender());
+		this(configurationFileName,tasks,new FileAppender("Configurator"));
 	}
 	
 }

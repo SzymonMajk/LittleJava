@@ -22,6 +22,12 @@ public interface Downloader {
 	boolean createStreams();
 	
 	/**
+	 * Zadaniem funkcji jest zamkniêcie strumieni oraz poinformowanie o powodzeniu
+	 * @return informacja o powodzeniu zamkniêcia strumieni
+	 */
+	public boolean closeStreams();
+	
+	/**
 	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w implementacji
 	 * interfejsu
 	 * @return strumieñ wyjœciowy przechowywany w implementacji interfejsu

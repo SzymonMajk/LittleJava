@@ -45,7 +45,7 @@ public class LineBrowser {
 	{
 		ArrayList<String> result = new ArrayList<String>();
 		
-		File file = new File("buStops/"+fileName);
+		File file = new File(fileName);
 		
 		if(file.exists())
 		{
@@ -60,6 +60,7 @@ public class LineBrowser {
 					result.add(line);
 				}
 				
+				buffReader.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
