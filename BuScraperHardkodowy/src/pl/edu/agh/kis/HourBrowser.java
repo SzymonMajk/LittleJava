@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Klasa której zadaniem jest zwrócenie listy wyodrêbnionych godzin odjazdów bior¹c pod uwagê
- * wszystkie otrzymane ograniczenia oraz kierunek przejazdu
+ * Klasa której zadaniem jest zwrócenie listy wyodrêbnionych godzin odjazdówz przystanku
+ * pocz¹tkowego bior¹c pod uwagê wszystkie otrzymane ograniczenia oraz kierunek przejazdu.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class HourBrowser {
@@ -27,7 +27,7 @@ public class HourBrowser {
 	private ArrayList<String> hours = new ArrayList<String>();
 	
 	/**
-	 * Funkcja ma za zadanie zwróciæ prywatn¹ listê wyodrêbnionych godzin
+	 * Funkcja ma za zadanie zwróciæ prywatn¹ listê wyodrêbnionych godzin.
 	 * @return zwraca gotowe wyodrêbnione godziny
 	 */
 	public ArrayList<String> getHours()
@@ -76,6 +76,37 @@ public class HourBrowser {
 	}
 	
 	/**
+	 * Funkcja ma za zadanie spradziæ poprawnoœæ danych wydobytych z pliku, sprawdza
+	 * czy w ka¿dej linii znajduj¹ siê cztery dwukropki, oraz czy na pocz¹tku linni znajduje
+	 * siê liczba, a na koñcu znak dwukropka
+	 * @param linesToCheckFormat dane wydobyte z pliku, które maj¹ zostaæ sprawdzone
+	 * @return informacja o poprawnoœci formatu wydyobytych danych
+	 */
+	private boolean isGoodFormat(ArrayList<String> linesToCheckFormat)
+	{
+		for(String l : linesToCheckFormat)
+		{
+			if(!l.matches("^\\d.*:$"))
+			{
+				browserLogger.warning(l,"Niepoprawny format linijki");
+				return false;
+			}
+			else if(4 != l.length()-l.replace(":", "").length())
+			{
+				browserLogger.warning(l,"Niepoprawny format linijki");
+				return false;
+			}
+			else if(l.charAt(1) != ':' && l.charAt(2) != ':' )
+			{
+				browserLogger.warning(l,"Niepoprawny format linijki");
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Funkcja sprawdzaj¹ca poprawnoœæ wszystkich danych z argumentów i zwracaj¹ca
 	 * informacjê o ich poprawnoœci
 	 * @param hours lista godzin, sprawdzimy czy nie jest pusta
@@ -103,7 +134,7 @@ public class HourBrowser {
 			browserLogger.warning("Podana minuta wykracza poza dozwolone minuty");
 			return false;
 		}
-		else if(maxTime < 0 || startingHour+maxTime > 23)
+		else if(maxTime < 0 || maxTime > 23)
 		{
 			browserLogger.warning("Podany zakres godzin wykracza poza rozk³ad");
 			return false;
@@ -172,7 +203,7 @@ public class HourBrowser {
 		for(String l : hours)
 		{
 			System.out.println(l);
-		}		*/
+		}*/
 		
 		try {
 		//wyci¹gamy odpowiedni czas
@@ -180,11 +211,13 @@ public class HourBrowser {
 			{
 				String[] separatedHourLine = l.split(":");
 				String hour = separatedHourLine[0];
-				
-				
+								
 				//wyci¹gamy odpowiedni czas
-				if(Integer.parseInt(hour) >= startingHour &&
-						Integer.parseInt(hour) <= startingHour + maxTime)
+				if((Integer.parseInt(hour) >= startingHour &&
+					Integer.parseInt(hour) <= startingHour + maxTime) ||
+					(startingHour + maxTime > 24 &&
+					Integer.parseInt(hour) <= (startingHour + maxTime)%24 &&
+					Integer.parseInt(hour) >= 0))
 				{
 					if(separatedHourLine.length >= typeOfDay+2)
 					{
@@ -221,8 +254,8 @@ public class HourBrowser {
 		} catch (Throwable e) {
 			browserLogger.warning("B³¹d przy parsowaniu reachOut"+e.getMessage());
 		}
-		/*
-		for(String l : result)
+		
+		/*for(String l : result)
 		{
 			System.out.println(l);
 		}*/
@@ -254,10 +287,12 @@ public class HourBrowser {
 		}
 		else if(firstLineOfFirstStop.equals(""))
 		{
+			browserLogger.warning("Pierwsza linia pocz¹tkowego pusta!");
 			return false;
 		}
 		else if(firstLineOfSecondStop.equals(""))
 		{
+			browserLogger.warning("Pierwsza linia koñcowego pusta!");
 			return false;			
 		}
 		
@@ -290,19 +325,26 @@ public class HourBrowser {
 			secondFirstMinute = Integer.parseInt(firstLineOfFirstStop);					
 		}
 		
-
-		if(firstFirstHour  > secondFirstHour || firstFirstMinute > 
-			secondFirstMinute)
+		
+		if(firstFirstHour  > secondFirstHour)
 		{
 			return false;
 		}
-		
+		else if(firstFirstHour == secondFirstHour && firstFirstMinute > secondFirstMinute)
+		{
+			return false;
+		}
+
 		return true;
 	}
 	
 	/**
 	 * Funkcja odpowiada za wyodrêbnienie godzin i minut odjazdów z przystanku pierwszego
-	 * do przystanku drugiego przez przesiadek
+	 * do przystanku drugiego bez przesiadek. Najpierw wczytuje dane z plików o nazwach
+	 * równych nazwom przystanków, nastêpnie sprawdza poprawnoœæ wyci¹gniêtych danych oraz
+	 * okreœla w³aœciwe kierunki, bior¹c pod uwagê pierwsze przejazdy. Kiedy pod uwagê
+	 * brane s¹ ju¿ tylko prawid³owe linie i kierunki, wyci¹ga z nich odpowiednie godziny
+	 * oraz minuty, dla zadanych w argumentach ograniczeñ.
 	 * @param firstBuStopName nazwa pierwszego przystanku
 	 * @param secondBuStopName nazwa drugiego przystanku
 	 * @param line numer linii ³¹cz¹cej przystanki
@@ -323,29 +365,42 @@ public class HourBrowser {
 		//Wyodrêbniamy surowe dane z plików dla odpowiednich przystanków
 		ArrayList<String> timeOfStartStop = readLinesFromFile(firstBuStopName);
 		ArrayList<String> timeOfEndStop = readLinesFromFile(secondBuStopName);
-		firstLineOfFirstStop = firstLineOfStop(timeOfStartStop,typeOfDay);
-		firstLineOfSecondStop = firstLineOfStop(timeOfEndStop,typeOfDay);
-
-		//Teraz wyodrêbniamy z surowych danych listê minut, które maj¹ nast¹piæ	
-		timeOfStartStop = reachOutTime(timeOfStartStop,hour,minutes,maxTime,typeOfDay);
-		timeOfEndStop = reachOutTime(timeOfEndStop,hour,minutes,maxTime,typeOfDay);
 		
-		if(checkDirection(timeOfStartStop,timeOfEndStop,firstLineOfFirstStop,
-				firstLineOfSecondStop))
+		if(isGoodFormat(timeOfStartStop) && isGoodFormat(timeOfEndStop))
 		{
-			hours = timeOfStartStop;
+			firstLineOfFirstStop = firstLineOfStop(timeOfStartStop,typeOfDay);
+			firstLineOfSecondStop = firstLineOfStop(timeOfEndStop,typeOfDay);
+
+			//Teraz wyodrêbniamy z surowych danych listê minut, które maj¹ nast¹piæ	
+			timeOfStartStop = reachOutTime(timeOfStartStop,hour,minutes,maxTime,typeOfDay);
+			timeOfEndStop = reachOutTime(timeOfEndStop,hour,minutes,maxTime,typeOfDay);
+			
+			if(checkDirection(timeOfStartStop,timeOfEndStop,firstLineOfFirstStop,
+					firstLineOfSecondStop))
+			{
+				hours = timeOfStartStop;
+			}			
 		}
-		
+
 		browserLogger.execute();
 		return !hours.isEmpty();
 	}
 	
 	/**
-	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu logów
+	 * Konstruktor sparametryzowany pozwalaj¹cy na przypisanie systemu sk³adowania logów.
+	 * @param appender sposób wysy³ania logów
+	 */
+	public HourBrowser(Appends appender)
+	{
+		browserLogger = new Logger();
+		browserLogger.changeAppender(appender);
+	}
+	
+	/**
+	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu sk³adowania logów.
 	 */
 	public HourBrowser()
 	{
-		browserLogger = new Logger();
-		browserLogger.changeAppender(new FileAppender("HourBrowser"));
+		this(new FileAppender("HourBrowser"));
 	}
 }

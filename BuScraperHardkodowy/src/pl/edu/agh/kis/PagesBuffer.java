@@ -1,40 +1,41 @@
 package pl.edu.agh.kis;
 
 /**
- * Zadaniem interfejsu jest udostêpniæ u¿ytkownikowi funkcje pobrania zawartoœci, dodania
- * zawartoœci oraz sprawdzenia pustoœci oraz sprawdzenia zape³nienia synchronizowanego
- * bufora, na którym oprzemy metodê producent-konsument przy przetwarzaniu stron
+ * Zadaniem interfejsu jest udostêpniæ funkcje pobrania zawartoœci, dodania
+ * zawartoœci oraz sprawdzenia stanu synchronizowanego
+ * bufora ( pusty/pe³ny), na którym oprzemy metodê producent-konsument pomocn¹
+ * przy wydobywaniu danych z internetu.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public interface PagesBuffer {
 
 	/**
-	 * Implementacja ma informowaæ o pustoœci bufora
-	 * @return informacja logiczna o pustoœci bufora
+	 * Implementacja ma zwróciæ informacjê czy bufor jest pusty.
+	 * @return informacja logiczna czy bufor jest pusty
 	 */
 	public boolean isEmpty();
 	
 	/**
-	 * Implementacja ma informowaæ o zape³nieniu bufora
-	 * @return informacja logiczna o zape³nieniu bufora
+	 * Implementacja ma zwróciæ informacjê czy bufor jest pe³ny.
+	 * @return informacja logiczna czy bufor jest pe³ny
 	 */
 	public boolean isFull();
 	
 	/**
-	 * Implementacja ma za zadanie dodaæ stronê do bufora, u¿ytkownik
-	 * sam powinien zatroszczyæ siê sprawdzenie zape³nienia
+	 * Implementacja ma za zadanie dodaæ stronê do niezape³nionego bufora, u¿ytkonik
+	 * jest zobligowany do wczeœniejszego wykonania implementacji metody isFull().
 	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
-	 * @param pageHTML Strona w HTML, któr¹ zamierzamy dodaæ do bufora
+	 * @param pageHTML Kod Ÿród³owy strony HTML, który umieszczamy w niezape³nionym buforze
 	 */
 	public void addPage(String pageHTML) throws InterruptedException;
 	
 	/**
-	 * Implementacja ma za zadanie zwróciæ oraz usun¹æ stronê z bufora,
-	 * u¿ytkownik sam powinien zatroszczyæ siê o sprawdzenie pustoœci
+	 * Implementacja ma za zadanie pobraæ oraz usun¹æ stronê z niepustego bufora, u¿ytkonik
+	 * jest zobligowany do wczeœniejszego wykonania implementacji metody isEmpty().
 	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
-	 * @return Strona w HTML, która zosta³a pobrana z bufora
+	 * @return Kod Ÿród³owy strony HTML, który zosta³ pobrany z bufora
 	 */
 	public String takePage() throws InterruptedException;
 }

@@ -2,6 +2,7 @@ package pl.edu.agh.kis;
 
 import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
@@ -9,9 +10,10 @@ import java.io.IOException;
 
 /**
  * Klasa implementuj¹ca interfejst Downloader, umo¿liwiaj¹ca udostêpnianie strumieni
- * przy u¿yciu socketów i po³¹czenia siê z hostem podanym w konstruktorze na porcie 80
+ * przy u¿yciu obiektów do komunikacji sieciowej oraz po³¹czenia siê z hostem podanym 
+ * w konstruktorze na porcie numer 80.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class SocketDownloader implements Downloader {
@@ -35,9 +37,14 @@ public class SocketDownloader implements Downloader {
 	 * Pole przechowuj¹ce numer portu
 	 */
 	private int portNumber = 80;
+
+	/**
+	 * Referencja do socket'u
+	 */
+	private Socket socket;
 	
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w polu prywatnym
+	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w polu prywatnym.
 	 * @return strumieñ wyjœciowy przechowywany w polu prywatnym
 	 */
 	@Override
@@ -46,7 +53,7 @@ public class SocketDownloader implements Downloader {
 	}
 
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w polu prywatnym
+	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w polu prywatnym.
 	 * @return strumieñ wyjœciowy przechowywany w polu prywatnym
 	 */
 	@Override
@@ -55,42 +62,39 @@ public class SocketDownloader implements Downloader {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest otwarcie po³¹czenia HTTP na nowym Sockecie z hostem przetrzymywanym
-	 * w polu prywatnym oraz pod³¹czenie strumieni tego Socketu do odpowiednich pól prywatnych
-	 * strumieni klasy, dodatkowo klasa informuje wartoœci¹ zwracan¹ o powodzeniu swojego dzia³ania
+	 * Zadaniem funkcji jest otwarcie po³¹czenia HTTP na nowym Sockecie z hostem
+	 * przetrzymywanym w polu prywatnym oraz pod³¹czenie strumieni tego Socketu do
+	 * odpowiednich pól prywatnych strumieni klasy, dodatkowo klasa informuje wartoœci¹ 
+	 * zwracan¹ o powodzeniu swojego dzia³ania, ustalaj¹c maksymalny dozwolony czas
+	 * po³¹czenia, zabezpiecza siê przed zablokowaniem na metodzie read() strumienia.
 	 * @return informacja o powodzeniu utworzenia nowego po³¹czenia z przechowywanym hostem
+	 * @throws UnknownHostException wyrzucany gdy wystêpuje problem z utworzeniem po³¹czenia
+	 *         sieciowego np. z powodu braku internetu
+	 * @throws IOException wyrzucany gdy wystêpuje problem ze zwróceniem strumieni
+	 *         i przypisaniem ich do w³aœciwych pól prywatnych
 	 */
 	@Override
-	public boolean createStreams() {
+	public boolean initStreams() throws UnknownHostException, IOException {
 		boolean result = true;
-		Socket socket;
-		try {
-			socket = new Socket(hostName, portNumber);
-			output = socket.getOutputStream();
-			input = socket.getInputStream();
-		} catch (IOException e) {
-			result = false;
-		}
+		
+		socket = new Socket(hostName, portNumber);
+		socket.setSoTimeout(1000);//odpowiada za uchronienie przed blokowaniem
+		output = socket.getOutputStream();
+		input = socket.getInputStream();
+
 		return result;
 	}
 	
 	/**
-	 * Zadaniem funkcji jest zamkniêcie strumieni oraz poinformowanie o powodzeniu
-	 * @return informacja o powodzeniu zamkniêcia strumieni
+	 * Zadaniem funkcji jest zamkniêcie strumieni.
+	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub
+	 *         socket'u odpowiedzialnych za komunikacjê sieciow¹
 	 */
-	public boolean closeStreams()
+	public void closeStreams() throws IOException 
 	{
-		boolean result = true;
-		
-		try {
-			input.close();
-			output.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			result = false;
-		}
-		
-		return result;
+		input.close();
+		output.close();
+		socket.close();
 	}
 	
 	/**

@@ -7,16 +7,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 /**
- * G³ownym zadaniem klasy jest odpowiednia analiza plików konfiguracyjnych, uzupe³nianych
+ * G³ownym zadaniem klasy jest odpowiednia analiza pliku konfiguracyjnego wype³nionego
  * przez u¿ytkownika, a nastêpnie wyodrêbnienie wszystkich informacji potrzebnych dla
- * pozosta³ych komponentów BuScrappera oraz mo¿liwoœæ prostego udostêpniania ich poprzez
- * funkcje publiczne get
- * Korzysta z plików w katalogu Conf
+ * pozosta³ych komponentów BuScrappera. Zapewnia równie¿ mo¿liwoœæ prostego udostêpniania
+ * wszystkich zebranych informacji poprzez swoje gettery. Korzysta z pliku w katalogu Conf.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class Configurator {
@@ -42,9 +40,9 @@ public class Configurator {
 	private HashMap<String,String> XPaths = new HashMap<String,String>();
 	
 	/**
-	 * Kolejka blokuj¹ca przechowywuj¹ca zadania
+	 * Obiekt zajmuj¹cy siê obs³ug¹ zadañ
 	 */
-	private LinkedList<Task> tasks;
+	private TaskManager tasks;
 	
 	/**
 	 * Lista wyszukiwañ zapisanych przez u¿ytkownika
@@ -57,8 +55,8 @@ public class Configurator {
 	private boolean updateData = false;
 	
 	/**
-	 * Funkcja ma za zadanie zwróciæ adres strony URL rozpoczynaj¹cej pracê
-	 * @return adres URL strony rozpoczynaj¹cej pracê
+	 * Funkcja ma za zadanie zwróciæ adres strony URL rozpoczynaj¹cej pracê BuScrappera.
+	 * @return adres URL strony rozpoczynaj¹cej pracê BuSrappera.
 	 */
 	public String getStartPageURL()
 	{
@@ -66,9 +64,8 @@ public class Configurator {
 	}
 	
 	/**
-	 * Zwraca informacjê o tym czy dane powinny byæ zaktualizowane otrzyman¹ z pliku
-	 * konfiguracyjnego
-	 * @return informacja o tym czy dane powinny byæ zaktualizowane
+	 * Zwraca informacjê logiczn¹ okreœlaj¹c¹ czy dane powinny zostaæ zaktualizowane.
+	 * @return informacja logiczna okreœlaj¹ca czy dane powinny zostaæ zaktualizowane
 	 */
 	public boolean getUpdateData()
 	{
@@ -76,8 +73,8 @@ public class Configurator {
 	}
 	
 	/**
-	 * Funkcja ma zwracaæ mapê z XPath'ami pochodz¹cymi z pliku konfiguracyjnego
-	 * @return mapa zawieraj¹ca œcie¿ki XPath dla snatchThreadów
+	 * Funkcja zwraca mapê z zebranymi wyra¿eniami XPath dla w¹tków wy³uskuj¹cych informacje.
+	 * @return mapa zawieraj¹ca zebrane wyra¿enia XPath.
 	 */
 	public HashMap<String,String> getXPaths()
 	{
@@ -87,9 +84,9 @@ public class Configurator {
 	}
 	
 	/**
-	 * Funkcja zwraca listê z zapytaniami, które bêdzie wykonywa³ Browser
-	 * sprawdzenie poprawnoœci spoczywa na Browser
-	 * @return lista z linijkami które nale¿y wyszukaæ dla Browser
+	 * Funkcja zwraca listê z wyszukiwaniami, które bêdzie wykonywa³ Browser, sprawdzenie
+	 * poprawnoœci spada na implementacjê obiektu Browser.
+	 * @return lista z zebranymi wyszukiwaniami
 	 */
 	public ArrayList<String> getToSerach()
 	{
@@ -162,10 +159,6 @@ public class Configurator {
 				xPaths.put("direction", s.substring(11));
 				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("direction"));
 			}
-			else
-			{
-				configuratorLogger.warning("W tym kontekcie niezrozumia³a liijka konfiguracyjna",s);
-			}
 		}
 		
 		this.XPaths = xPaths;
@@ -205,27 +198,37 @@ public class Configurator {
 			if(s.startsWith("DOWNLOADMETHOD="))
 			{
 				taskDetails[0] = s.substring(15);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[0]);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - metodê protoko³u!",
+						taskDetails[0]);
 			}
 			else if(s.startsWith("HOSTNAME="))
 			{
 				taskDetails[1] = s.substring(9);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[1]);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - nazwê hosta!",
+						taskDetails[1]);
 			}
 			else if(s.startsWith("ZAKRESLINI="))
 			{
 				taskDetails[2] = s.substring(11);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[2]);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - zakres linii!",
+						taskDetails[2]);
 			}
 			else if(s.startsWith("MAXPRZYSTANKOW="))
 			{
 				taskDetails[3] = s.substring(15);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[3]);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba przystanków!",
+						taskDetails[3]);
 			}
 			else if(s.startsWith("MAXKIERUNKOW="))
 			{
 				taskDetails[4] = s.substring(13);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",taskDetails[4]);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba kierunków!",
+						taskDetails[4]);
 			}
 		}
 		configuratorLogger.execute();
@@ -233,12 +236,15 @@ public class Configurator {
 		//Wyodrêbniamy zarkes linii
 		int separatorIndex = taskDetails[2].indexOf(":");
 
-		int startLine = Integer.parseInt(taskDetails[2].substring(0, separatorIndex));
-		int endLine = Integer.parseInt(taskDetails[2].substring(separatorIndex+1, taskDetails[2].length()));
+		int startLine = Integer.parseInt(taskDetails[2].
+				substring(0, separatorIndex));
+		int endLine = Integer.parseInt(taskDetails[2].
+				substring(separatorIndex+1, taskDetails[2].length()));
 				
 		for(int i = startLine; i <= endLine; ++i)
 		{
-			tasks.add(new Task(""+i,taskDetails[3],taskDetails[4],taskDetails[0],taskDetails[1]));
+			tasks.put(new Task(i,""+i,taskDetails[3],taskDetails[4],taskDetails[0],
+					taskDetails[1]));
 		}
 		
 
@@ -278,7 +284,9 @@ public class Configurator {
 			{
 				String searchLine = s.substring(7);
 				search.add(searchLine);
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ szczegó³ zadania!",searchLine);
+				configuratorLogger.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania -- linijka wyszukiwañ!",
+						searchLine);
 			}
 		}
 		
@@ -286,12 +294,14 @@ public class Configurator {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest ustalenie pocz¹tkowego stanu
-	 * Configurator'a, pozwalaj¹cy dodatkowo na ustalenie sposobu wysy³ania logów
-	 * @param configurationFileName nazwa œcie¿ki pliku konfiguracyjnego
-	 * @param appender obiekt s³u¿¹cy do obs³ugi systemu logów
+	 * Konstruktor sparametryzowany, którego zadaniem jest przypisanie nazwy pliku
+	 * konfiguracyjnego, referencji do obiektu TaskManager oraz przypisania obiektu
+	 * odpowiedzialnego za sk³adowanie logów.
+	 * @param configurationFileName nazwa pliku konfiguracyjnego
+	 * @param tasks obiekt odpowiedzialny za obs³ugê zadañ
+	 * @param appender obiekt s³u¿¹cy do sk³adowania logów
 	 */
-	Configurator(String configurationFileName,LinkedList<Task> tasks, Appends  appender)
+	Configurator(String configurationFileName,TaskManager tasks, Appends  appender)
 	{
 		configuratorLogger = new Logger();
 		configuratorLogger.changeAppender(appender);
@@ -325,11 +335,13 @@ public class Configurator {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest ustalenie pocz¹tkowego stanu
-	 * Configurator'a
+	 * Konstruktor sparametryzowany, którego zadaniem jest przypisanie nazwy pliku
+	 * konfiguracyjnego oraz referencji do obiektu TaskManager. Przypisuje równie¿
+	 * domyœlny sposób sk³adowania logów.
 	 * @param configurationFileName nazwa œcie¿ki pliku konfiguracyjnego
+	 * @param tasks obiekt odpowiedzialny za obs³ugê zadañ
 	 */
-	Configurator(String configurationFileName, LinkedList<Task> tasks)
+	Configurator(String configurationFileName, TaskManager tasks)
 	{
 		this(configurationFileName,tasks,new FileAppender("Configurator"));
 	}

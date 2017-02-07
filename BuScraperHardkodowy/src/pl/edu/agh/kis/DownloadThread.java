@@ -2,19 +2,24 @@ package pl.edu.agh.kis;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej odpowiedzi w bufofrze,
- * wykorzystuj¹c do tego celu strumienie uzyskane przez obiekt implementuj¹cy Downloader, oraz
- * kolejkê zapytañ, utworzon¹ przez RequestCreator poprzez BuScrappera
+ * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej odpowiedzi
+ * w obiekcie implementuj¹cym PagesBuffer. Do uzyskania odpowiedzi wykorzystuje strumienie 
+ * uzyskane przez implementacjê interfejsu Downloader, oraz korzysta kolejki zapytañ, 
+ * utworzonej przez RequestCreator. Ma dostêp do dwóch statycznych pól BuScrapper'a,
+ * numberOfWorkingDownloadThreads okreœla liczbê wci¹¿ pracuj¹cych w¹tków pobieraj¹cych
+ * natomiast correctTaskExecute okreœla czy w¹tki pobieraj¹ce nie pope³ni³y b³êdu przy
+ * wykonywaniu danego zadania, aby w ten sposób unikn¹æ pomijania danych niepobranych
+ * w poprawny sposób. Niepoprawnoœæ pobieranych danych jest okreœlana poprzez wy³apywane
+ * z metod prywatnych wyj¹tki.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  */
 public class DownloadThread extends Thread {
 
@@ -46,68 +51,72 @@ public class DownloadThread extends Thread {
 	/**
 	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedŸ,
 	 * któr¹ od niego otrzymuje. Funckja jest publiczna, poniewa¿ w ten sposób pozwala
-	 * na dogodne testowanie, posiada na sztywno ustalone kodowanie UTF-8
-	 * @param request poprawne zapytanie do servera o zasób
-	 * @return para nag³ówek oraz zawartoœæ strony w HTML
+	 * na dogodne testowanie, posiada na sztywno ustalone kodowanie UTF-8.
+	 * @param request poprawne zapytanie do servera uzyskane z kolejki udostêpnionej przez
+	 * 		  RequestCreator
+	 * @return tablica obiektów String, elementem o indeksie zero jest nag³ówek odpowiedzi,
+	 *        natomiast elementem o indeksie jeden jest treœæ odpowiedz
+	 * @throws UnknownHostException wyrzucany w przypadku b³êdnego ustalenia stanu obiektu
+	 *         przeznaczonego do komunikacji sieciowej lub braku dostêpu do internetu
+	 * @throws IOException wyrzucany gdy nastêpuje problem z korzystaniem ze strumieni
+	 *         na poziomie niesieciowym
 	 */
-	public String[] respond(String request)
+	public String[] respond(String request) throws UnknownHostException, IOException
 	{
-		InputStream input;
-		OutputStream output;
-		
 		String line = "";
 		StringBuilder respond = new StringBuilder();
 		StringBuilder header = new StringBuilder();
 		
-		if(downloader.createStreams())
+		if(downloader.initStreams())
 		{
-			input = downloader.getInputSteam();
-			output = downloader.getOutputStream();
 			try {
 				
-				OutputStreamWriter to = new OutputStreamWriter(output,"UTF-8");
+				OutputStreamWriter to = new OutputStreamWriter(
+						downloader.getOutputStream(),"UTF-8");
 				to.write(request);
 				to.flush();
-			
 				downloadLogger.info("Request:",request);
 				BufferedReader from;
 				
-				from = new BufferedReader(new InputStreamReader(input,"UTF-8"));
-				
+				from = new BufferedReader(new InputStreamReader(
+						downloader.getInputSteam(),"UTF-8"));
+
+				boolean content = false;
+
 				while((line = from.readLine()) != null)
 				{
-					header.append(line);
 					if(line.equals(""))
 					{
-						break;
+						content = true;
+					}
+					if(content)
+					{
+						respond.append(line);
+					}
+					else
+					{
+						header.append(line);
 					}
 				}
 				
-				while((line = from.readLine()) != null)
-				{
-					respond.append(line);
-				}
-				
-				to.close();
-				from.close();
+				downloader.closeStreams();
+
 				downloadLogger.info("Pobrano odpowiedz servera");
 			} catch (UnsupportedEncodingException e1) {
 				downloadLogger.error("Niew³aœciwe kodowanie dokumentu");
 				e1.printStackTrace();		
 			} catch (IOException e) {
-				
 				downloadLogger.error("Problem z czytaniem odpowiedzi servera");
 			}
-			
 		}
 		else
 		{
-			downloadLogger.error("Nie utworzono poprawnie socketu");
+			downloadLogger.error("Nie utworzono socketu, brak po³¹czenia");
 		}
-		
-		String result[] = {header.toString(),respond.toString()};
 
-		return result;
+		String[] allRespond = {header.toString(),respond.toString()};
+		
+		return allRespond;
 	}
 	
 	/**
@@ -117,19 +126,22 @@ public class DownloadThread extends Thread {
 	 */
 	private boolean isCorrectRespond(String[] respond)
 	{
-		if(respond[0] == null || respond[0].equals("") || respond[1] == null || respond[1].equals(""))
+		if(respond[0] == null || respond[0].equals("") || 
+				respond[1] == null || respond[1].equals(""))
 		{
 			downloadLogger.warning("Zamiast zasobu otrzyma³em null");
-			return false;
+			throw new NullPointerException();
 		}
-		else if(respond[0].contains("HTTP/1.1 200 OK") || respond[0].contains("HTTP/1.0 200 OK"))
+		else if(respond[0].contains("HTTP/1.1 200 OK") || 
+				respond[0].contains("HTTP/1.0 200 OK"))
 		{
 			downloadLogger.info("Pobrano poprawny zasób");
 			return true;
 		}
 		else
 		{
-			downloadLogger.info("Nie zwrócono poprawnego zasobu, nie wstawiam go do kolejki",
+			downloadLogger.
+			info("Nie zwrócono poprawnego zasobu, nie wstawiam go do kolejki",
 					respond[0]);
 			return false;
 		}
@@ -146,10 +158,10 @@ public class DownloadThread extends Thread {
 	public void run()
 	{		
 		
-		BuScrapper.numberOfWorkingThreads.incrementAndGet();
+		BuScrapper.numberOfWorkingDownloadThreads.incrementAndGet();
 		boolean alreadyDecrement = false;
 		
-		try {
+		try {	
 			do
 			{
 				String[] respondFromServer = null;
@@ -158,48 +170,60 @@ public class DownloadThread extends Thread {
 				{
 					respondFromServer = respond(requests.take());
 				}
-				
-				if(respondFromServer != null && isCorrectRespond(respondFromServer))
+				else
+				{
+					BuScrapper.correctTaskExecute = true;
+					break;
+				}
+
+				if(isCorrectRespond(respondFromServer))
 				{
 					//Wystarczy dziêki specyfikacji BlockingQueue
-						
 					pagesToAnalise.addPage(respondFromServer[1]);
 					downloadLogger.info("Dodajê now¹ stronê do kolejki stron");
 				}
-				else if(!alreadyDecrement)
-				{
-					BuScrapper.numberOfWorkingThreads.decrementAndGet();
-					alreadyDecrement = true;
-				}
+				
 				downloadLogger.execute();
-			}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
+			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
 		} catch (InterruptedException e) {
-			downloadLogger.info("Niepoprawnie wybudzony!",e.getMessage());
+			downloadLogger.error("Niepoprawnie wybudzony!",e.getMessage());
+			BuScrapper.correctTaskExecute = false;
+		} catch (UnknownHostException e) {
+			downloadLogger.error("Problem z po³¹czeniem internetowym!",e.getMessage());
+			BuScrapper.correctTaskExecute = false;
+		} catch (IOException e) {
+			downloadLogger.error("Problem ze strumieniami!",e.getMessage());
+			BuScrapper.correctTaskExecute = false;
+		} catch (Throwable t) {
+			downloadLogger.error("Powa¿ny problem!",t.getMessage());
+			BuScrapper.correctTaskExecute = false;
+		} finally {
+			if(!alreadyDecrement)
+			{
+				BuScrapper.numberOfWorkingDownloadThreads.decrementAndGet();
+				alreadyDecrement = true;
+			}
+			downloadLogger.execute();
 		}
-		
-		if(downloader.closeStreams())
-		{
-			downloadLogger.info("Strumienie zosta³y zamkniête poprawnie");
-		}
-		else
-		{
-			downloadLogger.error("Strumienie nie zosta³y zamkniête poprawnie");
-		}
-		
+				
 		downloadLogger.info("DownloadThread o imieniu "+threadName+" koñczy pracê!");
 		downloadLogger.execute();
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * Konstruktor sparametryzowany, którego zadanie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do
-	 * komunikacji, mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ
-	 * przygotowanych przez RequestCreator, dodatkowo ustala równie¿ sposób sk³adowania logów
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
+	 * logów, implementacjê Downloader, która bêdzie udostêpnia³a strumienie potrzebne przy
+	 * uzyskiwaniu zasobów, implementacjê PagesBuffer do zesk³adowania ju¿ pobranych zasobów,
+	 * kolejkê zapytañ przygotowan¹ przez RequestCreator, oraz obiekt odpowiedzialny za
+	 * sk³adowanie logów.
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
+	 *        nadrzêdnym
 	 * @param requests snychronizowana kolejka zapytañ
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod
-	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹ce strumienie do pobierania zasobów
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
+	 *        siebie metod
+	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹cy strumienie do pobierania 
+	 *        zasobów
 	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
 	 */
 	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
@@ -216,19 +240,24 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
+	 * Konstruktor sparametryzowany, którego zadanie polega na tym, aby ka¿dy nowo utworzony
 	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów oraz do³¹czyæ do odpowiednich pól strumienie podane przez w¹tek nadrzêdny do
-	 * komunikacji, mia³ tak¿e dostêp do bufora œci¹gniêtych stron oraz kolejki zapytañ
-	 * przygotowanych przez RequestCreator, ustala sposób sk³adowania logów na domyœlny
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku nadrzêdnym
+	 * logów, implementacjê Downloader, która bêdzie udostêpnia³a strumienie potrzebne przy
+	 * uzyskiwaniu zasobów, implementacjê PagesBuffer do zesk³adowania ju¿ pobranych zasobów,
+	 * oraz kolejkê zapytañ przygotowan¹ przez RequestCreator. Ustala domyœlny sposób
+	 * sk³adowania logów.
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
+	 *        nadrzêdnym
 	 * @param requests snychronizowana kolejka zapytañ
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez siebie metod
-	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹ce strumienie do komunikacji z serverem
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
+	 *        siebie metod
+	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹cy strumienie do pobierania 
+	 *        zasobów
 	 */
 	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
 			Downloader downloader)
 	{
-		this(id,requests,pagesToAnalise,downloader,new FileAppender("DownloadThread number " + id));
+		this(id,requests,pagesToAnalise,downloader,
+				new ConsoleAppender());
 	}
 }

@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.LinkedList;
 
 import org.junit.Test;
 
@@ -32,7 +31,7 @@ public class SnatchThreadTest {
 		}
 		
 		Configurator configurator = new Configurator("Tests/testConf",
-				new LinkedList<Task>(),new NullAppender());
+				new TaskManager(),new NullAppender());
 		
 		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(
 	    		new NullAppender()),configurator.getXPaths(), new NullAppender());

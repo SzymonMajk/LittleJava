@@ -6,7 +6,7 @@ XPATHDIREC=//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space:
 DOWNLOADMETHOD=GET
 PAGEURL=http://rozklady.mpk.krakow.pl/
 HOSTNAME=rozklady.mpk.krakow.pl
-ZAKRESLINI=105:297
+ZAKRESLINI=208:208
 MAXPRZYSTANKOW=70
 MAXKIERUNKOW=5
-eSEARCH=Czarnowiejska:MiasteczkoStudenckieAGH:0:12:31:2
+SEARCH=MiasteczkoStudenckieAGH:Lindego:0:12:05:2

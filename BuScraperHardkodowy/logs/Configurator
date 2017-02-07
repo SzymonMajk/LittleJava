@@ -1,40 +1,30 @@
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, DOWNLOADMETHOD=GET
+Tue Feb 07 02:12:15 CET 2017: Configurator rozpoczyna pracê!
 
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, HOSTNAME=rozklady.mpk.krakow.pl
+Tue Feb 07 02:12:15 CET 2017: Wiem czy aktualizowaæ!, TRUE
 
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, ZAKRESLINI=4:4
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']
 
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, MAXPRZYSTANKOW=70
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td/div/p[@style=' font-size: 40px;']
 
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, MAXKIERUNKOW=5
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td[@style=' vertical-align: top; text-align: left;']/table/tr/td[@style=' vertical-align: top;']/table/tr
 
-Fri Feb 03 03:31:00 CET 2017: W tym kontekcie niezrozumia³a liijka konfiguracyjna, SEARCH=Czarnowiejska:MiasteczkoStudenckieAGH:0:12:31:2
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']
 
-Fri Feb 03 03:31:00 CET 2017: Configurator rozpoczyna pracê!
+Tue Feb 07 02:12:15 CET 2017: Znalaz³em URL!, http://rozklady.mpk.krakow.pl/
 
-Fri Feb 03 03:31:00 CET 2017: Wiem czy aktualizowaæ!, TRUEe
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania - metodê protoko³u!, GET
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania - nazwê hosta!, rozklady.mpk.krakow.pl
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td/div/p[@style=' font-size: 40px;']
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania - zakres linii!, 208:208
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //td[@style=' vertical-align: top; text-align: left;']/table/tr/td[@style=' vertical-align: top;']/table/tr
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba przystanków!, 70
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ XPath!, //table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba kierunków!, 5
 
-Fri Feb 03 03:31:00 CET 2017: Znalaz³em URL!, http://rozklady.mpk.krakow.pl/
+Tue Feb 07 02:12:15 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania -- linijka wyszukiwañ!, MiasteczkoStudenckieAGH:Lindego:0:12:05:2
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, GET
+Tue Feb 07 02:12:15 CET 2017: Zwracam tablicê XPath!
 
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, rozklady.mpk.krakow.pl
-
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, 4:4
-
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, 70
-
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, 5
-
-Fri Feb 03 03:31:00 CET 2017: Uda³o mi siê wyodrêbniæ szczegó³ zadania!, Czarnowiejska:MiasteczkoStudenckieAGH:0:12:31:2
-
-Fri Feb 03 03:31:00 CET 2017: Zwracam tablicê toSearch!
+Tue Feb 07 02:13:19 CET 2017: Zwracam tablicê toSearch!
 

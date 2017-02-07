@@ -3,7 +3,6 @@ package pl.edu.agh.kis;
 import static org.junit.Assert.*;
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
 import org.junit.Test;
 
 /**
@@ -26,7 +25,7 @@ public class ConfiguratorTest {
 		}
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new LinkedList<Task>(),new NullAppender());
+				new TaskManager(),new NullAppender());
 		
 		HashMap<String,String> paths = conf.getXPaths();
 		
@@ -54,29 +53,42 @@ public class ConfiguratorTest {
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		LinkedList<Task> tasks = new LinkedList<Task>();
+		TaskManager tasks = new TaskManager();
 		Configurator conf = new Configurator("Tests/testConf",
 				tasks,new NullAppender());
 		
-		assertEquals(3,tasks.size());
+		assertEquals(true,tasks.hasNextTask());
+		Task newTask = tasks.getNextTask();
+		tasks.removeTask(newTask.getId());
 		
-		assertEquals("rozklady.mpk.krakow.pl",tasks.get(0).getHost());
-		assertEquals("4",tasks.get(0).getLineNumber());
-		assertEquals("5",tasks.get(0).getMaxBuStop());
-		assertEquals("5",tasks.get(0).getMaxDirection());
-		assertEquals("GET",tasks.get(0).getMethod());
+		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("4",newTask.getLineNumber());
+		assertEquals("5",newTask.getMaxBuStop());
+		assertEquals("5",newTask.getMaxDirection());
+		assertEquals("GET",newTask.getMethod());
 		
-		assertEquals("rozklady.mpk.krakow.pl",tasks.get(1).getHost());
-		assertEquals("5",tasks.get(1).getLineNumber());
-		assertEquals("5",tasks.get(1).getMaxBuStop());
-		assertEquals("5",tasks.get(1).getMaxDirection());
-		assertEquals("GET",tasks.get(1).getMethod());
+		assertEquals(true,tasks.hasNextTask());
+		newTask = tasks.getNextTask();
+		tasks.removeTask(newTask.getId());
 		
-		assertEquals("rozklady.mpk.krakow.pl",tasks.get(2).getHost());
-		assertEquals("6",tasks.get(2).getLineNumber());
-		assertEquals("5",tasks.get(2).getMaxBuStop());
-		assertEquals("5",tasks.get(2).getMaxDirection());
-		assertEquals("GET",tasks.get(2).getMethod());
+		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("5",newTask.getLineNumber());
+		assertEquals("5",newTask.getMaxBuStop());
+		assertEquals("5",newTask.getMaxDirection());
+		assertEquals("GET",newTask.getMethod());
+		
+		assertEquals(true,tasks.hasNextTask());
+		newTask = tasks.getNextTask();
+		tasks.removeTask(newTask.getId());
+		
+		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("6",newTask.getLineNumber());
+		assertEquals("5",newTask.getMaxBuStop());
+		assertEquals("5",newTask.getMaxDirection());
+		assertEquals("GET",newTask.getMethod());
+		
+		assertEquals(false,tasks.hasNextTask());
+
 	}
 	
 	/**
@@ -86,7 +98,7 @@ public class ConfiguratorTest {
 	public void testGetToSearch() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new LinkedList<Task>(),new NullAppender());
+				new TaskManager(),new NullAppender());
 		
 		String expected = "Czarnowiejska:MiasteczkoStudenckieAGH:0:12:51:2";
 		
@@ -100,7 +112,7 @@ public class ConfiguratorTest {
 	public void testGetStartPageURL() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new LinkedList<Task>(),new NullAppender());
+				new TaskManager(),new NullAppender());
 		
 		String expected = "http://rozklady.mpk.krakow.pl/";
 		
@@ -114,7 +126,7 @@ public class ConfiguratorTest {
 	public void testGetUpdateData() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new LinkedList<Task>(),new NullAppender());
+				new TaskManager(),new NullAppender());
 		
 		Boolean expected = true;
 		

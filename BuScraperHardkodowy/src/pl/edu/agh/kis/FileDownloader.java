@@ -8,10 +8,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Klasa implementuj¹ca interfejst Downloader, umo¿liwiaj¹ca udostêpnianie strumieni
- * dzia³aj¹cych na plikach, przeznaczona g³ównie do testów
+ * Klasa implementuj¹ca interfejs Downloader, umo¿liwiaj¹ca udostêpnianie strumieni
+ * do plików, jest przeznaczona g³ównie do testów.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class FileDownloader implements Downloader {
@@ -37,7 +37,7 @@ public class FileDownloader implements Downloader {
 	private String outputFileName;
 	
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w polu prywatnym
+	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w polu prywatnym.
 	 * @return strumieñ wyjœciowy przechowywany w polu prywatnym
 	 */
 	@Override
@@ -46,7 +46,7 @@ public class FileDownloader implements Downloader {
 	}
 
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w polu prywatnym
+	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w polu prywatnym.
 	 * @return strumieñ wyjœciowy przechowywany w polu prywatnym
 	 */
 	@Override
@@ -55,11 +55,11 @@ public class FileDownloader implements Downloader {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest otworzenie strumieni dla plików podanych w konstruktorze
-	 * @return informacja o powodzeniu utworzenia strumieni z plików
+	 * Zadaniem funkcji jest otworzenie strumieni dla plików podanych w konstruktorze.
+	 * @return informacja o powodzeniu utworzenia strumieni do plików
 	 */
 	@Override
-	public boolean createStreams() {
+	public boolean initStreams() {
 		boolean result = true;
 		
 		try {
@@ -74,27 +74,23 @@ public class FileDownloader implements Downloader {
 	}
 	
 	/**
-	 * Zadaniem funkcji jest zamkniêcie strumieni oraz poinformowanie o powodzeniu
+	 * Zadaniem funkcji jest zamkniêcie strumieni przechowywanych w polach prywatnych.
 	 * @return informacja o powodzeniu zamkniêcia strumieni
+	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub dostêpu
+	 *         do plików.
 	 */
-	public boolean closeStreams()
+	public void closeStreams() throws IOException
 	{
-		boolean result = true;
-		
-		try {
-			input.close();
-			output.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			result = false;
-		}
-		
-		return result;
+		input.close();
+		output.close();
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie nazwy Hosta
-	 * @param pageURL adres URL strony, z której wyodrêbnimy nazwê hosta
+	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie nazw plików
+	 * odpowiedzialnych za dane przychodz¹ce oraz dane wysy³ane ( dane przychodz¹ce s¹
+	 * czytane z pliku inputFileName, natomiast wysy³ane s¹ do pliku outputFileName ).
+	 * @param inputFileName nazwa pliku odpowiedzialnego za dane przychodz¹ce
+	 * @param outputFileName nazwa pliku odpowiedzialnego za dane wysy³ane
 	 */
 	FileDownloader(String inputFileName, String outputFileName) {
 		

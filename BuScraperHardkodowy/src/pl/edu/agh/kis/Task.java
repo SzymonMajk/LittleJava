@@ -2,20 +2,54 @@ package pl.edu.agh.kis;
 
 /**
  * Klasa przechowuj¹ca pojedyncze zadanie do wykonania dla BuScrappera
- * mo¿e zwracaæ szczegó³y zadania, a jego stan jest ustalany w konstruktorze
+ * mo¿e zwracaæ szczegó³y zadania, a jego stan jest ustalany w konstruktorze.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class Task {
 
+	private int id;
+	
+	/**
+	 * Funkcja zwraca indywidualny numer zadania jednoznacznie je okreœlaj¹cy.
+	 * @return indywidualny numer zadania jednoznacznie je okreœlaj¹cy
+	 */
+	public int getId()
+	{
+		return id;
+	}
+	
+	private int status;
+	
+	/**
+	 * Funkcja pozwala na zmianê statusu zadania wraz z okreœleniem poprawnoœci argumentu.
+	 * @param i nowy status zadania
+	 */
+	public void changeStatus(int i)
+	{
+		if(i >= 0 && i <= 2)
+		{
+			status = i;
+		}
+	}
+	
+	/**
+	 * Funkcja zwraca status zadania.
+	 * @return status zadania
+	 */
+	public int getStatus()
+	{
+		return status;
+	}
+	
 	/**
 	 * Przechowuje numer linii obs³ugiwanej przez zadanie
 	 */
 	private String lineNumber;
 	
 	/**
-	 * Zwraca numer linii obs³ugiwanej przez zadanie
+	 * Zwraca numer linii obs³ugiwanej przez zadanie.
 	 * @return numer linii obs³ugiwanej przez zadanie
 	 */
 	public String getLineNumber()
@@ -29,7 +63,7 @@ public class Task {
 	private String maxBuStop;
 	
 	/**
-	 * Zwraca maksymaln¹ liczbê przystanków
+	 * Zwraca maksymaln¹ liczbê przystanków.
 	 * @return maksymalna liczba przystanków
 	 */
 	public String getMaxBuStop()
@@ -43,7 +77,7 @@ public class Task {
 	private String maxDirection = "1";
 	
 	/**
-	 * Zwraca maksymaln¹ liczbê kierunków
+	 * Zwraca maksymaln¹ liczbê kierunków.
 	 * @return maksymalna liczba kierunków
 	 */
 	public String getMaxDirection()
@@ -57,7 +91,7 @@ public class Task {
 	private String method = "GET";
 	
 	/**
-	 * Zwraca nazwê metody dla zapytañ
+	 * Zwraca nazwê metody dla zapytañ.
 	 * @return nazwa metody dla zapytañ
 	 */
 	public String getMethod()
@@ -71,8 +105,8 @@ public class Task {
 	private String host = "";
 	
 	/**
-	 * Zwraca nazwê hosta dla zapytañ
-	 * @return nazwa hosta dla zapytañ
+	 * Zwraca nazwê hosta zapytañ.
+	 * @return nazwa hosta zapytañ
 	 */
 	public String getHost()
 	{
@@ -80,19 +114,22 @@ public class Task {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest ustalenie stanu obiektu
+	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie wszystkich
+	 * danych potrzebnych do ustalenia stanu pocz¹tkowego zadania, otrzymanych w argumentach.
 	 * @param lineNumber numer linii dla zapytañ
 	 * @param maxBuStop maksymalna liczba przystanków
 	 * @param maxDirection maksymalna liczba kierunków
 	 * @param method metoda dla zapytañ
 	 * @param host nazwa hosta dla zapytañ
 	 */
-	Task(String lineNumber, String maxBuStop, String maxDirection, String method, String host)
+	Task(int id,String lineNumber, String maxBuStop, String maxDirection, String method, String host)
 	{
+		this.id = id;
 		this.lineNumber = lineNumber;
 		this.maxBuStop = maxBuStop;
 		this.maxDirection = maxDirection;
 		this.method = method;
 		this.host = host;
+		status = 0;
 	}
 }

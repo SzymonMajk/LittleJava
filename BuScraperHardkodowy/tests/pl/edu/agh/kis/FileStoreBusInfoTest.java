@@ -44,7 +44,7 @@ public class FileStoreBusInfoTest {
 		BufferedReader bufferedReader;
 		String expected;
 		String line;
-		String got;
+		StringBuilder got;
 				
 		//Sprawdzanie zawartoœci utworzonych plików i ich usuniêcie
 		testFile = new File("999OdTestDoKierunek/PrzystanekTest");
@@ -54,16 +54,16 @@ public class FileStoreBusInfoTest {
 			expected = "23:1:1:1:0:1:1:1:1:1:1:1:2:1:1:1:3:1:1:1:4:1:1:1:";
 					
 			line = "";
-			got = "";
+			got = new StringBuilder();
 			
 			bufferedReader = new BufferedReader(new FileReader(testFile));
 			
 			while((line= bufferedReader.readLine()) != null)
 			{
-				got += line;
+				got.append(line);
 			}
 			bufferedReader.close();
-			assertEquals(expected,got);
+			assertEquals(expected,got.toString());
 			testFile.delete();
 			bufferedReader.close();
 		}

@@ -21,13 +21,13 @@ import org.xml.sax.SAXParseException;
 
 /**
  * Klasa w¹tków, których zadaniem jest wyodrêbnienie zawartoœci ze strony, która znajduje
- * siê ju¿ w buforze, metod tej klasy nie interesuje pochodzenie stron, a jedynie ustalony
- * w odpowiednim pliku XPath elementów, które musi wyodrêbniæ, posiada obiekt implementuj¹cy 
- * interfejs StoreBusInfo, do którego oddelegowuje obowi¹zek zesk³adowania otrzymanych 
- * informacji, posiada równie¿ swój w³asny system logów, z wyjœciem do pliku o nazwie równej 
- * id dzia³aj¹cego w¹tku
+ * siê ju¿ w buforze, metod tej klasy nie interesuje pochodzenie stron, a jedynie to za
+ * pomoc¹ jakich wyra¿eñ XPath ma dobraæ siê do elementów, które musi wyodrêbniæ, posiada 
+ * obiekt implementuj¹cy interfejs StoreBusInfo, do którego oddelegowuje obowi¹zek 
+ * zesk³adowania wyodrêbnionych informacji, posiada równie¿ swój w³asny system logów, 
+ * z wyjœciem do pliku o nazwie równej id dzia³aj¹cego w¹tku.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class SnatchThread extends Thread{
@@ -188,20 +188,28 @@ public class SnatchThread extends Thread{
 	 * wœród zawartych na niej danych, wyodrêbnienie danych pasuj¹cych do posiadanych przez
 	 * w¹tek wyra¿eñ XPath oraz pózniejsze zesk³adowanie ich, oddelegowuj¹c zadanie do
 	 * odpowiedniego obiektu implementuj¹cego interfejs StoreBusInfo, w przypadku pustego
-	 * Bufora, maj¹ zostaæ obudzeni producenci
+	 * Bufora, maj¹ zostaæ obudzone w¹tki pobieraj¹ce.
 	 */
 	public void run()
 	{	
+		
 		try {
 			do
 			{
-				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(pagesToAnalise.takePage())));
-				snatchLogger.info("Pobieram z kolejki stron");
+				if(!pagesToAnalise.isEmpty())
+				{
+					snatchLogger.info("Pobieram z kolejki stron");
+					infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(
+							pagesToAnalise.takePage())));
+				}
 				
 				snatchLogger.execute();
-			}while(BuScrapper.numberOfWorkingThreads.intValue() > 0);
+			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
 		} catch (InterruptedException e) {
-			snatchLogger.info("Niepoprawnie wybudzony!",e.getMessage());
+			snatchLogger.error("Niepoprawnie wybudzony!",e.getMessage());
+			snatchLogger.execute();
+		} catch (Throwable t) {
+			snatchLogger.error("Niepoprawne zapisanie!",t.getMessage());
 			snatchLogger.execute();
 		}
 		snatchLogger.info("SnatchThread o imieniu "+threadName+" koñczy pracê!");
@@ -209,16 +217,19 @@ public class SnatchThread extends Thread{
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
-	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
-	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, dodatkowo
-	 * posiada mo¿liwoœæ ustalenia w³asnego systemu logów
-	 * @param id unikalny numer w¹tku
-	 * @param pagesToAnalise bufor ze stronami do przetworzenia
+	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo
+	 * utworzony w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ
+	 * w systemie logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz 
+	 * podarowany przez w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie 
+	 * uzyskanych danych. Przypisuje obiekt odpowiedzialny za sk³adowanie logów.
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
+	 *        nadrzêdnym
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
+	 *        siebie metod
 	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
-	 * @param xPathExpressions mapa wyra¿eñ Regex do przetworzenia
-	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
+	 * @param xPathExpressions mapa wyra¿eñ XPath wykorzystywanych przy wyodrêbnianiu
+	 *        danych
+	 * @param appender obiekt odpowiedzialny za sk³adowanie logów	 
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
 			HashMap<String,String> xPathExpressions,Appends appender)
@@ -240,15 +251,19 @@ public class SnatchThread extends Thread{
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo utworzony
-	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz podarowany przez
-	 * w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie uzyskanych danych, ustala
-	 * domyœln¹ nazwê dla pliku do systemu logów
-	 * @param id unikalny numer w¹tku
-	 * @param pagesToAnalise bufor ze stronami do przetworzenia
+	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo
+	 * utworzony w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ
+	 * w systemie logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz 
+	 * podarowany przez w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie 
+	 * uzyskanych danych. Ustala domyœlny sposób sk³adowania logów.
+	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
+	 *        nadrzêdnym
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
+	 *        siebie metod
 	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
-	 * @param xPathExpressions mapa wyra¿eñ Regex do przetworzenia
+	 * @param xPathExpressions mapa wyra¿eñ XPath wykorzystywanych przy wyodrêbnianiu
+	 *        danych
+	 * @param appender obiekt odpowiedzialny za sk³adowanie logów	
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
 			HashMap<String,String> xPathExpressions)

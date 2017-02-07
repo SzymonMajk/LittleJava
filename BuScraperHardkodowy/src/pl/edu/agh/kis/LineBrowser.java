@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Klasa odpowiedzialna za wyszukiwanie linii ³¹cz¹ch podane przystanki z okreœleniem kierunku
+ * Klasa odpowiedzialna za wyszukiwanie linii ³¹cz¹ch podane przystanki bior¹c pod uwagê
+ * kierunek.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class LineBrowser {
@@ -27,7 +28,7 @@ public class LineBrowser {
 	private ArrayList<String> lines;
 	
 	/**
-	 * Funkcja zwracaj¹ca przechowywane przez klasê linie
+	 * Funkcja zwracaj¹ca przechowywane przez klasê linie.
 	 * @return lista linii przechowywanych przez klasê
 	 */
 	public ArrayList<String> getLines()
@@ -107,7 +108,7 @@ public class LineBrowser {
 	
 	/**
 	 * Funkcja ma za zadanie wyodrêbniæ linie ³¹cz¹ce dwa konkretne przystanki podane
-	 * w argumentach funkcji
+	 * w argumentach funkcji.
 	 * @param firstBuStopName przystanek pocz¹tkowy
 	 * @param secondBuStopName przystanek koñcowy
 	 * @return zwraca informacjê czy uda³o siê wyodrêbniæ przynajmniej jeden przystanek
@@ -122,7 +123,8 @@ public class LineBrowser {
 	}
 	
 	/**
-	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu logów
+	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu sposobu sk³adowania
+	 * logów.
 	 */
 	public LineBrowser()
 	{

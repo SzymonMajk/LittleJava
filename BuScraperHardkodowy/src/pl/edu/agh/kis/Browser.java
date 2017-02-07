@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 /**
  * Klasa ma udostêpniaæ funkcjonalnoœæ wyszukiwarki z zesk³adowanych przez BuScrappera danych
- * wykorzystuje funkcjonalnoœci dwóch obiektów pomocniczych
+ * wykorzystuje funkcjonalnoœci dwóch obiektów pomocniczych LineBrowser oraz HourBrowser.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class Browser {
@@ -41,9 +41,11 @@ public class Browser {
 	}
 	
 	/**
-	 * Funkcja ma za zadanie zadañ wyszukania, które zosta³y podane przez u¿ytkownika
-	 * oraz posiadaj¹ poprawn¹ formê
-	 * @param search Lista wyrzukiwañ zadanych przez u¿ytkownika
+	 * Funkcja ma za zadanie zadaæ wyszukania, które zosta³y podane przez u¿ytkownika
+	 * sprawdziæ poprawnoœæ ka¿dego z nich, nastêpnie przy u¿yciu LineBrowser znaleŸæ
+	 * wszystkie linie ³¹cz¹ce przystanki podane w wyszukaniu, a przy pomocy HourBrowser
+	 * wybraæ odpowiednie godziny i wypisaæ je na standardowe wyjœcie.
+	 * @param search Lista wyrzukiwañ otrzymana od obiektu Configurator
 	 */
 	public void serch(ArrayList<String> search)
 	{
@@ -84,11 +86,23 @@ public class Browser {
 						answer.append(s+"\n");
 					}
 					
+					//Wypisanie wyników
 					if(!answer.toString().equals(""))
 					{
-						System.out.println("Mo¿esz skorzystaæ z linii: "+l.substring(0, 3));
-						System.out.println(answer.toString()+"\n");
-	
+						if(l.substring(0, 3).matches("^\\d\\d\\d"))
+						{
+							System.out.println("Mo¿esz skorzystaæ z linii: "+l.substring(0, 3));
+
+						}
+						else if(l.substring(0, 2).matches("^\\d\\d"))
+						{
+							System.out.println("Mo¿esz skorzystaæ z linii: "+l.substring(0, 2));
+						}
+						else if(l.substring(0, 1).matches("^\\d"))
+						{
+							System.out.println("Mo¿esz skorzystaæ z linii: "+l.substring(0, 1));
+						}
+						System.out.println(answer.toString());
 					}
 				}
 			}
@@ -96,7 +110,6 @@ public class Browser {
 			{
 				System.out.println("Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami");
 			}
-		
 		}
 	}
 }

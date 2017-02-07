@@ -1,91 +1,97 @@
 package pl.edu.agh.kis;
 
-import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
  * Istot¹ istnienia klasy jest koniecznoœæ tworzenia zestawów zapytañ dla DownloadThread
- * bior¹ jako dane zawartoœæ kolejki zadañ tasks
+ * przy pomocy metody publicznej, która otrzymuje odpowiednie zadanie w argumencie.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  *
  */
 public class RequestCreator {
 
 	/**
-	 * Kolejka zadañ, z których przygotujemy zapytania
+	 * Kolejka poprawnych zapytañ
 	 */
-	private LinkedList<Task> tasks = new LinkedList<Task>();
+	private BlockingQueue<String> requests = new ArrayBlockingQueue<String>(1);
 	
 	/**
-	 * Funkcja przypisuje dla kolejki zapytañ zapytania z nowego zadania
+	 * Funkcja pozwala na zwrócenie kolejki z gotowymi zapytaniami. U¿ytkonik jest zobligowany
+	 * do wczeœniejszego uruchomienia prepareNewRequests() oraz jest zachêcony do u¿ycia
+	 * clear() przed kolejnym u¿yciem tej funkcji.
+	 * @return gotowe zapytania przechowywane w polu prywatnym.
 	 */
-	private BlockingQueue<String> prepareNewRequests()
+	public BlockingQueue<String> getRequests()
 	{
-		BlockingQueue<String> requests = new ArrayBlockingQueue<String>(1);
-		
-		if(!tasks.isEmpty())
-		{
-			Task newTask = tasks.poll();
-			
-			String lineNumber = newTask.getLineNumber();
-			int maxBuStop = Integer.parseInt(newTask.getMaxBuStop());
-			int maxDirection = Integer.parseInt(newTask.getMaxDirection());
-			String method = newTask.getMethod();
-			String host = newTask.getHost();
-			
-			requests = new ArrayBlockingQueue<String>(maxBuStop*maxDirection);
-			
-			if(method.equals("GET"))
-			{
-				for(int i = 0; i < maxDirection; ++i)
-				{
-					for(int j = 0; j < maxBuStop; ++j)
-					{
-						StringBuilder builder = new StringBuilder();
-						builder.append(method);
-						builder.append(" /?lang=PL&rozklad=20170120&linia=");
-						builder.append(lineNumber);
-						builder.append("__");
-						builder.append(i);
-						builder.append("__");
-						builder.append(j);
-						builder.append(" HTTP/1.1\r\n");
-						builder.append("Host: ");
-						builder.append(host);
-						builder.append("\r\n");
-						builder.append("Connection: close\r\n\r\n");
-						requests.add(builder.toString());
-					}
-				}
-			}
-			else
-			{
-				//POST nie gotowy jeszcze...
-			}
-		}
-		
 		return requests;
 	}
 	
 	/**
-	 * Funkcja ma za zadanie zwróciæ kolejkê z zapytaniami dla DownloadThread
-	 * @return gotowa kolejka z nowymi requestami dla DownloadThread
+	 * Zadaniem funkcji jest sprawdzenie poprawnoœci zadania.
+	 * @param taskToValidate zadanie którego poprawnoœæ musimy sprawdziæ
+	 * @return informacja o poprawnoœci sprawdzenia zadania
 	 */
-	public BlockingQueue<String> getRequests()
+	public boolean isGoodTask(Task taskToValidate)
 	{
-		return prepareNewRequests();
+		return true;
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest pod³¹czenie do obiektu
-	 * kolejki zadañ
-	 * @param tasks kolejka zadañ, z których przygotujemy zapytania dla DownloadThread
+	 * Funkcja otrzymuje w argumencie zadanie, z za³o¿eniem, ¿e u¿ytkownik ju¿ wczeœniej
+	 * sprawdzi³ jego poprawnoœæ za pomoc¹ metody isGoodTask(), tworzy na jego podstawie
+	 * kolejkê blokuj¹c¹ z zapytaniami dla obiektów DownloadThread.
+	 * @param newTask
+	 * @return
 	 */
-	RequestCreator(LinkedList<Task> tasks)
+	public void prepareNewRequests(Task newTask)
 	{
-		this.tasks = tasks;
+		String lineNumber = newTask.getLineNumber();
+		int maxBuStop = Integer.parseInt(newTask.getMaxBuStop());
+		int maxDirection = Integer.parseInt(newTask.getMaxDirection());
+		String method = newTask.getMethod();
+		String host = newTask.getHost();
+				
+		BlockingQueue<String> requests = new ArrayBlockingQueue<String>(maxBuStop*maxDirection);
+		
+		if(method.equals("GET"))
+		{
+			for(int i = 0; i < maxDirection; ++i)
+			{
+				for(int j = 0; j < maxBuStop; ++j)
+				{
+					StringBuilder builder = new StringBuilder();
+					builder.append(method);
+					builder.append(" /?lang=PL&rozklad=20170120&linia=");
+					builder.append(lineNumber);
+					builder.append("__");
+					builder.append(i);
+					builder.append("__");
+					builder.append(j);
+					builder.append(" HTTP/1.1\r\n");
+					builder.append("Host: ");
+					builder.append(host);
+					builder.append("\r\n");
+					builder.append("Connection: close\r\n\r\n");
+					requests.add(builder.toString());
+				}
+			}
+		}
+		else
+		{
+			//POST nie gotowy jeszcze...
+		}
+		
+	this.requests = requests;
 	}
 	
+	/**
+	 * Funkcja odpowiada za wyczyszczenie kolejki, przypisuj¹c do pola prywatnego j¹
+	 * przechowuj¹cego nowej pustej kolejki o maksymalnym rozmiarze równym jeden.
+	 */
+	public void clear()
+	{
+		requests = new ArrayBlockingQueue<String>(1);
+	}
 }

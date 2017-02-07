@@ -9,13 +9,12 @@ import java.util.Map;
 import java.io.IOException;
 
 /**
- * Klasa ma za zadanie implementowaæ metodê interfejsu StoreBusInfo, zapisuj¹c
- * otrzymywane dane w katalogach, których nazwy sugeruj¹ numer linii, w plikach
- * których nazwy bêd¹ odpowiada³y nazwom przystanków oraz tworz¹c katalog plików
- * o nazwach przystanków, w których znajd¹ siê numery linii przeje¿dzaj¹cych przez
- * przystanek wraz z kierunkiem
+ * Klasa ma za zadanie implementowaæ metodê interfejsu StoreBusInfo, zapisuj¹c otrzymywane
+ * dane w katalogach, których nazwy sugeruj¹ numer linii, w plikach których nazwy bêd¹
+ * odpowiada³y nazwom przystanków oraz tworz¹c katalog plików o nazwach przystanków, 
+ * w których znajd¹ siê numery linii przeje¿dzaj¹cych przez przystanek wraz z kierunkiem.
  * @author Szymon Majkut
- * @version 1.3
+ * @version 1.4
  */
 public class FileStoreBusInfo implements StoreBusInfo {
 
@@ -52,7 +51,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	private boolean prepareBuStopName(String infoBuStopName)
 	{
-		if(infoBuStopName != null && !infoBuStopName.equals("") )//&& infoBuStopName.matches("\\w+"))
+		if(infoBuStopName != null && !infoBuStopName.equals("") )
 		{
 			storeLogger.info("Znalaz³em nazwê linii: ",infoBuStopName);
 			buStopName = infoBuStopName;
@@ -73,7 +72,8 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	private boolean prepareLineNumber(String infoLineNumber)
 	{
-		if(infoLineNumber != null && !infoLineNumber.equals("") && infoLineNumber.matches("^\\d{1,3}$"))
+		if(infoLineNumber != null && !infoLineNumber.equals("") 
+				&& infoLineNumber.matches("^\\d{1,3}$"))
 		{
 			storeLogger.info("Znalaz³em numer linii: ",infoLineNumber);
 			lineNumber = infoLineNumber;
@@ -140,7 +140,8 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		String[] splitedTimeLine = timeLine.split("\n");
 		
 		ArrayList<String> hoursWithMinutes = new ArrayList<String>();
-		//W tym momencie mamy 4 linijki danych ( mog¹ byæ puste ), nastêpnie dwie linijki przerwy
+		//W tym momencie mamy 4 linijki danych ( mog¹ byæ puste ), 
+		//nastêpnie dwie linijki przerwy
 		
 		int starter = 7;
 		int paragraph = starter;
@@ -173,7 +174,8 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		}
 		
-		//Teraz hoursWithMinutes zawiera w ka¿dym elemencie godzinê i minuty dla poszczególnych sekji	
+		//Teraz hoursWithMinutes zawiera w ka¿dym elemencie godzinê 
+		//i minuty dla poszczególnych sekji	
 		hours = hoursWithMinutes;
 		
 		return true;
@@ -297,8 +299,8 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz przetworzenie
-	 * kolejnej porcji informacji
+	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz
+	 * przetworzenie kolejnej porcji informacji
 	 */
 	private void clear()
 	{
@@ -308,11 +310,14 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 
 	/**
-	 * Funkcja otrzymuje paczkê danych wyodrêbnionych przez XPath, ma za zadanie sprawdziæ
-	 * poprawnoœæ tych danych, a je¿eli uda siê z nich wyci¹gn¹æ przydatne informacje, zapisaæ
-	 * je w okreœlony przez funkcjê SendInfo() sposób
-	 * @param allInformations paczka danych, których poprawnoœæ musimy sprawdziæ oraz wyci¹gn¹æ
-	 * z nich przydatne informacje
+	 * Funkcja otrzymuje paczkê danych wyodrêbnionych przez w¹tki wy³uskuj¹ce, ma za
+	 * zadanie sprawdziæ poprawnoœæ tych danych, a je¿eli uda siê z nich wyci¹gn¹æ 
+	 * przydatne informacje, zapisaæ je w katalogach z nazwami linii wraz z kierunkiem,
+	 * w plikach o nazwach przystanków, dodatkowo tworz¹c katalog pomocniczy dla wyszukiwania
+	 * zawieraj¹cy pliki z wszystkimi przystankami, w których znajduj¹ siê numery linii wraz
+	 * z kierunkiem przeje¿dzaj¹ce przez dany przystanek.
+	 * @param allInformations paczka danych, których poprawnoœæ musimy sprawdziæ oraz
+	 *        wyci¹gn¹æ z nich przydatne informacje
 	 */
 	@Override
 	public void storeInfo(Map<String,String> allInformations) {
@@ -359,8 +364,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, pozwalaj¹cy na okreœlenie sposoby sk³adowana
-	 * logów, stworzony dla u³atwienia sprz¹tania po testach
+	 * Konstruktor sparametryzowany, przypisuj¹cy obiekt do sk³adowania logów.
 	 * @param appender okreœla sposób sk³adowania logów
 	 */
 	FileStoreBusInfo(Appends appender)
@@ -372,7 +376,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Konstruktor domyœlny, który ustala domyœln¹ nazwê pliku z logami
+	 * Konstruktor domyœlny, który ustala domyœlny sposób sk³adowania logów.
 	 */
 	FileStoreBusInfo()
 	{
