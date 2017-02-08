@@ -1,12 +1,16 @@
 package pl.edu.agh.kis;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.FileReader;
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 /**
  * Klasa ma za zadanie implementowaæ metodê interfejsu StoreBusInfo, zapisuj¹c otrzymywane
@@ -211,10 +215,12 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	private void sendInfos()
 	{	
 		String fileName = lineNumber+direction+"/"+buStopName;
-		BufferedReader output;
-		FileWriter input;
+		BufferedReader output = null;
+		Writer input = null;
 		String line;
-		StringBuilder builder;
+		StringBuilder builder = new StringBuilder();
+		
+		fileName = fileName.replace("\"", "");
 		
 		File toSend = new File(fileName);
 		if(!new File(toSend.getParent()).mkdir())
@@ -230,26 +236,39 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			storeLogger.info("Utworzy³em plik!",fileName);
 		} catch (IOException e) {
 			storeLogger.error("Wyj¹tek przy tworzeniu pliku!",fileName,e.getMessage());
-		}
+		} catch (Throwable t) {
+			storeLogger.error("Powa¿ny wyj¹tek przy tworzeniu pliku",fileName,t.getMessage());
+		} 
 
 		try {
-			input = new FileWriter(toSend);
+			input = new OutputStreamWriter(new FileOutputStream(toSend),"UTF-8");
 
 			for(String s : hours)
 			{
 				input.write(s);
 			}
 			
-			input.close();
 			storeLogger.info("Nadpisa³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Problem z zapisem do pliku!",fileName);
-			e.printStackTrace();
+			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+		} catch (Throwable t) {
+		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+		} finally {
+			if(input != null)
+			{
+				try {
+					input.close();
+				} catch (IOException e) {
+					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
 		} 
 		
 		//Dodanie nazwy linii do linii danego przystanku
 		
 		fileName = "buStops/"+buStopName;
+		fileName = fileName.replace("\"", "");
+
 		toSend = new File(fileName);
 		if(!new File(toSend.getParent()).mkdir())
 		{
@@ -267,13 +286,15 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			
 			storeLogger.info("Utworzy³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Rzuci³em wyj¹tek przy tworzeniu pliku!",fileName,
-					e.getMessage());
-		}
+			storeLogger.error("Wyj¹tek przy tworzeniu pliku!",fileName,e.getMessage());
+		} catch (Throwable t) {
+			storeLogger.error("Powa¿ny wyj¹tek przy tworzeniu pliku",fileName,t.getMessage());
+		} 
 
 		try {
 			
-			output = new BufferedReader(new FileReader(toSend));
+			output = new BufferedReader(
+					new InputStreamReader(new FileInputStream(toSend),"UTF-8"));
 			
 			line = "";
 			builder = new StringBuilder(line);
@@ -283,18 +304,44 @@ public class FileStoreBusInfo implements StoreBusInfo {
 				builder.append(line);
 			}
 			
+		} catch (IOException e) {
+			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+		} catch (Throwable t) {
+		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+		} finally {
+			if(output != null)
+			{
+				try {
+					output.close();
+				} catch (IOException e) {
+					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
+		}
+		
+		try {
+			
+			input = new FileWriter(toSend,true); //chcemy nadpisywaæ
+
 			if(!builder.toString().contains(lineNumber+direction))
 			{
-				input = new FileWriter(toSend,true); //chcemy nadpisywaæ
 				input.write(lineNumber+direction+"\n");
-				input.close();
 			}
 			
-			output.close();
 			storeLogger.info("Nadpisa³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Problem z zapisem do pliku!",fileName);
-			e.printStackTrace();
+			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+		} catch (Throwable t) {
+		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+		} finally {
+			if(input != null)
+			{
+				try {
+					input.close();
+				} catch (IOException e) {
+					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
 		}
 	}
 	

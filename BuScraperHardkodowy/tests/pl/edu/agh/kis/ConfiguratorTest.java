@@ -56,6 +56,10 @@ public class ConfiguratorTest {
 		TaskManager tasks = new TaskManager();
 		Configurator conf = new Configurator("Tests/testConf",
 				tasks,new NullAppender());
+		if(!conf.getUpdateData())
+		{
+			fail("Niepoprawnie przeczytany plik konfiguracyjny");
+		}
 		
 		assertEquals(true,tasks.hasNextTask());
 		Task newTask = tasks.getNextTask();

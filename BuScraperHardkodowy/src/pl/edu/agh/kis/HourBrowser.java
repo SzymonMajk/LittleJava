@@ -2,9 +2,10 @@ package pl.edu.agh.kis;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /**
@@ -49,10 +50,11 @@ public class HourBrowser {
 		
 		if(file.exists())
 		{
-			BufferedReader buffReader;
+			BufferedReader buffReader = null;
 				
 			try {
-				buffReader = new BufferedReader(new FileReader(file));
+				buffReader = new BufferedReader(
+						new InputStreamReader ( new FileInputStream(file),"UTF-8"));
 				String line = "";
 				
 				while((line = buffReader.readLine()) != null)
@@ -60,11 +62,19 @@ public class HourBrowser {
 					result.add(line);
 				}
 				
-				buffReader.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
+			} finally {
+				if(buffReader != null)
+				{
+					try {
+						buffReader.close();
+					} catch (IOException e) {
+						browserLogger.warning("Nie zamkniêto poprawnie strumienia");
+					}
+				}
 			}
 		}
 		else
@@ -347,7 +357,6 @@ public class HourBrowser {
 	 * oraz minuty, dla zadanych w argumentach ograniczeñ.
 	 * @param firstBuStopName nazwa pierwszego przystanku
 	 * @param secondBuStopName nazwa drugiego przystanku
-	 * @param line numer linii ³¹cz¹cej przystanki
 	 * @param hour godzina od której naliczamy odjazd
 	 * @param minutes minuty od których naliczamy odjazd
 	 * @param maxTime maksymalny czas odjazdu

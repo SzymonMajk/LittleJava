@@ -32,14 +32,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -149,8 +155,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -159,8 +167,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -180,14 +190,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -265,8 +281,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -275,8 +293,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -295,14 +315,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -372,8 +398,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -382,8 +410,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -402,14 +432,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -465,8 +501,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -475,8 +513,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -496,14 +536,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -559,8 +605,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -569,8 +617,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -590,14 +640,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -653,8 +709,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -663,8 +721,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -684,14 +744,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -747,8 +813,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -757,8 +825,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -778,14 +848,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -852,8 +928,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -862,8 +940,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -882,14 +962,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -956,8 +1042,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -966,8 +1054,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -986,14 +1076,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -1060,8 +1156,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -1070,8 +1168,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -1090,14 +1190,20 @@ public class HourBrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("tests/Przystanek1");
 		try {
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("tests/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -1164,8 +1270,10 @@ public class HourBrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -1174,8 +1282,10 @@ public class HourBrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{

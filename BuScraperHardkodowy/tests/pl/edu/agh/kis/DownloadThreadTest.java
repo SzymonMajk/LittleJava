@@ -27,6 +27,8 @@ public class DownloadThreadTest {
 	 * Test bêdzie polega³ na przygotowaniu dwóch zestawów testowych, jednego z headerem
 	 * posiadaj¹cym informacjê o pozytywnym odbiorze, drugiego który stwierdzi, ¿e nie istnieje
 	 * taki zasób, a nastêpnie sprawdzenie czy w kolejce znajduje siê tylko ten pierwszy
+	 * @throws IOException wyrzucany w przypadku b³êdów wejœcia wyjœcia
+	 * @throws InterruptedException wyrzuany w przypadku b³êdnego wybudzenia w¹tków
 	 */
 	@Test
 	public void testRun() throws IOException, InterruptedException {
@@ -34,16 +36,28 @@ public class DownloadThreadTest {
 		//Utworzenie plików oraz strumieni plikowych do testu, bufora,
 		//requests oraz dwóch w¹tków
 		File testFileOut1 = new File("tests/RequestTestFile1");
-		testFileOut1.createNewFile();
+		if(!testFileOut1.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 				
 		File testFileIn1 = new File("tests/RespondTestFile1");
-		testFileIn1.createNewFile();
+		if(!testFileIn1.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 		
 		File testFileOut2 = new File("tests/RequestTestFile2");
-		testFileOut2.createNewFile();
+		if(!testFileOut2.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 				
 		File testFileIn2 = new File("tests/RespondTestFile2");
-		testFileIn2.createNewFile();
+		if(!testFileIn2.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 				
 		FileDownloader downloader1 = new FileDownloader("tests/RespondTestFile1",
 				"tests/RequestTestFile1");
@@ -87,7 +101,10 @@ public class DownloadThreadTest {
 		//Usuwanie plików
 		if(testFileIn1.exists())
 		{
-			testFileIn1.delete();
+			if(!testFileIn1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -96,7 +113,10 @@ public class DownloadThreadTest {
 				
 		if(testFileOut1.exists())
 		{
-			testFileOut1.delete();
+			if(!testFileOut1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -105,7 +125,10 @@ public class DownloadThreadTest {
 
 		if(testFileIn2.exists())
 		{
-			testFileIn2.delete();
+			if(!testFileIn2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -114,7 +137,10 @@ public class DownloadThreadTest {
 				
 		if(testFileOut2.exists())
 		{
-			testFileOut2.delete();
+			if(!testFileOut2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -132,10 +158,16 @@ public class DownloadThreadTest {
 		
 		//Utworzenie plików oraz strumieni plikowych do testu oraz bufora
 		File testFileOut = new File("tests/RequestTestFile");
-		testFileOut.createNewFile();
+		if(!testFileOut.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 		
 		File testFileIn = new File("tests/RespondTestFile");
-		testFileIn.createNewFile();
+		if(!testFileIn.createNewFile())
+		{
+			fail("Nie utworzono pliku");
+		}
 		
 		FileDownloader downloader = new FileDownloader("tests/RequestTestFile",
 				"tests/RespondTestFile");
@@ -183,7 +215,10 @@ public class DownloadThreadTest {
 		//Usuwanie plików
 		if(testFileIn.exists())
 		{
-			testFileIn.delete();
+			if(!testFileIn.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -192,7 +227,10 @@ public class DownloadThreadTest {
 		
 		if(testFileOut.exists())
 		{
-			testFileOut.delete();
+			if(!testFileOut.delete())
+			{
+				fail("Nie utworzono pliku");
+			}
 		}
 		else
 		{

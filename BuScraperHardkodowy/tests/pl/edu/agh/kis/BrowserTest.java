@@ -26,29 +26,44 @@ public class BrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("999test/Przystanek1");
 		try {
-			testFileBuStop1.getParentFile().mkdir();
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.getParentFile().mkdir())
+			{
+				fail("Nie utworzono pliku");
+			}
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("999test/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop3 = new File("buStops/Przystanek1");
 		try {
-			testFileBuStop3.createNewFile();
+			if(!testFileBuStop3.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop4 = new File("buStops/Przystanek2");
 		try {
-			testFileBuStop4.createNewFile();
+			if(!testFileBuStop4.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -165,8 +180,14 @@ public class BrowserTest {
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+			if(testFileBuStop1.getParentFile().delete())
+			{
+				fail("Usuniêto katalog zbyt wczeœnie");
+			}
 		}
 		else
 		{
@@ -175,8 +196,14 @@ public class BrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+			if(!testFileBuStop2.getParentFile().delete())
+			{
+				fail("Nie usuniêto katalogu");
+			}
 		}
 		else
 		{
@@ -185,7 +212,10 @@ public class BrowserTest {
 		
 		if(testFileBuStop3.exists())
 		{
-			testFileBuStop3.delete();
+			if(!testFileBuStop3.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -194,7 +224,10 @@ public class BrowserTest {
 		
 		if(testFileBuStop4.exists())
 		{
-			testFileBuStop4.delete();
+			if(!testFileBuStop4.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -213,29 +246,44 @@ public class BrowserTest {
 		//Przygotowanie plików z danymi
 		File testFileBuStop1 = new File("999test/Przystanek1");
 		try {
-			testFileBuStop1.getParentFile().mkdir();
-			testFileBuStop1.createNewFile();
+			if(!testFileBuStop1.getParentFile().mkdir())
+			{
+				fail("Nie utworzono katalogu");
+			}
+			if(!testFileBuStop1.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop2 = new File("999test/Przystanek2");
 		try {
-			testFileBuStop2.createNewFile();
+			if(!testFileBuStop2.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop3 = new File("buStops/Przystanek1");
 		try {
-			testFileBuStop3.createNewFile();
+			if(!testFileBuStop3.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
 		
 		File testFileBuStop4 = new File("buStops/Przystanek2");
 		try {
-			testFileBuStop4.createNewFile();
+			if(!testFileBuStop4.createNewFile())
+			{
+				fail("Nie utworzono pliku");
+			}
 		} catch (IOException e) {
 			fail("Nie utworzono pliku");
 		}
@@ -340,17 +388,27 @@ public class BrowserTest {
 		new Browser().serch(toSearch);
 				
 		//Sprawdzanie
+
 		assertEquals("\n\n\n\n"+
+"Dla przystanków: Przystanek2 i Przystanek1\r\n"+
 "Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami\r\n"+
+"Dla przystanków: Przystanek2 i Przystanek1\r\n"+
 "Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami\r\n"+
+"Dla przystanków: Przystanek2 i Przystanek1\r\n"+
 "Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami\r\n"
 				,new String(outContent.toByteArray()));	
 		
 		//usuwanie plików
 		if(testFileBuStop1.exists())
 		{
-			testFileBuStop1.delete();
-			testFileBuStop1.getParentFile().delete();
+			if(!testFileBuStop1.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+			if(testFileBuStop1.getParentFile().delete())
+			{
+				fail("Usuniêto katalog zbyt wczeœnie");
+			}
 		}
 		else
 		{
@@ -359,8 +417,14 @@ public class BrowserTest {
 				
 		if(testFileBuStop2.exists())
 		{
-			testFileBuStop2.delete();
-			testFileBuStop2.getParentFile().delete();
+			if(!testFileBuStop2.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+			if(!testFileBuStop2.getParentFile().delete())
+			{
+				fail("Nie usuniêto katalogu");
+			}
 		}
 		else
 		{
@@ -369,7 +433,10 @@ public class BrowserTest {
 		
 		if(testFileBuStop3.exists())
 		{
-			testFileBuStop3.delete();
+			if(!testFileBuStop3.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{
@@ -378,7 +445,10 @@ public class BrowserTest {
 		
 		if(testFileBuStop4.exists())
 		{
-			testFileBuStop4.delete();
+			if(!testFileBuStop4.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
 		}
 		else
 		{

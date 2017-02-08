@@ -78,7 +78,7 @@ public class SocketDownloader implements Downloader {
 		boolean result = true;
 		
 		socket = new Socket(hostName, portNumber);
-		socket.setSoTimeout(1000);//odpowiada za uchronienie przed blokowaniem
+		socket.setSoTimeout(100);//odpowiada za uchronienie przed blokowaniem
 		output = socket.getOutputStream();
 		input = socket.getInputStream();
 

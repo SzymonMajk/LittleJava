@@ -30,7 +30,7 @@ import org.xml.sax.SAXParseException;
  * @version 1.4
  *
  */
-public class SnatchThread extends Thread{
+public class SnatchThread extends Thread {
 	
 	/**
 	 * W³asny system logów
@@ -97,7 +97,8 @@ public class SnatchThread extends Thread{
 			
 			snatchLogger.info("Utworzy³em dokument XHTML z dokumentu HTML");
 		} catch (UnsupportedEncodingException e) {
-			snatchLogger.warning("Nie uda³o siê utworzyæ dokumentu XHTML z HTML");
+			snatchLogger.warning("Nie uda³o siê utworzyæ dokumentu XHTML z HTML",
+					e.getMessage());
 		}
 
 		return "<myroot>"+result+"</myroot>";
@@ -165,14 +166,12 @@ public class SnatchThread extends Thread{
 		    
 		    snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
 		} catch (SAXParseException err) {
-			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML");
-			err.printStackTrace();
+			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML",err.getMessage());
 		} catch (SAXException e) {
-			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML");
-			e.printStackTrace();
+			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML",e.getMessage());
 		} catch (Throwable t) {
-			snatchLogger.error("Bardzo powa¿ny i nieznany problem z analizowaniem XHTML");
-			t.printStackTrace();
+			snatchLogger.
+			error("Bardzo powa¿ny i nieznany problem z analizowaniem XHTML",t.getMessage());
 		}
 		
 		results.put("lineNumber", lineNumber);
@@ -201,9 +200,13 @@ public class SnatchThread extends Thread{
 					snatchLogger.info("Pobieram z kolejki stron");
 					infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(
 							pagesToAnalise.takePage())));
+					snatchLogger.execute();
+				}
+				else
+				{
+					yield();
 				}
 				
-				snatchLogger.execute();
 			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
 		} catch (InterruptedException e) {
 			snatchLogger.error("Niepoprawnie wybudzony!",e.getMessage());

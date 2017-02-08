@@ -42,8 +42,7 @@ public class RequestCreator {
 	 * Funkcja otrzymuje w argumencie zadanie, z za³o¿eniem, ¿e u¿ytkownik ju¿ wczeœniej
 	 * sprawdzi³ jego poprawnoœæ za pomoc¹ metody isGoodTask(), tworzy na jego podstawie
 	 * kolejkê blokuj¹c¹ z zapytaniami dla obiektów DownloadThread.
-	 * @param newTask
-	 * @return
+	 * @param newTask nowe zadanie, na podstawie którego tworzymy kolejkê zapytañ
 	 */
 	public void prepareNewRequests(Task newTask)
 	{

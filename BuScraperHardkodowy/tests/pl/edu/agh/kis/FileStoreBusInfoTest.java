@@ -64,7 +64,11 @@ public class FileStoreBusInfoTest {
 			}
 			bufferedReader.close();
 			assertEquals(expected,got.toString());
-			testFile.delete();
+			if(!testFile.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+
 			bufferedReader.close();
 		}
 		else

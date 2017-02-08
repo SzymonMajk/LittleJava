@@ -105,7 +105,7 @@ public class Configurator {
 		
 		ArrayList<String> toCheck = new ArrayList<String>();
 		HashMap<String,String> xPaths = new HashMap<String,String>();
-		BufferedReader reader;
+		BufferedReader reader = null;
 		
 		try {
 			reader = new BufferedReader(
@@ -117,9 +117,17 @@ public class Configurator {
 			{
 				toCheck.add(line);
 			}
-			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+		} finally {
+			if(reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e) {
+					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
 		}
 		
 		for(String s : toCheck)
@@ -174,7 +182,7 @@ public class Configurator {
 		
 		ArrayList<String> toCheck = new ArrayList<String>();
 		String[] taskDetails = {"","","","",""};
-		BufferedReader reader;
+		BufferedReader reader = null;
 		
 		try {
 			reader = new BufferedReader(
@@ -187,10 +195,18 @@ public class Configurator {
 				toCheck.add(line);
 			}
 			
-			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
 			e.printStackTrace();
+		} finally {
+			if(reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e) {
+					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
 		}
 		
 		for(String s : toCheck)
@@ -260,7 +276,7 @@ public class Configurator {
 		
 		ArrayList<String> search = new ArrayList<String>();
 		ArrayList<String> toCheck = new ArrayList<String>();
-		BufferedReader reader;
+		BufferedReader reader = null;
 		
 		try {
 			reader = new BufferedReader(
@@ -273,9 +289,17 @@ public class Configurator {
 				toCheck.add(line);
 			}
 			
-			reader.close();
 		} catch (IOException e) {
 			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+		} finally {
+			if(reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e) {
+					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+				}
+			}
 		}
 		
 		for(String s : toCheck)

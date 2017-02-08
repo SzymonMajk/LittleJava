@@ -66,20 +66,21 @@ public class DownloadThread extends Thread {
 		String line = "";
 		StringBuilder respond = new StringBuilder();
 		StringBuilder header = new StringBuilder();
+		OutputStreamWriter to;
+		BufferedReader from;
 		
 		if(downloader.initStreams())
 		{
 			try {
 				
-				OutputStreamWriter to = new OutputStreamWriter(
+				to = new OutputStreamWriter(
 						downloader.getOutputStream(),"UTF-8");
 				to.write(request);
 				to.flush();
 				downloadLogger.info("Request:",request);
-				BufferedReader from;
 				
 				from = new BufferedReader(new InputStreamReader(
-						downloader.getInputSteam(),"UTF-8"));
+						downloader.getInputSteam(),"UTF-8"));			
 
 				boolean content = false;
 
@@ -98,16 +99,16 @@ public class DownloadThread extends Thread {
 						header.append(line);
 					}
 				}
-				
-				downloader.closeStreams();
 
 				downloadLogger.info("Pobrano odpowiedz servera");
+				downloader.closeStreams();
+				
 			} catch (UnsupportedEncodingException e1) {
 				downloadLogger.error("Niew³aœciwe kodowanie dokumentu");
 				e1.printStackTrace();		
 			} catch (IOException e) {
 				downloadLogger.error("Problem z czytaniem odpowiedzi servera");
-			}
+			} 
 		}
 		else
 		{
@@ -130,7 +131,7 @@ public class DownloadThread extends Thread {
 				respond[1] == null || respond[1].equals(""))
 		{
 			downloadLogger.warning("Zamiast zasobu otrzyma³em null");
-			throw new NullPointerException();
+			return false;
 		}
 		else if(respond[0].contains("HTTP/1.1 200 OK") || 
 				respond[0].contains("HTTP/1.0 200 OK"))
@@ -172,7 +173,7 @@ public class DownloadThread extends Thread {
 				}
 				else
 				{
-					BuScrapper.correctTaskExecute = true;
+					BuScrapper.correctTaskExecute.set(true);
 					break;
 				}
 
@@ -187,18 +188,27 @@ public class DownloadThread extends Thread {
 			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
 		} catch (InterruptedException e) {
 			downloadLogger.error("Niepoprawnie wybudzony!",e.getMessage());
-			BuScrapper.correctTaskExecute = false;
+			BuScrapper.numberOfWorkingDownloadThreads.set(0);
+			BuScrapper.correctTaskExecute.set(false);
 		} catch (UnknownHostException e) {
 			downloadLogger.error("Problem z po³¹czeniem internetowym!",e.getMessage());
-			BuScrapper.correctTaskExecute = false;
+			BuScrapper.numberOfWorkingDownloadThreads.set(0);
+			BuScrapper.correctTaskExecute.set(false);
 		} catch (IOException e) {
 			downloadLogger.error("Problem ze strumieniami!",e.getMessage());
-			BuScrapper.correctTaskExecute = false;
+			BuScrapper.numberOfWorkingDownloadThreads.set(0);
+			BuScrapper.correctTaskExecute.set(false);
 		} catch (Throwable t) {
 			downloadLogger.error("Powa¿ny problem!",t.getMessage());
-			BuScrapper.correctTaskExecute = false;
+			BuScrapper.numberOfWorkingDownloadThreads.set(0);
+			BuScrapper.correctTaskExecute.set(false);
 		} finally {
-			if(!alreadyDecrement)
+			
+			if(!alreadyDecrement && !BuScrapper.correctTaskExecute.get())
+			{
+				alreadyDecrement = true;
+			}
+			else if(!alreadyDecrement)
 			{
 				BuScrapper.numberOfWorkingDownloadThreads.decrementAndGet();
 				alreadyDecrement = true;

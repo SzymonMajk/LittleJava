@@ -2,6 +2,7 @@ package pl.edu.agh.kis;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -51,7 +52,7 @@ public class BuScrapper {
 	 * Pole logiczne sprawdzaj¹ce czy aktualnie wykonywane zadanie jest wci¹¿ wykonaywane
 	 * i sprawdzaj¹c wartoœæ pola w odpowiednim momencie, zosta³o wykonane bezb³êdnie
 	 */
-	static boolean correctTaskExecute;
+	static AtomicBoolean correctTaskExecute = new AtomicBoolean();
 	
 	/**
 	 * Funkcja odpowiada za sekwencjê programu przeprowadzaj¹c¹ aktualizacjê danych, na
@@ -82,7 +83,7 @@ public class BuScrapper {
 		
 		while(tasks.hasNextTask())
 		{
-			correctTaskExecute = false;
+			correctTaskExecute.set(false);
 			Task newTask = tasks.getNextTask();
 			Set<DownloadThread> downloadThreads = new HashSet<DownloadThread>();
 			Set<SnatchThread> snatchThreads = new HashSet<SnatchThread>();
@@ -91,7 +92,7 @@ public class BuScrapper {
 			{
 				requestCreator.prepareNewRequests(newTask);
 				
-				for(int i = 0; i < 1; ++i)
+				for(int i = 0; i < 3; ++i)
 				{
 					downloadThreads.add(new DownloadThread(i,requestCreator.
 							getRequests(),buffer, new SocketDownloader(configurator.
@@ -99,33 +100,6 @@ public class BuScrapper {
 					snatchThreads.add(new SnatchThread(i,buffer,new FileStoreBusInfo(
 				    		new FileAppender("File Store"+i)),configurator.getXPaths()));
 				}
-				
-			    /*DownloadThread d1 = new DownloadThread(0,requestCreator.getRequests(),buffer,
-			    		new SocketDownloader(configurator.getStartPageURL()));
-			    DownloadThread d2 = new DownloadThread(1,requestCreator.getRequests(),buffer,
-			    		new SocketDownloader(configurator.getStartPageURL()));
-			    DownloadThread d3 = new DownloadThread(2,requestCreator.getRequests(),buffer,
-			    		new SocketDownloader(configurator.getStartPageURL()));
-			    DownloadThread d4 = new DownloadThread(3,requestCreator.getRequests(),buffer,
-			    		new SocketDownloader(configurator.getStartPageURL()));
-				
-			    SnatchThread s1 = new SnatchThread(0,buffer,new FileStoreBusInfo(
-			    		new FileAppender("File Store"+0)),configurator.getXPaths());
-			    SnatchThread s2 = new SnatchThread(1,buffer,new FileStoreBusInfo(
-			    		new FileAppender("File Store"+1)),configurator.getXPaths());
-			    SnatchThread s3 = new SnatchThread(2,buffer,new FileStoreBusInfo(
-			    		new FileAppender("File Store"+2)),configurator.getXPaths());
-			    SnatchThread s4 = new SnatchThread(3,buffer,new FileStoreBusInfo(
-			    		new FileAppender("File Store"+3)),configurator.getXPaths());
-			    
-			    d1.start();
-			    d2.start();
-			    d3.start();
-			    d4.start();
-			    s1.start();
-			    s2.start();
-			    s3.start();
-			    s4.start();*/
 			    
 				for(DownloadThread d : downloadThreads)
 				{
@@ -139,45 +113,31 @@ public class BuScrapper {
 				
 			    try {
 			    
-			    /*d1.join();
-				d2.join();
-				d3.join();
-				d4.join();
-				s1.join();
-				s2.join();
-				s3.join();
-				s4.join();*/
-			    	
-			    for(DownloadThread d : downloadThreads)
-				{
-					d.join();
-				}
-					
-				for(SnatchThread s : snatchThreads)
-				{
-					s.join();
-				}			    	    
+				    for(DownloadThread d : downloadThreads)
+					{
+						d.join();
+					}
+						
+					for(SnatchThread s : snatchThreads)
+					{
+						s.join();
+					}			    	    
 			    
 			    } catch (InterruptedException e) {
-				    scrapperLogger.error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
+				    scrapperLogger.
+				    error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
 			    }
 			    
-			    if(correctTaskExecute)
+			    if(correctTaskExecute.get())
 			    {
-			    	//dodaj task do poprawnie zakoñcoznych
-				    scrapperLogger.info("Zakoñczy³em aktualizacjê danych");
+			    	scrapperLogger.info("Zakoñczy³em aktualizacjê danych");
 			    	//Zadanie zosta³o wykonane poprawnie, mo¿emy je usun¹æ
 				    tasks.removeTask(newTask.getId());
 			    }
-			    
-			    BuScrapper.numberOfWorkingDownloadThreads.set(0);
-			    requestCreator.clear();
 			}
-			else
-		    {
-			    scrapperLogger.warning("Nast¹pi³ problem podczas wykonywania zadania");
-			    tasks.incorrectTask(newTask.getId());
-		    }
+			//Czyszczenie przed kolejn¹ iteracj¹
+		    BuScrapper.numberOfWorkingDownloadThreads.set(0);
+		    requestCreator.clear();
 			scrapperLogger.execute();
 		}
 	}

@@ -75,7 +75,6 @@ public class FileDownloader implements Downloader {
 	
 	/**
 	 * Zadaniem funkcji jest zamkniêcie strumieni przechowywanych w polach prywatnych.
-	 * @return informacja o powodzeniu zamkniêcia strumieni
 	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub dostêpu
 	 *         do plików.
 	 */

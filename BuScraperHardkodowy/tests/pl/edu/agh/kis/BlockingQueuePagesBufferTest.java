@@ -251,7 +251,7 @@ public class BlockingQueuePagesBufferTest {
 	
 	/**
 	 * Tworzymy producenta i konsumenta, którzy maj¹ wspó³pracowaæ
-	 * @throws InterruptedException 
+	 * @throws InterruptedException nastêpuje przy niew³aœciwym obudzeniu w¹tków
 	 */
 	@Test
 	public void testTwoThreads() throws InterruptedException {

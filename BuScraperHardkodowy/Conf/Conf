@@ -10,3 +10,7 @@ ZAKRESLINI=208:208
 MAXPRZYSTANKOW=70
 MAXKIERUNKOW=5
 SEARCH=MiasteczkoStudenckieAGH:Lindego:0:12:05:2
+SEARCH=MiasteczkoStudenckieAGH:MłynówkaSKA:0:12:05:2
+SEARCH=MiasteczkoStudenckieAGH:Politechnika:0:12:05:2
+SEARCH=MiasteczkoStudenckieAGH:Skotniki:0:12:05:2
+SEARCH=MiasteczkoStudenckieAGH:NieMaTakiegoPrzystanku:0:12:05:2

@@ -20,11 +20,6 @@ public class TaskManager {
 	private Map<Integer,Task> tasksToDo = new HashMap<Integer,Task>();
 	
 	/**
-	 * Kolejka b³êdnych zadañ
-	 */
-	private Map<Integer,Task> tasksIncorrect = new HashMap<Integer,Task>();
-	
-	/**
 	 * Umieszcza nowe zadanie w mapie zadañ do wykonania.
 	 * @param newTask nowe zadanie do wykonania
 	 */
@@ -59,18 +54,6 @@ public class TaskManager {
 		}
 		
 		return new Task(9999,"","","","","");
-	}
-	
-	/**
-	 * Funkcja obs³ugujê sytuacjê wyst¹pienia niepoprawnego zadania, takowe jest
-	 * umieszczane w mapie zadañ niepoprawnych oraz usuwany z mapy zadañ do wykonania.
-	 * @param i
-	 */
-	public void incorrectTask(Integer i)
-	{
-		System.out.println("Niepoprawne zadanie o id: "+i);
-		tasksIncorrect.put(i,tasksToDo.get(i));
-		tasksToDo.remove(i);
 	}
 	
 	/**

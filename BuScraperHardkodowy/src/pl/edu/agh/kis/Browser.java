@@ -85,10 +85,12 @@ public class Browser {
 					{
 						answer.append(s+"\n");
 					}
-					
+										
 					//Wypisanie wyników
 					if(!answer.toString().equals(""))
 					{
+						System.out.println("Dla przystanków: "+s1+" i "+s2);
+
 						if(l.substring(0, 3).matches("^\\d\\d\\d"))
 						{
 							System.out.println("Mo¿esz skorzystaæ z linii: "+l.substring(0, 3));
@@ -108,6 +110,7 @@ public class Browser {
 			}
 			else
 			{
+				System.out.println("Dla przystanków: "+s1+" i "+s2);
 				System.out.println("Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami");
 			}
 		}

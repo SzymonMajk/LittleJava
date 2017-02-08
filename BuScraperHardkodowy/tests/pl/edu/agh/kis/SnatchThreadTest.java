@@ -40,7 +40,10 @@ public class SnatchThreadTest {
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/testAnaliseHTMLPage");
-		testFile.createNewFile();
+		if(!testFile.exists())
+		{
+			fail("Brak ¿adanego pliku testowego");
+		}
 				
 		BufferedReader from = new BufferedReader(new InputStreamReader
 				(new FileInputStream(testFile)));
@@ -117,8 +120,15 @@ public class SnatchThreadTest {
 		//Usuwamy utworzony plik
 		if(gotFile.exists())
 		{
-			gotFile.delete();
-			gotFile.getParentFile().delete();
+			if(!gotFile.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+
+			if(!gotFile.getParentFile().delete())
+			{
+				fail("Nie usuniêto katalogu");
+			}
 		}
 		else
 		{
