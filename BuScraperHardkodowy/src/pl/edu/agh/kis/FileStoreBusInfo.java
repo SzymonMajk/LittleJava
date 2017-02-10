@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -23,9 +25,9 @@ import java.io.Writer;
 public class FileStoreBusInfo implements StoreBusInfo {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger storeLogger;
+	private static final Logger log4j = LogManager.getLogger(FileStoreBusInfo.class.getName());
 	
 	/**
 	 * Pole przechowuje numer aktualnie przetwarzanej linii
@@ -57,13 +59,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	{
 		if(infoBuStopName != null && !infoBuStopName.equals("") )
 		{
-			storeLogger.info("Znalaz³em nazwê linii: ",infoBuStopName);
+			log4j.info("Znalaz³em nazwê linii:"+infoBuStopName);
 			buStopName = infoBuStopName;
 			return true;
 		}
 		else 
 		{
-			storeLogger.warning("Nazwa linii zawiera b³êdy!: ",infoBuStopName);
+			log4j.warn("Nazwa linii zawiera b³êdy!:"+infoBuStopName);
 			return false;
 		}
 	}
@@ -79,13 +81,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		if(infoLineNumber != null && !infoLineNumber.equals("") 
 				&& infoLineNumber.matches("^\\d{1,3}$"))
 		{
-			storeLogger.info("Znalaz³em numer linii: ",infoLineNumber);
+			log4j.info("Znalaz³em numer linii:"+infoLineNumber);
 			lineNumber = infoLineNumber;
 			return true;
 		}
 		else
 		{
-			storeLogger.warning("Numer linii zawiera b³êdy!: ",infoLineNumber);
+			log4j.warn("Numer linii zawiera b³êdy!:"+infoLineNumber);
 			return false;
 		}
 	}
@@ -102,13 +104,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		if(!infoDirection.equals("") && infoDirection.contains("Do"))
 		{
-			storeLogger.info("Znalaz³em kierunek linii: ",infoDirection);
+			log4j.info("Znalaz³em kierunek linii:"+infoDirection);
 			direction = infoDirection;
 			return true;
 		}
 		else 
 		{
-			storeLogger.warning("Kierunek linii zawiera b³êdy!: ",infoDirection);
+			log4j.warn("Kierunek linii zawiera b³êdy!:"+infoDirection);
 			return false;
 		}
 	}
@@ -197,12 +199,12 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		if(infoHour != null && !infoHour.equals(""))//&& infoHour.matches("\\d"))
 		{
 
-			storeLogger.info("Znalazlem godzinê odjazdu: ",infoHour);	
+			log4j.info("Znalazlem godzinê odjazdu:"+infoHour);	
 			return true;
 		}
 		else
 		{
-			storeLogger.warning("Godzina zawiera b³êdy!: ",infoHour);
+			log4j.warn("Godzina zawiera b³êdy!:"+infoHour);
 			return false;
 		}
 	}
@@ -225,19 +227,19 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		File toSend = new File(fileName);
 		if(!new File(toSend.getParent()).mkdir())
 		{
-			storeLogger.error("Nie uda³o mi siê utworzyæ folderu!",toSend.getParent());
+			log4j.error("Nie uda³o mi siê utworzyæ folderu!"+toSend.getParent());
 		}
 		
 		try {
 			if(!toSend.createNewFile())
 			{
-				storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+				log4j.error("Nie uda³o siê utworzyæ pliku!",fileName);
 			}
-			storeLogger.info("Utworzy³em plik!",fileName);
+			log4j.info("Utworzy³em plik!"+fileName);
 		} catch (IOException e) {
-			storeLogger.error("Wyj¹tek przy tworzeniu pliku!",fileName,e.getMessage());
+			log4j.error("Wyj¹tek przy tworzeniu pliku!"+fileName,e.getMessage());
 		} catch (Throwable t) {
-			storeLogger.error("Powa¿ny wyj¹tek przy tworzeniu pliku",fileName,t.getMessage());
+			log4j.error("Powa¿ny wyj¹tek przy tworzeniu pliku!"+fileName,t.getMessage());
 		} 
 
 		try {
@@ -248,18 +250,18 @@ public class FileStoreBusInfo implements StoreBusInfo {
 				input.write(s);
 			}
 			
-			storeLogger.info("Nadpisa³em plik!",fileName);
+			log4j.info("Nadpisa³em plik!"+fileName);
 		} catch (IOException e) {
-			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
 		} catch (Throwable t) {
-		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
 		} finally {
 			if(input != null)
 			{
 				try {
 					input.close();
 				} catch (IOException e) {
-					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.warn("Niepoprawnie zamkniêty strumieñ!"+e.getMessage());
 				}
 			}
 		} 
@@ -272,7 +274,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		toSend = new File(fileName);
 		if(!new File(toSend.getParent()).mkdir())
 		{
-			storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+			log4j.error("Nie uda³o siê utworzyæ pliku!"+fileName);
 		}
 		
 		try {
@@ -280,15 +282,15 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			{
 				if(!toSend.createNewFile())
 				{
-					storeLogger.error("Nie uda³o siê utworzyæ pliku!",fileName);
+					log4j.error("Nie uda³o siê utworzyæ pliku!"+fileName);
 				}
 			}
 			
-			storeLogger.info("Utworzy³em plik!",fileName);
+			log4j.info("Utworzy³em plik!"+fileName);
 		} catch (IOException e) {
-			storeLogger.error("Wyj¹tek przy tworzeniu pliku!",fileName,e.getMessage());
+			log4j.error("Wyj¹tek przy tworzeniu pliku!"+fileName+e.getMessage());
 		} catch (Throwable t) {
-			storeLogger.error("Powa¿ny wyj¹tek przy tworzeniu pliku",fileName,t.getMessage());
+			log4j.error("Powa¿ny wyj¹tek przy tworzeniu pliku!"+fileName+t.getMessage());
 		} 
 
 		try {
@@ -305,16 +307,16 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			}
 			
 		} catch (IOException e) {
-			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
 		} catch (Throwable t) {
-		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
 		} finally {
 			if(output != null)
 			{
 				try {
 					output.close();
 				} catch (IOException e) {
-					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.warn("Niepoprawnie zamkniêty strumieñ!");
 				}
 			}
 		}
@@ -328,18 +330,18 @@ public class FileStoreBusInfo implements StoreBusInfo {
 				input.write(lineNumber+direction+"\n");
 			}
 			
-			storeLogger.info("Nadpisa³em plik!",fileName);
+			log4j.info("Nadpisa³em plik!",fileName);
 		} catch (IOException e) {
-			storeLogger.error("Problem z zapisem do pliku!",fileName,e.getMessage());
+			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
 		} catch (Throwable t) {
-		storeLogger.error("Powa¿ny problem z zapisaniem do pliku",fileName,t.getMessage());
+			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
 		} finally {
 			if(input != null)
 			{
 				try {
 					input.close();
 				} catch (IOException e) {
-					storeLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.warn("Niepoprawnie zamkniêty strumieñ!");
 				}
 			}
 		}
@@ -351,9 +353,10 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	private void clear()
 	{
-		storeLogger.execute();
-		lineNumber = null;
-		buStopName = null;
+		lineNumber = "";
+		buStopName = "";
+		direction = "";
+		hours = new ArrayList<String>();
 	}
 
 	/**
@@ -408,25 +411,5 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		//Sprz¹tamy dla kolejnego u¿ycia
 		clear();
-	}
-	
-	/**
-	 * Konstruktor sparametryzowany, przypisuj¹cy obiekt do sk³adowania logów.
-	 * @param appender okreœla sposób sk³adowania logów
-	 */
-	FileStoreBusInfo(Appends appender)
-	{
-		storeLogger = new Logger();
-		storeLogger.changeAppender(appender);
-		storeLogger.info("Czas rozpocz¹æ pracê!");
-		storeLogger.execute();
-	}
-	
-	/**
-	 * Konstruktor domyœlny, który ustala domyœlny sposób sk³adowania logów.
-	 */
-	FileStoreBusInfo()
-	{
-		this(new FileAppender("FileStore"));
 	}
 }

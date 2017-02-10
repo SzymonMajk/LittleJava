@@ -23,7 +23,7 @@ public class BlockingQueuePagesBufferTest {
 		final int size = 5;
 		
 		//Przygotowanie obiektów
-		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
+		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size);
 		
 		assertEquals(true,b.isEmpty());
 		
@@ -74,7 +74,7 @@ public class BlockingQueuePagesBufferTest {
 		final int size = 5;
 		
 		//Przygotowanie obiektów
-		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
+		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size);
 		
 		assertEquals(false,b.isFull());
 		
@@ -125,7 +125,7 @@ public class BlockingQueuePagesBufferTest {
 		final int size = 5;
 		
 		//Przygotowanie obiektów
-		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
+		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size);
 		
 		StringBuilder result = new StringBuilder();
 		
@@ -190,7 +190,7 @@ public class BlockingQueuePagesBufferTest {
 		final int size = 5;
 		
 		//Przygotowanie obiektów
-		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
+		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size);
 		
 		ArrayBlockingQueue<String> result = new ArrayBlockingQueue<String>(size);
 		
@@ -259,7 +259,7 @@ public class BlockingQueuePagesBufferTest {
 		final int size = 5;
 		
 		//Przygotowanie obiektów
-		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size, new NullAppender());
+		BlockingQueuePagesBuffer b = new BlockingQueuePagesBuffer(size);
 		
 		ArrayBlockingQueue<String> result = new ArrayBlockingQueue<String>(size*4);
 		
@@ -350,3 +350,5 @@ class TestThread extends Thread {
 		this.setS(s);
 	}
 }
+//TODO zmieniamy testy, to nie te maj¹ dzia³aæ, tylko te nasze 
+//w¹tki maj¹ dzia³aæ na tym buforze!

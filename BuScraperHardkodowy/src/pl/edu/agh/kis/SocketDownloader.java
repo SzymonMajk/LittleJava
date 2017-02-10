@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -18,6 +20,12 @@ import java.io.IOException;
  */
 public class SocketDownloader implements Downloader {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(SocketDownloader.class.getName());
+	
+	
 	/**
 	 * Pole przechowuj¹ce na czas pobierania zawartoœci strumieñ wejœcia od hosta
 	 */
@@ -74,17 +82,18 @@ public class SocketDownloader implements Downloader {
 	 *         i przypisaniem ich do w³aœciwych pól prywatnych
 	 */
 	@Override
-	public boolean initStreams() throws UnknownHostException, IOException {
+	public boolean initDownloader() throws UnknownHostException, IOException {
 		boolean result = true;
 		
 		socket = new Socket(hostName, portNumber);
-		socket.setSoTimeout(100);//odpowiada za uchronienie przed blokowaniem
+		socket.setSoTimeout(1000);//odpowiada za uchronienie przed blokowaniem
 		output = socket.getOutputStream();
 		input = socket.getInputStream();
 
 		return result;
 	}
 	
+	//TODO mo¿e to wywalimy co?
 	/**
 	 * Zadaniem funkcji jest zamkniêcie strumieni.
 	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub
@@ -108,7 +117,7 @@ public class SocketDownloader implements Downloader {
 			url = new URL(pageURL);
 			hostName = url.getHost();
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			log4j.error("Problem z po³¹czeniem z URL"+e.getMessage());
 		} 
 	}
 }

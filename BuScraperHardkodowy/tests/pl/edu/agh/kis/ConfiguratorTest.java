@@ -25,7 +25,7 @@ public class ConfiguratorTest {
 		}
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new TaskManager(),new NullAppender());
+				new TaskManager());
 		
 		HashMap<String,String> paths = conf.getXPaths();
 		
@@ -54,8 +54,7 @@ public class ConfiguratorTest {
 		}
 		
 		TaskManager tasks = new TaskManager();
-		Configurator conf = new Configurator("Tests/testConf",
-				tasks,new NullAppender());
+		Configurator conf = new Configurator("Tests/testConf",tasks);
 		if(!conf.getUpdateData())
 		{
 			fail("Niepoprawnie przeczytany plik konfiguracyjny");
@@ -102,7 +101,7 @@ public class ConfiguratorTest {
 	public void testGetToSearch() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new TaskManager(),new NullAppender());
+				new TaskManager());
 		
 		String expected = "Czarnowiejska:MiasteczkoStudenckieAGH:0:12:51:2";
 		
@@ -116,7 +115,7 @@ public class ConfiguratorTest {
 	public void testGetStartPageURL() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new TaskManager(),new NullAppender());
+				new TaskManager());
 		
 		String expected = "http://rozklady.mpk.krakow.pl/";
 		
@@ -130,10 +129,11 @@ public class ConfiguratorTest {
 	public void testGetUpdateData() {
 		
 		Configurator conf = new Configurator("Tests/testConf",
-				new TaskManager(),new NullAppender());
+				new TaskManager());
 		
 		Boolean expected = true;
 		
 		assertEquals(expected,conf.getUpdateData());
 	}
 }
+//TODO i tak trzeba bêdzie nowe testy jak go pozmieniamy...

@@ -122,7 +122,8 @@ public class Task {
 	 * @param method metoda dla zapytañ
 	 * @param host nazwa hosta dla zapytañ
 	 */
-	Task(int id,String lineNumber, String maxBuStop, String maxDirection, String method, String host)
+	Task(int id,String lineNumber, String maxBuStop, String maxDirection, String method, 
+			String host)
 	{
 		this.id = id;
 		this.lineNumber = lineNumber;
@@ -132,4 +133,6 @@ public class Task {
 		this.host = host;
 		status = 0;
 	}
+	//TODO zmienimy logikê, bêdzie dostawa³o URL i do requestCreatora podawa³o URL, a on sobie
+	//bêdzie wiedzia³ ju¿ co z tym zrobiæ
 }

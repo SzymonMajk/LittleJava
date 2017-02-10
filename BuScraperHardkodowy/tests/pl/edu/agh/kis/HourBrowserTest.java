@@ -119,7 +119,7 @@ public class HourBrowserTest {
 			fail("Nie zapisano do pliku");
 		}
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 
 		assertEquals(true,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				15, 20, 2, 0));
@@ -246,7 +246,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(true,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				23, 56, 3, 0));
@@ -371,7 +371,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				23, 56, 3, 0));
@@ -488,7 +488,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		//Test b³¹d na koñcu linijki
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
@@ -592,7 +592,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		//Test b³¹d na koñcu linijki
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
@@ -696,7 +696,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		//Test b³¹d na koñcu linijki
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
@@ -800,7 +800,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		//Test b³¹d na koñcu linijki
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
@@ -904,7 +904,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				25, 56, 3, 0));
@@ -915,7 +915,7 @@ public class HourBrowserTest {
 		assertEquals(0,hourBrowser.getHours().size());
 
 		
-		hourBrowser = new HourBrowser(new ConsoleAppender());
+		hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				-1, 56, 3, 0));
@@ -1018,7 +1018,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, 60, 3, 0));
@@ -1029,7 +1029,7 @@ public class HourBrowserTest {
 		assertEquals(0,hourBrowser.getHours().size());
 
 		
-		hourBrowser = new HourBrowser(new ConsoleAppender());
+		hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, -1, 3, 0));
@@ -1132,7 +1132,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, 50, 24, 0));
@@ -1143,8 +1143,8 @@ public class HourBrowserTest {
 		assertEquals(0,hourBrowser.getHours().size());
 
 		
-		hourBrowser = new HourBrowser(new ConsoleAppender());
-		
+		hourBrowser = new HourBrowser();
+	
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, 40, -1, 0));
 		
@@ -1246,7 +1246,7 @@ public class HourBrowserTest {
 		}
 		
 		//przygotowanie obiektu i testy
-		HourBrowser hourBrowser = new HourBrowser(new ConsoleAppender());
+		HourBrowser hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, 50, 2, 3));
@@ -1257,7 +1257,7 @@ public class HourBrowserTest {
 		assertEquals(0,hourBrowser.getHours().size());
 
 		
-		hourBrowser = new HourBrowser(new ConsoleAppender());
+		hourBrowser = new HourBrowser();
 		
 		assertEquals(false,hourBrowser.searchHours("tests/Przystanek1", "tests/Przystanek2", 
 				12, 40, 2, -1));
@@ -1295,3 +1295,4 @@ public class HourBrowserTest {
 		System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
 	}
 }
+//TODO, do poprawki... 

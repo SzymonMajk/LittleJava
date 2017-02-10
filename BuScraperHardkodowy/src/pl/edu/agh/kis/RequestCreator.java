@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -12,6 +14,14 @@ import java.util.concurrent.BlockingQueue;
  */
 public class RequestCreator {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(RequestCreator.class.getName());
+	
+	//TODO pytanie czy nie lepiej niech RequestCreatora ma ka¿dy DownloadThread i po prosu
+	//niech to tworzy pojedyncze jedno zapytanie w zale¿noœci do otrzymanych parametrów?
+	
 	/**
 	 * Kolejka poprawnych zapytañ
 	 */
@@ -74,12 +84,14 @@ public class RequestCreator {
 					builder.append("\r\n");
 					builder.append("Connection: close\r\n\r\n");
 					requests.add(builder.toString());
+					//log4j.info("Utworzy³em zapytanie:"+builder.toString());
 				}
 			}
 		}
 		else
 		{
 			//POST nie gotowy jeszcze...
+			//TODO koniecznie trzeba zrobiæ, bo grozi œmieræ!
 		}
 		
 	this.requests = requests;

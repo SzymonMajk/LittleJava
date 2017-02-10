@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -14,6 +16,11 @@ import java.util.HashMap;
  */
 public class TaskManager {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(TaskManager.class.getName());
+	
 	/**
 	 * Kolejka zadañ do wykonania przez program
 	 */
@@ -53,6 +60,7 @@ public class TaskManager {
 			}
 		}
 		
+		//TODO Oj, tutaj trzeba coœ wymyœleæ!
 		return new Task(9999,"","","","","");
 	}
 	
@@ -67,4 +75,8 @@ public class TaskManager {
 		System.out.println("Usuwam zadanie o id: "+i);
 		tasksToDo.remove(i);
 	}
+	
+	//TODO, wracamy do innej koncepcji... No có¿ po pierwsze zadania niewykonane musz¹
+	//trafiaæ na koniec KOLEJKI, no i teraz jeszcze sprawa, ¿e musimy mieæ mo¿liwoœæ
+	//utworzenia i przypisania na koniec kolejki nowych zadañ, tych z b³êdnymi requestami!
 }

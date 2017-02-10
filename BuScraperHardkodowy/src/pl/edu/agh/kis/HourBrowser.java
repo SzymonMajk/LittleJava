@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,9 +20,10 @@ import java.util.ArrayList;
 public class HourBrowser {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger browserLogger;
+	private static final Logger log4j = LogManager.getLogger(HourBrowser.class.getName());
+	
 	
 	/**
 	 * Lista gotowych wyodrêbnionych godzin
@@ -72,14 +75,14 @@ public class HourBrowser {
 					try {
 						buffReader.close();
 					} catch (IOException e) {
-						browserLogger.warning("Nie zamkniêto poprawnie strumienia");
+						log4j.error("Nie zamkniêto poprawnie strumienia:"+e.getMessage());
 					}
 				}
 			}
 		}
 		else
 		{
-			browserLogger.warning("Nie ma pliku "+fileName);
+			log4j.warn("Brak pliku: "+fileName);
 		}
 		
 		return result;
@@ -98,17 +101,17 @@ public class HourBrowser {
 		{
 			if(!l.matches("^\\d.*:$"))
 			{
-				browserLogger.warning(l,"Niepoprawny format linijki");
+				log4j.warn("Niepoprawny format linijki:"+l);
 				return false;
 			}
 			else if(4 != l.length()-l.replace(":", "").length())
 			{
-				browserLogger.warning(l,"Niepoprawny format linijki");
+				log4j.warn("Niepoprawny format linijki:"+l);
 				return false;
 			}
 			else if(l.charAt(1) != ':' && l.charAt(2) != ':' )
 			{
-				browserLogger.warning(l,"Niepoprawny format linijki");
+				log4j.warn("Niepoprawny format linijki:"+l);
 				return false;
 			}
 		}
@@ -131,27 +134,27 @@ public class HourBrowser {
 	{
 		if(hours == null || hours.isEmpty())
 		{
-			browserLogger.warning("Godziny by³y puste");
+			log4j.warn("Godziny by³y puste");
 			return false;
 		}
 		else if(startingHour < 0 || startingHour > 23)
 		{
-			browserLogger.warning("Podana godzina wykracza poza dozwolone godziny");
+			log4j.warn("Podana godzina wykracza poza dozwolone godziny:"+startingHour);
 			return false;
 		}
 		else if(startingMinutes < 0 || startingMinutes > 59)
 		{
-			browserLogger.warning("Podana minuta wykracza poza dozwolone minuty");
+			log4j.warn("Podana minuta wykracza poza dozwolone minuty:"+startingMinutes);
 			return false;
 		}
 		else if(maxTime < 0 || maxTime > 23)
 		{
-			browserLogger.warning("Podany zakres godzin wykracza poza rozk³ad");
+			log4j.warn("Podany zakres godzin wykracza poza rozk³ad:"+maxTime);
 			return false;
 		}
 		else if(typeOfDay < 0 || typeOfDay > 2)
 		{
-			browserLogger.warning("Podano niepoprawny rodzaj dnia");
+			log4j.warn("Podano niepoprawny rodzaj dnia:"+typeOfDay);
 			return false;	
 		}
 		else
@@ -204,6 +207,9 @@ public class HourBrowser {
 		{
 			return new ArrayList<String>();
 		}
+		
+		//TODO zamiast takiego ³o wypisywania, to zróbmy ¿eby by³a przygotowywana stosowna
+		//odpowiedz!
 		
 		//Z ka¿dej linijki wyci¹gamy tylko te minuty które pasuj¹ ( z pierwszej tylko te
 		//wiêksze od zadanych w argumencie, i tylko tyle linijek ile maxTime,
@@ -262,7 +268,7 @@ public class HourBrowser {
 			}
 		
 		} catch (Throwable e) {
-			browserLogger.warning("B³¹d przy parsowaniu reachOut"+e.getMessage());
+			log4j.warn("B³¹d przy parsowaniu reachOut"+e.getMessage());
 		}
 		
 		/*for(String l : result)
@@ -287,22 +293,22 @@ public class HourBrowser {
 		//sprawdzamy czy nie otrzymaliœmy pustych list
 		if(timeOfStartStop.isEmpty())
 		{
-			browserLogger.warning("Podane godziny nie pasuj¹ do godzin przystanku pocz¹tkowego.");
+			log4j.warn("Podane godziny nie pasuj¹ do godzin przystanku pocz¹tkowego.");
 			return false;
 		}
 		else if(timeOfEndStop.isEmpty())
 		{
-			browserLogger.warning("Podane godziny nie pasuj¹ do godzin przystanku koñcowego.");
+			log4j.warn("Podane godziny nie pasuj¹ do godzin przystanku koñcowego.");
 			return false;
 		}
 		else if(firstLineOfFirstStop.equals(""))
 		{
-			browserLogger.warning("Pierwsza linia pocz¹tkowego pusta!");
+			log4j.warn("Pierwsza linia pocz¹tkowego pusta!");
 			return false;
 		}
 		else if(firstLineOfSecondStop.equals(""))
 		{
-			browserLogger.warning("Pierwsza linia koñcowego pusta!");
+			log4j.warn("Pierwsza linia koñcowego pusta!");
 			return false;			
 		}
 		
@@ -390,26 +396,7 @@ public class HourBrowser {
 				hours = timeOfStartStop;
 			}			
 		}
-
-		browserLogger.execute();
+		
 		return !hours.isEmpty();
-	}
-	
-	/**
-	 * Konstruktor sparametryzowany pozwalaj¹cy na przypisanie systemu sk³adowania logów.
-	 * @param appender sposób wysy³ania logów
-	 */
-	public HourBrowser(Appends appender)
-	{
-		browserLogger = new Logger();
-		browserLogger.changeAppender(appender);
-	}
-	
-	/**
-	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu sk³adowania logów.
-	 */
-	public HourBrowser()
-	{
-		this(new FileAppender("HourBrowser"));
 	}
 }

@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,9 +20,9 @@ import java.util.ArrayList;
 public class LineBrowser {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger browserLogger;
+	private static final Logger log4j = LogManager.getLogger(LineBrowser.class.getName());
 	
 	
 	/**
@@ -73,14 +75,14 @@ public class LineBrowser {
 					try {
 						buffReader.close();
 					} catch (IOException e) {
-						browserLogger.warning("Nie zamkniêto poprawnie strumienia");
+						log4j.warn("Nie zamkniêto poprawnie strumienia");
 					}
 				}
 			}
 		}
 		else
 		{
-			browserLogger.warning("Nie ma pliku "+fileName);
+			log4j.warn("Nie ma pliku "+fileName);
 		}
 		
 		return result;
@@ -128,17 +130,6 @@ public class LineBrowser {
 		lines = takeShared(readLinesFromFile(firstBuStopName),
 				readLinesFromFile(secondBuStopName));
 		
-		browserLogger.execute();
 		return !lines.isEmpty();
-	}
-	
-	/**
-	 * Konstruktor którego zadaniem jest przypisanie domyœlnego systemu sposobu sk³adowania
-	 * logów.
-	 */
-	public LineBrowser()
-	{
-		browserLogger = new Logger();
-		browserLogger.changeAppender(new FileAppender("LineBrowser"));
 	}
 }

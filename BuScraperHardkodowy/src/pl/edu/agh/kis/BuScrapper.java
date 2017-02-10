@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,9 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BuScrapper {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger scrapperLogger;
+	private static final Logger log4j = LogManager.getLogger(BuScrapper.class.getName());
 	
 	/**
 	 * Obiekt obs³uguj¹cy zadania do wykonania okreœlone przez u¿ytkownika
@@ -36,7 +38,7 @@ public class BuScrapper {
 	/**
 	 * Bufor dla konsumentów-producentów do przechowywania tymczasowego stron do przerobienia
 	 */
-	private PagesBuffer buffer = new BlockingQueuePagesBuffer(10);
+	private PagesBuffer buffer = new BlockingQueuePagesBuffer(100);
 	
 	/**
 	 * Obiekt przechowuj¹cy wyszukiwarkê danych
@@ -78,27 +80,34 @@ public class BuScrapper {
 	 */
 	public void updateData()
 	{
-	
 		RequestCreator requestCreator = new RequestCreator();
 		
 		while(tasks.hasNextTask())
 		{
+			
+			//TODO taki ma³y obiekcik, który bêdzie sprawdza³ czy jest po³¹czenie internetowe
+			//z URL podanym w tasku, póki nie bêdzie to przerzuca to zadanie na koniec
+			//i idzie do nastêpnego zadania powtarza dla nowego URL, ale ale! Wypisuje
+			//informajê o tym ¿e nie ma internetu tylko przy pierwszym, ¿eby nie zaspamiæ logów
 			correctTaskExecute.set(false);
 			Task newTask = tasks.getNextTask();
 			Set<DownloadThread> downloadThreads = new HashSet<DownloadThread>();
 			Set<SnatchThread> snatchThreads = new HashSet<SnatchThread>();
 			
+			//TODO nie no, musimy zrobiæ to pul¹ w¹tków...
+			
 			if(requestCreator.isGoodTask(newTask))
 			{
 				requestCreator.prepareNewRequests(newTask);
 				
-				for(int i = 0; i < 3; ++i)
+				for(int i = 0; i < 5; ++i)
 				{
+					//TODO no niech on nie dostaje startowego, tylko ten z zadania!
 					downloadThreads.add(new DownloadThread(i,requestCreator.
 							getRequests(),buffer, new SocketDownloader(configurator.
 									getStartPageURL())));
-					snatchThreads.add(new SnatchThread(i,buffer,new FileStoreBusInfo(
-				    		new FileAppender("File Store"+i)),configurator.getXPaths()));
+					snatchThreads.add(new SnatchThread(i,buffer,new FileStoreBusInfo(),
+				    		configurator.getXPaths()));
 				}
 			    
 				for(DownloadThread d : downloadThreads)
@@ -124,13 +133,13 @@ public class BuScrapper {
 					}			    	    
 			    
 			    } catch (InterruptedException e) {
-				    scrapperLogger.
-				    error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
+			    	log4j.error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
 			    }
 			    
 			    if(correctTaskExecute.get())
 			    {
-			    	scrapperLogger.info("Zakoñczy³em aktualizacjê danych");
+			    	//dodaj szczegó³y tasku, np. id
+			    	log4j.trace("Poprawnie zakoñczy³em Task");
 			    	//Zadanie zosta³o wykonane poprawnie, mo¿emy je usun¹æ
 				    tasks.removeTask(newTask.getId());
 			    }
@@ -138,32 +147,12 @@ public class BuScrapper {
 			//Czyszczenie przed kolejn¹ iteracj¹
 		    BuScrapper.numberOfWorkingDownloadThreads.set(0);
 		    requestCreator.clear();
-			scrapperLogger.execute();
 		}
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany pozwalaj¹cy na okreœlenie sposobu sk³adowania logów
-	 * poprzez podanie odpowiedniego obiektu w argumencie funkcji.
-	 * @param appender obiekt odpowiedzialny za sk³adowanie logów
-	 */
-	BuScrapper(Appends appender)
-	{
-		scrapperLogger = new Logger();
-		scrapperLogger.changeAppender(appender);
-	}
-	
-	/**
-	 * Konstruktor domyœlny, który ustala domyœlny sposób sk³adowania logów.
-	 */
-	BuScrapper()
-	{
-		this(new FileAppender("BuScrapper"));
-	}
-	
-	/**
-	 * Przyk³adowy sposób uruchomienia programu.
-	 * @param args nieu¿ywane
+	 * 
+	 * @param args
 	 */
 	public static void main(String[] args) {
 

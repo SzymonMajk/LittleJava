@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,6 +18,12 @@ import java.io.OutputStream;
  */
 public class FileDownloader implements Downloader {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(FileDownloader.class.getName());
+	
+	
 	/**
 	 * Pole przechowuj¹ce na czas pobierania zawartoœci strumieñ wejœcia od hosta
 	 */
@@ -59,20 +67,23 @@ public class FileDownloader implements Downloader {
 	 * @return informacja o powodzeniu utworzenia strumieni do plików
 	 */
 	@Override
-	public boolean initStreams() {
+	public boolean initDownloader() {
 		boolean result = true;
 		
 		try {
 			input = new FileInputStream(inputFileName);
 			output= new FileOutputStream(outputFileName);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log4j.error("Nast¹pi³ problem podczas ustalania stanu pocz¹tkowego strumieni:"+
+					e.getMessage());
 			result = false;
 		}
 		
 		return result;
 	}
 	
+	//TODO to ca³e dziadostwo wywalamy i w¹tki same maj¹ siê zatroszczyæ o zamykanie strumieni
+	//Co te¿ dopisz w javadocu!
 	/**
 	 * Zadaniem funkcji jest zamkniêcie strumieni przechowywanych w polach prywatnych.
 	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub dostêpu

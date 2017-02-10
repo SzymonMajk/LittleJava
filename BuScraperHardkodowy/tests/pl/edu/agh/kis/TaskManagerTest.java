@@ -70,5 +70,5 @@ public class TaskManagerTest {
 		assertEquals(false,manager.hasNextTask());
 
 	}
-
+//TODO zmienimy ten test, gdy informacja o usuwania trafi do logów
 }

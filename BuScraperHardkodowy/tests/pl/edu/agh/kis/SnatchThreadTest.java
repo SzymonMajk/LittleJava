@@ -23,7 +23,7 @@ public class SnatchThreadTest {
 	@Test
 	public void testRun() throws IOException, InterruptedException {
 
-		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5,new NullAppender());
+		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		
 		if(!new File("Tests/testConf").exists())
 		{
@@ -31,22 +31,20 @@ public class SnatchThreadTest {
 		}
 		
 		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager(),new NullAppender());
+				new TaskManager());
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(
-	    		new NullAppender()),configurator.getXPaths(), new NullAppender());
-		/*SnatchThread s2 = new SnatchThread(998,pages,new FileStoreBusInfo(
-	    		new NullAppender()),configurator.getXPaths(), new NullAppender());*/
+		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(),
+				configurator.getXPaths());
 
 		//Przygotowanie danych testowych
-		File testFile = new File("Tests/testAnaliseHTMLPage");
+		File testFile = new File("Tests/AnaliseHTMLPage23Ruczaj");
 		if(!testFile.exists())
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
 				
 		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile)));
+				(new FileInputStream(testFile),"UTF-8"));
 		
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
@@ -72,8 +70,8 @@ public class SnatchThreadTest {
 		StringBuilder expected = new StringBuilder();
 		StringBuilder got = new StringBuilder();
 		
-		File expectedFile = new File("Tests/testStrugaTest");
-		File gotFile = new File("999OdTestDoKierunek/Struga");
+		File expectedFile = new File("Tests/RuczajResults");
+		File gotFile = new File("999OdTestDoKierunek/Ruczaj");
 		
 		if(!expectedFile.exists())
 		{
@@ -82,7 +80,7 @@ public class SnatchThreadTest {
 		
 		if(!gotFile.exists())
 		{
-			fail("Brak pliku wynikowego, sprawdz katalog 999OdTestDoKierunek/Struga");
+			fail("Brak pliku wynikowego, sprawdz katalog 999OdTestDoKierunek/Ruczaj");
 		}
 		
 		from = new BufferedReader(new InputStreamReader
@@ -112,7 +110,7 @@ public class SnatchThreadTest {
 			from.close();
 
 		} catch (IOException e) {
-			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku StrugaTest");
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku RuczajTest");
 		}
 		
 		assertEquals(expected.toString(),got.toString());
@@ -136,3 +134,4 @@ public class SnatchThreadTest {
 		}
 	}
 }
+//Pierwszorzêdnie, do dopisania wszystkie testy z katalogu tests!

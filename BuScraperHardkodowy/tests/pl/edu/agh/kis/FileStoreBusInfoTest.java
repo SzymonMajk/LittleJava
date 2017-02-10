@@ -26,7 +26,7 @@ public class FileStoreBusInfoTest {
 	@Test
 	public void testStoreInfo() throws IOException {
 		
-		FileStoreBusInfo f = new FileStoreBusInfo(new NullAppender());
+		FileStoreBusInfo f = new FileStoreBusInfo();
 		
 		HashMap<String,String> info= new HashMap<String,String>();
 		
@@ -77,5 +77,5 @@ public class FileStoreBusInfoTest {
 		}
 		
 	}
-
 }
+//TODO co prawda w Snatchu ju¿ trochê to testujemy... Ale jakieœ inne warianty te¿ pomyœlmy!

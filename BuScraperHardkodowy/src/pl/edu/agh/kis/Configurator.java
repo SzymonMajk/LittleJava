@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -20,9 +22,10 @@ import java.util.HashMap;
 public class Configurator {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger configuratorLogger;
+	private static final Logger log4j = LogManager.getLogger(Configurator.class.getName());
+	
 	
 	/**
 	 * Pole przechowuj¹ce nazwê pliku konfiguracyjnego
@@ -78,8 +81,7 @@ public class Configurator {
 	 */
 	public HashMap<String,String> getXPaths()
 	{
-		configuratorLogger.info("Zwracam tablicê XPath!");
-		configuratorLogger.execute();
+		log4j.info("Zwracam tablicê XPath!");
 		return XPaths;
 	}
 	
@@ -90,8 +92,7 @@ public class Configurator {
 	 */
 	public ArrayList<String> getToSerach()
 	{
-		configuratorLogger.info("Zwracam tablicê toSearch!");
-		configuratorLogger.execute();
+		log4j.info("Zwracam tablicê toSearch!");
 		return toSearch;
 	}
 	
@@ -101,6 +102,7 @@ public class Configurator {
 	 */
 	private void parseInfo()
 	{
+		//Zmienimy tutaj plik na formê XML i bêdziemy czytaæ XPathem po prostu
 		File conf = new File(configurationFileName);
 		
 		ArrayList<String> toCheck = new ArrayList<String>();
@@ -118,14 +120,14 @@ public class Configurator {
 				toCheck.add(line);
 			}
 		} catch (IOException e) {
-			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+			log4j.error("Nie uda³o siê przeczytaæ z pliku XPath!"+e.getMessage());
 		} finally {
 			if(reader != null)
 			{
 				try {
 					reader.close();
 				} catch (IOException e) {
-					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.error("Niepoprawnie zamkniêty strumieñ:"+e.getMessage());
 				}
 			}
 		}
@@ -136,7 +138,7 @@ public class Configurator {
 			{
 				startPageURL = s.substring(8);
 				
-				configuratorLogger.info("Znalaz³em URL!",startPageURL);
+				log4j.info("Znalaz³em URL!"+startPageURL);
 			}
 			else if(s.startsWith("UPDATE="))
 			{
@@ -145,27 +147,27 @@ public class Configurator {
 				{
 					updateData = true;
 				}
-				configuratorLogger.info("Wiem czy aktualizowaæ!",update);
+				log4j.info("Wiem czy aktualizowaæ!"+update);
 			}
 		    else if(s.startsWith("XPATHNAZWA="))
 			{
 				xPaths.put("buStopName", s.substring(11));
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("buStopName"));
+				log4j.info("Uda³o mi siê wyodrêbniæ XPath!"+xPaths.get("buStopName"));
 			}
 			else if(s.startsWith("XPATHNUMER="))
 			{
 				xPaths.put("lineNumber", s.substring(11));
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("lineNumber"));
+				log4j.info("Uda³o mi siê wyodrêbniæ XPath!"+xPaths.get("lineNumber"));
 			}
 			else if(s.startsWith("XPATHCZASY="))
 			{
 				xPaths.put("hours", s.substring(11));
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("hours"));
+				log4j.info("Uda³o mi siê wyodrêbniæ XPath!"+xPaths.get("hours"));
 			}
 			else if(s.startsWith("XPATHDIREC="))
 			{
 				xPaths.put("direction", s.substring(11));
-				configuratorLogger.info("Uda³o mi siê wyodrêbniæ XPath!",xPaths.get("direction"));
+				log4j.info("Uda³o mi siê wyodrêbniæ XPath!"+xPaths.get("direction"));
 			}
 		}
 		
@@ -196,15 +198,14 @@ public class Configurator {
 			}
 			
 		} catch (IOException e) {
-			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
-			e.printStackTrace();
+			log4j.error("Nie uda³o siê przeczytaæ z pliku XPath!"+e.getMessage());
 		} finally {
 			if(reader != null)
 			{
 				try {
 					reader.close();
 				} catch (IOException e) {
-					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.error("Niepoprawnie zamkniêty strumieñ:"+e.getMessage());
 				}
 			}
 		}
@@ -214,40 +215,39 @@ public class Configurator {
 			if(s.startsWith("DOWNLOADMETHOD="))
 			{
 				taskDetails[0] = s.substring(15);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - metodê protoko³u!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - metodê protoko³u!"+
 						taskDetails[0]);
 			}
 			else if(s.startsWith("HOSTNAME="))
 			{
 				taskDetails[1] = s.substring(9);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - nazwê hosta!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - nazwê hosta!"+
 						taskDetails[1]);
 			}
 			else if(s.startsWith("ZAKRESLINI="))
 			{
 				taskDetails[2] = s.substring(11);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - zakres linii!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - zakres linii!"+
 						taskDetails[2]);
 			}
 			else if(s.startsWith("MAXPRZYSTANKOW="))
 			{
 				taskDetails[3] = s.substring(15);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba przystanków!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba przystanków!"+
 						taskDetails[3]);
 			}
 			else if(s.startsWith("MAXKIERUNKOW="))
 			{
 				taskDetails[4] = s.substring(13);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba kierunków!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - maksymalna liczba kierunków!"+
 						taskDetails[4]);
 			}
 		}
-		configuratorLogger.execute();
 
 		//Wyodrêbniamy zarkes linii
 		int separatorIndex = taskDetails[2].indexOf(":");
@@ -290,14 +290,14 @@ public class Configurator {
 			}
 			
 		} catch (IOException e) {
-			configuratorLogger.error("Nie uda³o siê przeczytaæ z pliku XPath!");
+			log4j.error("Nie uda³o siê przeczytaæ z pliku XPath!");
 		} finally {
 			if(reader != null)
 			{
 				try {
 					reader.close();
 				} catch (IOException e) {
-					configuratorLogger.warning("Niepoprawnie zamkniêty strumieñ");
+					log4j.error("Niepoprawnie zamkniêty strumieñ:"+e.getMessage());
 				}
 			}
 		}
@@ -308,8 +308,8 @@ public class Configurator {
 			{
 				String searchLine = s.substring(7);
 				search.add(searchLine);
-				configuratorLogger.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania -- linijka wyszukiwañ!",
+				log4j.
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania -- linijka wyszukiwañ!"+
 						searchLine);
 			}
 		}
@@ -319,17 +319,13 @@ public class Configurator {
 	
 	/**
 	 * Konstruktor sparametryzowany, którego zadaniem jest przypisanie nazwy pliku
-	 * konfiguracyjnego, referencji do obiektu TaskManager oraz przypisania obiektu
-	 * odpowiedzialnego za sk³adowanie logów.
+	 * konfiguracyjnego, referencji do obiektu TaskManager.
 	 * @param configurationFileName nazwa pliku konfiguracyjnego
 	 * @param tasks obiekt odpowiedzialny za obs³ugê zadañ
-	 * @param appender obiekt s³u¿¹cy do sk³adowania logów
 	 */
-	Configurator(String configurationFileName,TaskManager tasks, Appends  appender)
+	Configurator(String configurationFileName,TaskManager tasks)
 	{
-		configuratorLogger = new Logger();
-		configuratorLogger.changeAppender(appender);
-		configuratorLogger.info("Configurator rozpoczyna pracê!");
+		log4j.info("Konfigurator rozpoczyna pracê!");
 		
 		this.configurationFileName = configurationFileName;
 		
@@ -337,12 +333,12 @@ public class Configurator {
 		
 		if(!conf.exists())
 		{
-			configuratorLogger.info("Plik konfiguracyjny nie istnieje!");
+			log4j.info("Plik konfiguracyjny nie istnieje!");
 			return;
 		}
 		else if(!conf.canRead())
 		{
-			configuratorLogger.info("Nie mogê czytaæ z pliku konfiguracyjnego!");
+			log4j.info("Nie mogê czytaæ z pliku konfiguracyjnego!");
 			return;
 		}
 		//Przygotowanie wstêpne zapytañ
@@ -354,20 +350,5 @@ public class Configurator {
 		prepareTasks();
 		//przygotowujemy zapytania do wyszukiwania
 		preapareSearch();
-		
-		configuratorLogger.execute();
 	}
-	
-	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest przypisanie nazwy pliku
-	 * konfiguracyjnego oraz referencji do obiektu TaskManager. Przypisuje równie¿
-	 * domyœlny sposób sk³adowania logów.
-	 * @param configurationFileName nazwa œcie¿ki pliku konfiguracyjnego
-	 * @param tasks obiekt odpowiedzialny za obs³ugê zadañ
-	 */
-	Configurator(String configurationFileName, TaskManager tasks)
-	{
-		this(configurationFileName,tasks,new FileAppender("Configurator"));
-	}
-	
 }

@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -16,9 +18,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class BlockingQueuePagesBuffer implements PagesBuffer {
 
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger bufferLogger;
+	private static final Logger log4j = 
+			LogManager.getLogger(BlockingQueuePagesBuffer.class.getName());
 	
 	/**
 	 * Obiekt przechowuj¹cy synchronizowany bufor, jest on podawany w konstruktorze
@@ -53,8 +56,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 */
 	@Override
 	public void addPage(String pageHTML) throws InterruptedException {
-		bufferLogger.info("Podali mi stronê!");
-		bufferLogger.execute();
+		log4j.info("Dodano stronê! Stan bufora przed:"+buffer.size());
 		buffer.put(pageHTML);
 	}
 
@@ -64,50 +66,32 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * siê w ju¿ w buforze, dlatego u¿ytkownik jest zobligowany do umieszczenia wywo³ania 
 	 * funkcji bezpoœrednio po wywo³aniu funkcji isEmpty() oraz zwrócenie przez ni¹ wartoœci
 	 * logicznego fa³szu.
-	 * @return Pierwszy Kod Ÿród³owy strony, pobierany z bufora
+	 * @return Pierwszy kod Ÿród³owy strony, pobierany z bufora
 	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 */
 	@Override
 	public String takePage() throws InterruptedException {
 		//metoda take u¿ywa wait oraz notify
-		bufferLogger.info("Zabrali mi stronê!");
-		bufferLogger.execute();
-
+		log4j.info("Pobrano stronê!  Stan bufora przed:"+buffer.size());
 		return buffer.take();
 	}
 	
 	/**
 	 * Konstruktor sparametryzowany, którego zadaniem jest utworzenie  obiektu 
-	 * odpowiedzialnego za buforowanie stron, pozwalaj¹cy na ustalenie rozmiaru bufora 
-	 * oraz przypisanie obiektu sk³aduj¹cego logi.
+	 * odpowiedzialnego za buforowanie stron o rozmiarze ustalonym przez argument
 	 * @param size rozmiar bufora podany przez u¿ytkownika
-	 * @param appender obiekt s³u¿¹cy do sk³adowania logów.
 	 */
-	BlockingQueuePagesBuffer(int size, Appends appender)
+	BlockingQueuePagesBuffer(int size)
 	{
-		bufferLogger = new Logger();
-		bufferLogger.changeAppender(appender);
 		buffer = new ArrayBlockingQueue<String>(size);
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest utworzenie obiektu
-	 * odpowiedzialnego za buforowanie stron, pozwalaj¹cy na ustalenie rozmiaru 
-	 * bufora oraz ustalaj¹cy domyœlny sposób sk³adowania logów.
-	 * @param size rozmiar bufora podany przez u¿ytkownika.
-	 */
-	BlockingQueuePagesBuffer(int size)
-	{
-		this(size, new FileAppender(("Buffer")));
-	}
-	
-	/**
 	 * Konstruktor domyœlny, którego zadaniem jest utworzenie obiektu odpowiedzialnego
-	 * za buforowanie stron, ustala zarówno domyœlny rozmiar bufora, jak i domyœlny
-	 * sposób sk³adowania logów.
+	 * za buforowanie stron, ustala domyœlny rozmiar bufora równy 50
 	 */
 	BlockingQueuePagesBuffer()
 	{
-		this(10, new FileAppender(("Buffer")));
+		this(50);
 	}
 }

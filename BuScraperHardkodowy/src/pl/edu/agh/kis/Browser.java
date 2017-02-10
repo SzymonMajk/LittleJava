@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 
 /**
@@ -11,6 +13,11 @@ import java.util.ArrayList;
  */
 public class Browser {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(Browser.class.getName());
+	
 	/**
 	 * Obiekt umo¿liwiaj¹cy wyszukiwanie linijek z czasami
 	 */
@@ -36,6 +43,7 @@ public class Browser {
 		}
 		else
 		{
+			log4j.warn("Linia nie przesz³a walidacji:"+searchLine);
 			return false;
 		}
 	}
@@ -49,6 +57,8 @@ public class Browser {
 	 */
 	public void serch(ArrayList<String> search)
 	{
+		//TODO tutaj musimy zamieniæ, ¿eby zamiast po prostu wypisywania, to nam przygotowywa³o
+		//odpowiedz stringBuilderem i myk
 		for(String u : search)
 		{
 			if(!validateSerachLine(u))

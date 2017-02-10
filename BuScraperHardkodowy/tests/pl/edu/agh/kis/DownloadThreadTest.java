@@ -64,7 +64,7 @@ public class DownloadThreadTest {
 		FileDownloader downloader2 = new FileDownloader("tests/RespondTestFile2",
 				"tests/RequestTestFile2");
 				
-		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5, new NullAppender());
+		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5);
 		BlockingQueue<String> request = new ArrayBlockingQueue<String>(3);
 		request.add("Zapytanie1");
 		request.add("Zapytanie2");
@@ -84,9 +84,9 @@ public class DownloadThreadTest {
 		
 		//Tworzenie dwóch obiektów i wykonywanie zapytañ 
 		DownloadThread testThread1 = new DownloadThread(999,request,buffer,
-				downloader1, new NullAppender());
+				downloader1);
 		DownloadThread testThread2 = new DownloadThread(998,request,buffer,
-				downloader2, new NullAppender());
+				downloader2);
 
 		testThread1.start();
 		testThread2.start();
@@ -172,7 +172,7 @@ public class DownloadThreadTest {
 		FileDownloader downloader = new FileDownloader("tests/RequestTestFile",
 				"tests/RespondTestFile");
 		
-		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5, new NullAppender());
+		BlockingQueuePagesBuffer buffer = new BlockingQueuePagesBuffer(5);
 	
 		//Przygotowanie pliku z odpowiedzi¹
 		OutputStream toOut = new FileOutputStream(testFileOut);
@@ -183,7 +183,7 @@ public class DownloadThreadTest {
 		
 		//Tworzymy nowy obiekt w¹tku, podpinaj¹c do niego strumienie do plików-testów
 		DownloadThread testThread = new DownloadThread(997,new ArrayBlockingQueue<String>(5),
-				buffer,downloader, new NullAppender());
+				buffer,downloader);
 		
 		String[] respondFromServer = testThread.respond("Zapytanie");
 		
@@ -238,3 +238,5 @@ public class DownloadThreadTest {
 		}
 	}
 }
+//TODO napiszmy testy dla ró¿nych mo¿liwoœci! Co tak ubogo? Niech dzia³a ró¿nie dla
+//Kodów 302, 301, 502, 100 chocia¿by, a co!

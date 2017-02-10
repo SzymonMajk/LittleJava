@@ -27,7 +27,7 @@ public interface Downloader {
 	 * @throws UnknownHostException wyj¹tki zwi¹zane z nieudanym po³¹czeniem sieciowym
 	 * @throws IOException wyj¹tki zwi¹zane z obs³ug¹ wejœcia/wyjœcia
 	 */
-	public boolean initStreams() throws IOException;
+	public boolean initDownloader() throws IOException;
 	
 	/**
 	 * Zadaniem funkcji jest zamkniêcie strumieni. Deklaruje mo¿liwoœæ wyrzucania

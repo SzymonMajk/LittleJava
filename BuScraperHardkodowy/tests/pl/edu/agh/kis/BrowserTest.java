@@ -389,7 +389,7 @@ public class BrowserTest {
 				
 		//Sprawdzanie
 
-		assertEquals("\n\n\n\n"+
+		assertEquals(
 "Dla przystanków: Przystanek2 i Przystanek1\r\n"+
 "Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami\r\n"+
 "Dla przystanków: Przystanek2 i Przystanek1\r\n"+

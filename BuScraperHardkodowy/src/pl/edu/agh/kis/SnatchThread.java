@@ -1,5 +1,7 @@
 package pl.edu.agh.kis;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -33,14 +35,14 @@ import org.xml.sax.SAXParseException;
 public class SnatchThread extends Thread {
 	
 	/**
-	 * W³asny system logów
+	 * System Log4J
 	 */
-	private Logger snatchLogger;
+	private static final Logger log4j = LogManager.getLogger(SnatchThread.class.getName());
 	
 	/**
-	 * Unikatowa nazwa przyporz¹dkowana danemu w¹tkowi
+	 * Unikatowy numer przyporz¹dkowany danemu w¹tkowi
 	 */
-	private String threadName;
+	private int threadId;
 	
 	/**
 	 * Zestaw wyra¿eñ XPath, z których bêdziemy korzystaæ
@@ -95,9 +97,9 @@ public class SnatchThread extends Thread {
 		    tidy.parseDOM(inputStream, outputStream);
 			result = outputStream.toString("UTF-8");
 			
-			snatchLogger.info("Utworzy³em dokument XHTML z dokumentu HTML");
+			log4j.info("Utworzy³em dokument XHTML z dokumentu HTML");
 		} catch (UnsupportedEncodingException e) {
-			snatchLogger.warning("Nie uda³o siê utworzyæ dokumentu XHTML z HTML",
+			log4j.error("B³¹d kodowania:"+
 					e.getMessage());
 		}
 
@@ -128,7 +130,8 @@ public class SnatchThread extends Thread {
 
 		    DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		    DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-		    Document docXML = docBuilder.parse(new ByteArrayInputStream(pageXHTML.getBytes("UTF-8")));
+		    Document docXML = docBuilder.
+		    		parse(new ByteArrayInputStream(pageXHTML.getBytes("UTF-8")));
 		    
 		    XPath xPath =  XPathFactory.newInstance().newXPath();
  		    
@@ -164,14 +167,15 @@ public class SnatchThread extends Thread {
 		    
 		    hours = buildHours.toString();
 		    
-		    snatchLogger.info("Wyodrêbni³em informacje ze strony XHTML");
+		    log4j.info("Wyodrêbni³em informacje ze strony XHTML");
 		} catch (SAXParseException err) {
-			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML",err.getMessage());
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+err.getMessage());
 		} catch (SAXException e) {
-			snatchLogger.error("Problem przy analizowaniu dokumentu XHTML",e.getMessage());
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
 		} catch (Throwable t) {
-			snatchLogger.
-			error("Bardzo powa¿ny i nieznany problem z analizowaniem XHTML",t.getMessage());
+			log4j.
+			error("Bardzo powa¿ny i do obczajenia problem z analizowaniem XHTML:"+
+					t.getMessage());
 		}
 		
 		results.put("lineNumber", lineNumber);
@@ -181,7 +185,7 @@ public class SnatchThread extends Thread {
 		
 		return results;
 	}
-	
+	//TODO no tutaj pewnie bêdzie wymaga³o zmian... ¿eby nie zawiesza³o tak tych w¹tków!
 	/**
 	 * G³ówna pêtla w¹tku - konsumenta, jej zadaniem jest pobieranie strony z bufora, oraz 
 	 * wœród zawartych na niej danych, wyodrêbnienie danych pasuj¹cych do posiadanych przez
@@ -197,26 +201,26 @@ public class SnatchThread extends Thread {
 			{
 				if(!pagesToAnalise.isEmpty())
 				{
-					snatchLogger.info("Pobieram z kolejki stron");
 					infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(
 							pagesToAnalise.takePage())));
-					snatchLogger.execute();
+					log4j.info("Pobieram z kolejki stron");
 				}
 				else
 				{
+					log4j.info("Kolejka pusta, oddajê swój czas");
+					//TODO zastnaów siê nad odpowiednim wyjœciem
 					yield();
+					log4j.info("Zasypiam, bo nie mam co robiæ...");
+					sleep(1000);
 				}
 				
 			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
 		} catch (InterruptedException e) {
-			snatchLogger.error("Niepoprawnie wybudzony!",e.getMessage());
-			snatchLogger.execute();
+			log4j.error("Niepoprawnie wybudzony!"+e.getMessage());
 		} catch (Throwable t) {
-			snatchLogger.error("Niepoprawne zapisanie!",t.getMessage());
-			snatchLogger.execute();
+			log4j.error("Niepoprawne zapisanie!"+t.getMessage());
 		}
-		snatchLogger.info("SnatchThread o imieniu "+threadName+" koñczy pracê!");
-		snatchLogger.execute();
+		log4j.info("SnatchThread o id "+threadId+" koñczy pracê!");
 	}
 	
 	/**
@@ -224,7 +228,7 @@ public class SnatchThread extends Thread {
 	 * utworzony w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ
 	 * w systemie logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz 
 	 * podarowany przez w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie 
-	 * uzyskanych danych. Przypisuje obiekt odpowiedzialny za sk³adowanie logów.
+	 * uzyskanych danych.
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
 	 *        nadrzêdnym
 	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
@@ -232,46 +236,22 @@ public class SnatchThread extends Thread {
 	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
 	 * @param xPathExpressions mapa wyra¿eñ XPath wykorzystywanych przy wyodrêbnianiu
 	 *        danych
-	 * @param appender obiekt odpowiedzialny za sk³adowanie logów	 
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
-			HashMap<String,String> xPathExpressions,Appends appender)
+			HashMap<String,String> xPathExpressions)
 	{
-		threadName = "SnatchThread number " + id;
+		threadId = id;
 		this.pagesToAnalise = pagesToAnalise;
 		this.infoSaving = infoSaving;
 		this.xPathExpressions = xPathExpressions;
-		snatchLogger = new Logger();
-		snatchLogger.changeAppender(appender);
-		snatchLogger.info("SnatchThread o imieniu "+threadName+" rozpoczyna pracê!");
+		log4j.info("SnatchThread o id "+threadId+" rozpoczyna pracê!");
 		StringBuilder regexs = new StringBuilder();
 		for(String s : xPathExpressions.keySet())
 		{
 			regexs.append(s);
 		}
-		snatchLogger.info("Otrzyma³em œcie¿ki XPath:",regexs.toString());
-		snatchLogger.execute();
+		log4j.info("Otrzyma³em œcie¿ki XPath:"+regexs.toString());
 	}
-	
-	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo
-	 * utworzony w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ
-	 * w systemie logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz 
-	 * podarowany przez w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie 
-	 * uzyskanych danych. Ustala domyœlny sposób sk³adowania logów.
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
-	 *        nadrzêdnym
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
-	 *        siebie metod
-	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
-	 * @param xPathExpressions mapa wyra¿eñ XPath wykorzystywanych przy wyodrêbnianiu
-	 *        danych
-	 * @param appender obiekt odpowiedzialny za sk³adowanie logów	
-	 */
-	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
-			HashMap<String,String> xPathExpressions)
-	{
-		this(id,pagesToAnalise,infoSaving,xPathExpressions,
-				new FileAppender("SnatchThread number " + id));
-	}
+	//TODO, niech w konstrutkorze dostaj¹ tylko buffer. id i storeBusInfo i XPAth, no i tutaj
+	//chyba nie trzeba dodatkowych funkcji... zastanów siê!
 }
