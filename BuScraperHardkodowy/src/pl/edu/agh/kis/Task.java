@@ -1,15 +1,47 @@
 package pl.edu.agh.kis;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Klasa przechowuj¹ca pojedyncze zadanie do wykonania dla BuScrappera
  * mo¿e zwracaæ szczegó³y zadania, a jego stan jest ustalany w konstruktorze.
+ * Jeden Task przeprowadza zapytania dla jednego hosta.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class Task {
 
+	/**
+	 * System Log4J
+	 */
+	private static final Logger log4j = LogManager.getLogger(TaskManager.class.getName());
+
 	private int id;
+	
+	
+	/**
+	 * Kolejka zadañ do powtórzenia
+	 */
+	private BlockingQueue<Request> requestsToRepeat;
+	
+	public void setRequestsToRepeat(BlockingQueue<Request> requestsToRepeat)
+	{
+		this.requestsToRepeat = requestsToRepeat;
+	}
+	
+	public BlockingQueue<Request> pollRequestsToRepeat()
+	{
+		BlockingQueue<Request> result = requestsToRepeat;
+		requestsToRepeat = new ArrayBlockingQueue<Request>(1);
+		return result;
+	}
 	
 	/**
 	 * Funkcja zwraca indywidualny numer zadania jednoznacznie je okreœlaj¹cy.
@@ -26,7 +58,7 @@ public class Task {
 	 * Funkcja pozwala na zmianê statusu zadania wraz z okreœleniem poprawnoœci argumentu.
 	 * @param i nowy status zadania
 	 */
-	public void changeStatus(int i)
+	public void setStatus(int i)
 	{
 		if(i >= 0 && i <= 2)
 		{
@@ -102,6 +134,20 @@ public class Task {
 	/**
 	 * Przechowuje nazwê hosta dla zapytañ
 	 */
+	private String urlPath = "";
+	
+	/**
+	 * Zwraca nazwê hosta zapytañ.
+	 * @return nazwa hosta zapytañ
+	 */
+	public String getUrlPath()
+	{
+		return urlPath;
+	}
+	
+	/**
+	 * Przechowuje nazwê hosta dla zapytañ
+	 */
 	private String host = "";
 	
 	/**
@@ -111,6 +157,18 @@ public class Task {
 	public String getHost()
 	{
 		return host;
+	}
+	
+	Task()
+	{
+		this.id = 0;
+		this.lineNumber = "";
+		this.maxBuStop = "";
+		this.maxDirection = "";
+		this.method = "";
+		this.host = "";
+		this.urlPath = "";
+		status = 0;
 	}
 	
 	/**
@@ -123,16 +181,23 @@ public class Task {
 	 * @param host nazwa hosta dla zapytañ
 	 */
 	Task(int id,String lineNumber, String maxBuStop, String maxDirection, String method, 
-			String host)
+			String pageUrl)
 	{
 		this.id = id;
 		this.lineNumber = lineNumber;
 		this.maxBuStop = maxBuStop;
 		this.maxDirection = maxDirection;
 		this.method = method;
-		this.host = host;
+		
+		URL url;
+		try {
+			url = new URL(pageUrl);
+			this.host = url.getHost();
+			this.urlPath = url.getPath();
+		} catch (MalformedURLException e) {
+			log4j.error("Problem z po³¹czeniem z URL"+e.getMessage());
+		}
+		
 		status = 0;
 	}
-	//TODO zmienimy logikê, bêdzie dostawa³o URL i do requestCreatora podawa³o URL, a on sobie
-	//bêdzie wiedzia³ ju¿ co z tym zrobiæ
 }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * Klasa ma udostêpniaæ funkcjonalnoœæ wyszukiwarki z zesk³adowanych przez BuScrappera danych
  * wykorzystuje funkcjonalnoœci dwóch obiektów pomocniczych LineBrowser oraz HourBrowser.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class Browser {
@@ -17,6 +17,11 @@ public class Browser {
 	 * System Log4J
 	 */
 	private static final Logger log4j = LogManager.getLogger(Browser.class.getName());
+	
+	/**
+	 * Przechowuje nazwê katalogu, w którym bêdziemy sk³adowaæ katalogi z danymi
+	 */
+	private String storedDataDirectoryName;
 	
 	/**
 	 * Obiekt umo¿liwiaj¹cy wyszukiwanie linijek z czasami
@@ -77,7 +82,8 @@ public class Browser {
 		
 			ArrayList<String> lines = new ArrayList<String>();
 			
-			if(lineBrowser.searchConnectingLines("buStops/"+s1, "buStops/"+s2))
+			if(lineBrowser.searchConnectingLines(storedDataDirectoryName+"buStops/"+s1,
+					storedDataDirectoryName+"buStops/"+s2))
 			{
 				for(String l : lineBrowser.getLines())	
 				{
@@ -86,7 +92,8 @@ public class Browser {
 				
 				for(String l : lines)
 				{
-					hourBrowser.searchHours(l+"/"+s1, l+"/"+s2, 
+					hourBrowser.searchHours(storedDataDirectoryName+l+"/"+s1,
+							storedDataDirectoryName+l+"/"+s2, 
 							hour, minutes, maxTime, typeOfDay);
 					
 					StringBuilder answer = new StringBuilder();
@@ -124,5 +131,15 @@ public class Browser {
 				System.out.println("Nie znaleziono bezpoœredniego po³¹czenia pomiêdzy przystankami");
 			}
 		}
+	}
+	
+	Browser()
+	{
+		this("Data/");
+	}
+	
+	Browser(String storedDataDirectoryName)
+	{
+		this.storedDataDirectoryName = storedDataDirectoryName+"/";
 	}
 }

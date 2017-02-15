@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * Klasa odpowiedzialna za wyszukiwanie linii ³¹cz¹ch podane przystanki bior¹c pod uwagê
  * kierunek.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class LineBrowser {
@@ -48,43 +48,23 @@ public class LineBrowser {
 	private ArrayList<String> readLinesFromFile(String fileName)
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		
 		File file = new File(fileName);
 		
-		if(file.exists())
-		{
-			BufferedReader buffReader = null;
-				
-			try {
-				buffReader = new BufferedReader(
-						new InputStreamReader ( new FileInputStream(file),"UTF-8"));
-				String line = "";
-				
-				while((line = buffReader.readLine()) != null)
-				{
-					result.add(line);
-				}
-				
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if(buffReader != null)
-				{
-					try {
-						buffReader.close();
-					} catch (IOException e) {
-						log4j.warn("Nie zamkniêto poprawnie strumienia");
-					}
-				}
+		try (BufferedReader buffReader = new BufferedReader(
+				new InputStreamReader ( new FileInputStream(file),"UTF-8"))) {
+			String line = "";
+	
+			while((line = buffReader.readLine()) != null)
+			{
+				result.add(line);
 			}
+				log4j.info("Wydoby³em linie dla przystanku"+fileName);
+		} catch (FileNotFoundException e) {
+			log4j.warn("Nie znaleziono pliku: "+fileName);
+		} catch (IOException e) {
+			log4j.warn("Wyst¹pi³ wyj¹tek podczas czytania z pliku: "+fileName);
 		}
-		else
-		{
-			log4j.warn("Nie ma pliku "+fileName);
-		}
-		
+			
 		return result;
 	}
 	

@@ -4,14 +4,17 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
@@ -19,7 +22,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * Klasa w¹tków, których zadaniem jest wyodrêbnienie zawartoœci ze strony, która znajduje
@@ -29,7 +31,7 @@ import org.xml.sax.SAXParseException;
  * zesk³adowania wyodrêbnionych informacji, posiada równie¿ swój w³asny system logów, 
  * z wyjœciem do pliku o nazwie równej id dzia³aj¹cego w¹tku.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class SnatchThread extends Thread {
@@ -64,47 +66,55 @@ public class SnatchThread extends Thread {
 	private StoreBusInfo infoSaving;
 	
 	/**
-	 * Funkcja s³u¿y do przetworzenia stron zapisanych w jêzyku HTML na strony XHTML,
-	 * na których mo¿emy korzystaæ z przechodzenia poprzez XPath, wykorzystuje mo¿liwoœci
-	 * pakietu JTidy, s³u¿¹cego do przetwarzania stron HTML, wyniki zapisuje w pliku
-	 * o unikatowej nazwie w¹tku, 
-	 * @param pageHTML pe³ny kod Ÿród³owy strony, któr¹ bêdziemy przetwarzaæ
-	 * @return pe³ny kod Ÿród³owy strony przetworzony do formy XHTML'a
+	 * Obiekt przechowuj¹cy aktualnie przetwarzan¹ stronê
+	 */
+	private String currentPage;
+	
+	/**
+	 * Funkcja s³u¿y do przetworzenia stron zapisanych w jêzyku HTML na dokument XML przy
+	 * u¿yciu pakietu JTidy, wykorzystuj¹c do tego dwie tablice bitów, potrzebne dla 
+	 * funkcji parse z klasy Tidy, zapisuj¹c wynik tej operacji ze strumienia odpowiadaj¹cego
+	 * za strumieñ wyjœcia funkcji, do przygotowanego String'a. Wynik jest jeszcze opakowywany
+	 * przez znaczniki <myroot></myroot> w celu uchronienia siê przed wynikiem przetwarznia,
+	 * w którym nie istnia³by jeden korzeñ, co mo¿e siê zdarzyæ przy specyficznie zbudowanych
+	 * stronach HTML.
+	 * @param pageHTML pe³ny kod Ÿród³owy HTML strony, któr¹ bêdziemy przetwarzaæ
+	 * @return pe³ny kod Ÿród³owy strony przetworzony do formy zgodnej z XML
 	 */
 	private String prepareXMLPage(String pageHTML)
 	{		
-		String result = "";
-				
+		String result = "";	
 		Tidy tidy = new Tidy();
-		//tidy.setXHTML(true);
 		tidy.setInputEncoding("UTF-8");
 	    tidy.setOutputEncoding("UTF-8");
 	    tidy.setWraplen(Integer.MAX_VALUE);
 	    tidy.setPrintBodyOnly(true);
 	    tidy.setXmlOut(true);
 	    tidy.setSmartIndent(true);
-	    
 	    tidy.setQuiet(true);
 	    tidy.setShowErrors(0);
 	    tidy.setShowWarnings(false);
 	    tidy.setForceOutput(true);
 	    
-		ByteArrayInputStream inputStream;
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		
-		try {
-			inputStream = new ByteArrayInputStream(pageHTML.getBytes("UTF-8"));
+		try (ByteArrayInputStream inputStream = 
+				new ByteArrayInputStream(pageHTML.getBytes("UTF-8"));
+				ByteArrayOutputStream outputStream = new ByteArrayOutputStream())
+		{
 		    tidy.parseDOM(inputStream, outputStream);
 			result = outputStream.toString("UTF-8");
-			
 			log4j.info("Utworzy³em dokument XHTML z dokumentu HTML");
 		} catch (UnsupportedEncodingException e) {
-			log4j.error("B³¹d kodowania:"+
-					e.getMessage());
+			log4j.error("B³¹d kodowania:"+e.getMessage());
+		} catch (IOException e) {
+			log4j.error("B³¹d wejœcia/wyjœcia:"+e.getMessage());
 		}
-
-		return "<myroot>"+result+"</myroot>";
 		
+		StringBuilder builder = new StringBuilder();
+		builder.append("<myroot>");
+		builder.append(result);
+		builder.append("</myroot>");
+
+		return builder.toString();
 	}
 	
 	/**
@@ -153,7 +163,6 @@ public class SnatchThread extends Thread {
 		    //Przelatujê po wszystkich linijkach pasuj¹cych do XPath
 		    for (int i = 0;null!=hourss && i < hourss.getLength(); ++i) 
 		    {
-		    	
 	    		Node nod = hourss.item(i);
 	    		if(nod.getNodeType() == Node.ELEMENT_NODE)
 	    		{
@@ -168,14 +177,16 @@ public class SnatchThread extends Thread {
 		    hours = buildHours.toString();
 		    
 		    log4j.info("Wyodrêbni³em informacje ze strony XHTML");
-		} catch (SAXParseException err) {
-			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+err.getMessage());
 		} catch (SAXException e) {
 			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
-		} catch (Throwable t) {
-			log4j.
-			error("Bardzo powa¿ny i do obczajenia problem z analizowaniem XHTML:"+
-					t.getMessage());
+		} catch (ParserConfigurationException e) {
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+		} catch (IOException e) {
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace(); 
 		}
 		
 		results.put("lineNumber", lineNumber);
@@ -185,7 +196,6 @@ public class SnatchThread extends Thread {
 		
 		return results;
 	}
-	//TODO no tutaj pewnie bêdzie wymaga³o zmian... ¿eby nie zawiesza³o tak tych w¹tków!
 	/**
 	 * G³ówna pêtla w¹tku - konsumenta, jej zadaniem jest pobieranie strony z bufora, oraz 
 	 * wœród zawartych na niej danych, wyodrêbnienie danych pasuj¹cych do posiadanych przez
@@ -195,31 +205,43 @@ public class SnatchThread extends Thread {
 	 */
 	public void run()
 	{	
-		
-		try {
-			do
+		BuScrapper.numberOfWorkingSnatchThreads.incrementAndGet();
+
+		do
+		{
+			if(!pagesToAnalise.isEmpty())
 			{
-				if(!pagesToAnalise.isEmpty())
-				{
-					infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(
-							pagesToAnalise.takePage())));
+				try {
+					currentPage = pagesToAnalise.takePage();
 					log4j.info("Pobieram z kolejki stron");
+				} catch (InterruptedException e) {
+					log4j.error("W¹tek niepoprawnie wybudzony:"+e.getMessage());
+				} finally {
+					if(currentPage == null)
+					{
+						continue;
+					}
 				}
-				else
-				{
-					log4j.info("Kolejka pusta, oddajê swój czas");
-					//TODO zastnaów siê nad odpowiednim wyjœciem
+				log4j.info("Pobra³em z kolejki stron");
+				infoSaving.storeInfo(analiseXMLPage(prepareXMLPage(
+						currentPage)));
+				log4j.info("Strona zosta³a przetworzona");
+			}
+			else
+			{
+				log4j.info("Kolejka pusta, usypiamy w oczekiwaniu na producenta.");
+				try {
+					sleep(5000);
 					yield();
-					log4j.info("Zasypiam, bo nie mam co robiæ...");
-					sleep(1000);
+				} catch (InterruptedException e) {
+					log4j.error("W¹tek niepoprawnie wybudzony:"+e.getMessage());
 				}
+			}
 				
-			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
-		} catch (InterruptedException e) {
-			log4j.error("Niepoprawnie wybudzony!"+e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Niepoprawne zapisanie!"+t.getMessage());
-		}
+		}while((BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0 
+				|| !pagesToAnalise.isEmpty()) );
+		 
+		BuScrapper.numberOfWorkingSnatchThreads.decrementAndGet();
 		log4j.info("SnatchThread o id "+threadId+" koñczy pracê!");
 	}
 	
@@ -252,6 +274,4 @@ public class SnatchThread extends Thread {
 		}
 		log4j.info("Otrzyma³em œcie¿ki XPath:"+regexs.toString());
 	}
-	//TODO, niech w konstrutkorze dostaj¹ tylko buffer. id i storeBusInfo i XPAth, no i tutaj
-	//chyba nie trzeba dodatkowych funkcji... zastanów siê!
 }

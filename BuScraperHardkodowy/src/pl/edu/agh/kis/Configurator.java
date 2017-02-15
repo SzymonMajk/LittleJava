@@ -16,7 +16,7 @@ import java.util.HashMap;
  * pozosta³ych komponentów BuScrappera. Zapewnia równie¿ mo¿liwoœæ prostego udostêpniania
  * wszystkich zebranych informacji poprzez swoje gettery. Korzysta z pliku w katalogu Conf.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class Configurator {
@@ -219,11 +219,11 @@ public class Configurator {
 				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - metodê protoko³u!"+
 						taskDetails[0]);
 			}
-			else if(s.startsWith("HOSTNAME="))
+			else if(s.startsWith("STARTURL="))
 			{
 				taskDetails[1] = s.substring(9);
 				log4j.
-				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - nazwê hosta!"+
+				info("Uda³o mi siê wyodrêbniæ szczegó³ zadania - adres url!"+
 						taskDetails[1]);
 			}
 			else if(s.startsWith("ZAKRESLINI="))

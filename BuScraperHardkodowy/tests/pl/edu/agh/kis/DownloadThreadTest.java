@@ -5,11 +5,8 @@ import static org.junit.Assert.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -18,7 +15,7 @@ import org.junit.Test;
 /**
  * Dwa proste testy dla klasy DownloadThread
  * @author Szymon Majkut
- * @varsion 1.3
+ * @version %I%, %G%
  *
  */
 public class DownloadThreadTest {
@@ -30,8 +27,8 @@ public class DownloadThreadTest {
 	 * @throws IOException wyrzucany w przypadku b³êdów wejœcia wyjœcia
 	 * @throws InterruptedException wyrzuany w przypadku b³êdnego wybudzenia w¹tków
 	 */
-	@Test
-	public void testRun() throws IOException, InterruptedException {
+	//@Test
+	/*public void testRun() throws IOException, InterruptedException {
 		
 		//Utworzenie plików oraz strumieni plikowych do testu, bufora,
 		//requests oraz dwóch w¹tków
@@ -83,9 +80,9 @@ public class DownloadThreadTest {
 		to.close();
 		
 		//Tworzenie dwóch obiektów i wykonywanie zapytañ 
-		DownloadThread testThread1 = new DownloadThread(999,request,buffer,
+		DownloadThread testThread1 = new DownloadThread(999,buffer,request,
 				downloader1);
-		DownloadThread testThread2 = new DownloadThread(998,request,buffer,
+		DownloadThread testThread2 = new DownloadThread(998,buffer,request,
 				downloader2);
 
 		testThread1.start();
@@ -147,14 +144,14 @@ public class DownloadThreadTest {
 			fail("Plik testowy testFileOut2 nie istnia³!");
 		}
 	}
-	
+	*/
 	/**
 	 * Test metody wewn¹trz DownloadThread, która jest dosyæ wa¿na
 	 * i warto by³oby jej zrobiæ osobny test
 	 * @throws IOException
 	 */
-	@Test
-	public void testRequest() throws IOException {
+	//@Test
+	/*public void testRequest() throws IOException {
 		
 		//Utworzenie plików oraz strumieni plikowych do testu oraz bufora
 		File testFileOut = new File("tests/RequestTestFile");
@@ -182,8 +179,8 @@ public class DownloadThreadTest {
 		to.close();
 		
 		//Tworzymy nowy obiekt w¹tku, podpinaj¹c do niego strumienie do plików-testów
-		DownloadThread testThread = new DownloadThread(997,new ArrayBlockingQueue<String>(5),
-				buffer,downloader);
+		DownloadThread testThread = new DownloadThread(997,buffer
+				,new ArrayBlockingQueue<String>(5),downloader);
 		
 		String[] respondFromServer = testThread.respond("Zapytanie");
 		
@@ -236,6 +233,165 @@ public class DownloadThreadTest {
 		{
 			fail("Plik testowy testFileOut nie istnia³!");
 		}
+	}
+*/
+	//TODO dla innych testy, no to bêdziemy sprawdzaæ co jest w tych innych kolejkach...
+	/**
+	 * Sprwadzamy przypadek, gdy otrzymujemy od servera odpowiedz 200 OK
+	 */
+	@Test
+	public void testRunRespond200() throws IOException, InterruptedException {
+	
+		RequestCreator requestCreator = new RequestCreator();
+		//TODO trzeba zmieniæ requestCreatora, zeby mo¿na mu by³o ustawiæ requesty te¿
+		//zewnêtrzn¹ funkcj¹...
+		
+		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
+		BlockingQueue<String> request = new ArrayBlockingQueue<String>(3);
+		request.add("Zapytanie1");
+		request.add("Zapytanie2");
+		
+		String testRoot = "tests/testData/";
+		
+		if(!new File("Tests/testConf").exists())
+		{
+			fail("Nie odnaleziono pliku testowego!");
+		}
+		
+		String nameOfTestFile = "Tests/ServerRespond200";
+		File testFile = new File(nameOfTestFile);
+		
+		DownloadThread d1 = new DownloadThread(999,pages,requestCreator,
+				new FileDownloader(testRoot+"RespondTestFile1",nameOfTestFile));
+		
+		
+		//Przygotowanie danych testowych
+		if(!testFile.exists())
+		{
+			fail("Brak ¿adanego pliku testowego");
+		}
+				
+		BufferedReader from = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"));
+		
+		String line = "";
+		StringBuilder XMLDocument = new StringBuilder();
+		
+		try {
+			while((line = from.readLine()) != null)
+			{
+				XMLDocument.append(line);
+			}
+			
+			from.close();
+	
+		} catch (IOException e) {
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
+		}
+		pages.addPage(XMLDocument.toString());
+		
+		//Odpalmy to!
+		d1.start();
+		d1.join();
+		
+		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
+		StringBuilder expected = new StringBuilder();
+		StringBuilder got = new StringBuilder();
+		
+		File expectedFile = new File("Tests/RuczajResults");
+		File gotFile = new File(testRoot+"999OdTestDoKierunek/Ruczaj");
+		File buStops = new File(testRoot+"buStops/Ruczaj");
+		File testDataFolder = new File(testRoot+"buStops").getParentFile();
+		
+		if(!expectedFile.exists())
+		{
+			fail("Brak pliku testowego");
+		}
+		
+		if(!gotFile.exists())
+		{
+			fail("Brak pliku wynikowego");
+		}
+		
+		from = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)));
+		
+		try {
+			while((line = from.readLine()) != null)
+			{
+				expected.append(line);
+			}
+			
+			from.close();
+	
+		} catch (IOException e) {
+			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
+		}
+		
+		from = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)));
+		
+		try {
+			while((line = from.readLine()) != null)
+			{
+				got.append(line);
+			}
+	
+			from.close();
+	
+		} catch (IOException e) {
+			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
+		}
+		
+		//Usuwamy utworzone pliki
+		if(gotFile.exists())
+		{
+			if(!gotFile.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+	
+			if(!gotFile.getParentFile().delete())
+			{
+				fail("Nie usuniêto katalogu");
+			}
+		}
+		else
+		{
+			fail("Plik zosta³ niew³¹œciwie usuniêty");
+		}
+		
+		if(buStops.exists())
+		{
+			if(!buStops.delete())
+			{
+				fail("Nie usuniêto pliku");
+			}
+	
+			if(!buStops.getParentFile().delete())
+			{
+				fail("Nie usuniêto katalogu");
+			}
+		}
+		else
+		{
+			fail("Plik zosta³ niew³¹œciwie usuniêty");
+		}
+		
+		if(testDataFolder.exists())
+		{
+			if(!testDataFolder.delete())
+			{
+				fail("Katalog g³ówny testów nie zosta³ usuniêty poprawnie");
+			}
+		}
+		else
+		{
+			fail("Katalog g³ówny testów zosta³ wczeœniej usuniêty niepoprawnie");
+		}		
+		
+		//Sprawdzamy co znajdowa³o siê w plikach
+		assertEquals(expected.toString(),got.toString());
 	}
 }
 //TODO napiszmy testy dla ró¿nych mo¿liwoœci! Co tak ubogo? Niech dzia³a ró¿nie dla

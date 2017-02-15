@@ -8,7 +8,7 @@ import org.junit.Test;
 /**
  * Kilka testów czy wszystko dzia³a poprawnie
  * @author Szymon Majkut
- * @version 1.1b
+ * @version %I%, %G%
  *
  */
 public class ConfiguratorTest {

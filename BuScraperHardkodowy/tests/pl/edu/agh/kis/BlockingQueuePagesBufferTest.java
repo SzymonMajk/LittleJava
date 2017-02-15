@@ -9,7 +9,7 @@ import org.junit.Test;
 /**
  * Kilka prostych testów dla bufora stron
  * @author Szymon Majkut
- * @version 1.1b
+ * @version %I%, %G%
  *
  */
 public class BlockingQueuePagesBufferTest {

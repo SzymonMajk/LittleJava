@@ -4,6 +4,12 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+/**
+ * 
+ * @author Szymon Majkut
+ * @version %I%, %G%
+ *
+ */
 public class TaskTest {
 
 	@Test
@@ -11,7 +17,7 @@ public class TaskTest {
 		Task newTask = new Task(0,"999","5","5","Post","host");
 
 		assertEquals(0,newTask.getStatus());
-		newTask.changeStatus(1);
+		newTask.setStatus(1);
 		assertEquals(1,newTask.getStatus());
 	}
 	
@@ -20,7 +26,7 @@ public class TaskTest {
 		Task newTask = new Task(0,"999","5","5","Post","host");
 
 		assertEquals(0,newTask.getStatus());
-		newTask.changeStatus(2);
+		newTask.setStatus(2);
 		assertEquals(2,newTask.getStatus());
 	}
 	
@@ -29,7 +35,7 @@ public class TaskTest {
 		Task newTask = new Task(0,"999","5","5","Post","host");
 
 		assertEquals(0,newTask.getStatus());
-		newTask.changeStatus(0);
+		newTask.setStatus(0);
 		assertEquals(0,newTask.getStatus());
 	}
 	
@@ -38,7 +44,7 @@ public class TaskTest {
 		Task newTask = new Task(0,"999","5","5","Post","host");
 
 		assertEquals(0,newTask.getStatus());
-		newTask.changeStatus(3);
+		newTask.setStatus(3);
 		assertEquals(0,newTask.getStatus());
 	}
 	
@@ -47,7 +53,7 @@ public class TaskTest {
 		Task newTask = new Task(0,"999","5","5","Post","host");
 
 		assertEquals(0,newTask.getStatus());
-		newTask.changeStatus(-1);
+		newTask.setStatus(-1);
 		assertEquals(0,newTask.getStatus());
 	}
 

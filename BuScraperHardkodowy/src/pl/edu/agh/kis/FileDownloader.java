@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -13,7 +12,7 @@ import java.io.OutputStream;
  * Klasa implementuj¹ca interfejs Downloader, umo¿liwiaj¹ca udostêpnianie strumieni
  * do plików, jest przeznaczona g³ównie do testów.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class FileDownloader implements Downloader {
@@ -64,10 +63,11 @@ public class FileDownloader implements Downloader {
 	
 	/**
 	 * Zadaniem funkcji jest otworzenie strumieni dla plików podanych w konstruktorze.
+	 * @param hostName w tej implementacji nie jest u¿ywany
 	 * @return informacja o powodzeniu utworzenia strumieni do plików
 	 */
 	@Override
-	public boolean initDownloader() {
+	public boolean initDownloader(String hostName) {
 		boolean result = true;
 		
 		try {
@@ -80,19 +80,6 @@ public class FileDownloader implements Downloader {
 		}
 		
 		return result;
-	}
-	
-	//TODO to ca³e dziadostwo wywalamy i w¹tki same maj¹ siê zatroszczyæ o zamykanie strumieni
-	//Co te¿ dopisz w javadocu!
-	/**
-	 * Zadaniem funkcji jest zamkniêcie strumieni przechowywanych w polach prywatnych.
-	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub dostêpu
-	 *         do plików.
-	 */
-	public void closeStreams() throws IOException
-	{
-		input.close();
-		output.close();
 	}
 	
 	/**

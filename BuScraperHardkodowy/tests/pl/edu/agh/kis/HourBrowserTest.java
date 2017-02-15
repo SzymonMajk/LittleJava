@@ -18,7 +18,7 @@ import org.junit.Test;
  * Testy wyszukiwarki godzin, osobne przypadki linii nocnej, dziennej autobusowej
  * oraz tramwajowej, oraz kilka mo¿liwych przypadków niepowodzenia
  * @author Szymon Majkut
- * @version 1.3
+ * @version %I%, %G%
  *
  */
 public class HourBrowserTest {

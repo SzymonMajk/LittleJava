@@ -7,8 +7,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.UnknownHostException;
-import java.util.concurrent.BlockingQueue;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Klasa w¹tków, których zadaniem jest umieszczenie poprawnie otrzymanej odpowiedzi
@@ -21,7 +22,7 @@ import java.util.concurrent.BlockingQueue;
  * w poprawny sposób. Niepoprawnoœæ pobieranych danych jest okreœlana poprzez wy³apywane
  * z metod prywatnych wyj¹tki.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  */
 public class DownloadThread extends Thread {
 
@@ -38,12 +39,7 @@ public class DownloadThread extends Thread {
 	/**
 	 * Referencja do kolejki zapytañ, które w¹tek powinieñ wykonaæ
 	 */
-	private BlockingQueue<String> requests;
-	
-	/**
-	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
-	 */
-	private PagesBuffer pagesToAnalise;
+	private RequestCreator requestCreator;
 	
 	/**
 	 * Obiekt udostêpniaj¹cy strumienie do wysy³ania zapytañ oraz odbierania odpowiedzi
@@ -51,40 +47,95 @@ public class DownloadThread extends Thread {
 	private Downloader downloader;
 	
 	/**
+	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
+	 */
+	private PagesBuffer pagesToAnalise;
+	
+	private boolean connectionProblems;
+	
+	private Request currentRequest;
+	
+	private String currentHeader = "";
+	
+	private String currentResponse = "";
+	
+	private void storeRequest(Request request)
+	{
+		requestCreator.putInvalidRequest(request);
+	}
+	
+	private String writeRequest(Request request)
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append(request.getMethod());
+		builder.append(" ");
+		builder.append(request.getUrlPath());
+		
+		if(request.getMethod().equals("GET"))
+		{
+			builder.append("?");
+			builder.append(request.getParameters());
+			builder.append(" HTTP/1.1\r\n");
+			builder.append("Host: ");
+			builder.append(request.getHost());
+			builder.append("\r\n");
+			builder.append("Accept-Charset: ");
+			builder.append(request.getAcceptCharset());
+			builder.append("\r\n");
+			builder.append("Connection: close\r\n\r\n");
+		}
+		else if(request.getMethod().equals("POST"))
+		{
+			builder.append(" HTTP/1.1\r\n");
+			builder.append("Host: ");
+			builder.append(request.getHost());
+			builder.append("\r\n");
+			builder.append("Accept-Charset: ");
+			builder.append(request.getAcceptCharset());
+			builder.append("\r\n");
+			builder.append("Connection: close\r\n\r\n");
+			builder.append("Content-Type: application/x-www-form-urlencoded\r\n");
+			builder.append("Content-Length: ");
+			builder.append(request.getParameters().length());
+			builder.append("\r\n\r\n");
+			builder.append(request.getParameters());
+			builder.append("\r\n");
+		}
+		
+		return builder.toString();
+	}
+	
+	/**
 	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedŸ,
 	 * któr¹ od niego otrzymuje. Funckja jest publiczna, poniewa¿ w ten sposób pozwala
 	 * na dogodne testowanie, posiada na sztywno ustalone kodowanie UTF-8.
 	 * @param request poprawne zapytanie do servera uzyskane z kolejki udostêpnionej przez
 	 * 		  RequestCreator
-	 * @return tablica obiektów String, elementem o indeksie zero jest nag³ówek odpowiedzi,
-	 *        natomiast elementem o indeksie jeden jest treœæ odpowiedz
-	 * @throws UnknownHostException wyrzucany w przypadku b³êdnego ustalenia stanu obiektu
-	 *         przeznaczonego do komunikacji sieciowej lub braku dostêpu do internetu
-	 * @throws IOException wyrzucany gdy nastêpuje problem z korzystaniem ze strumieni
-	 *         na poziomie niesieciowym
+	 * @return 
 	 */
-	public String[] respond(String request) throws UnknownHostException, IOException
+	public boolean proceedRequest(Request request)
 	{
+		boolean result = true;
 		String line = "";
-		StringBuilder respond = new StringBuilder();
-		StringBuilder header = new StringBuilder();
-		OutputStreamWriter to;
-		BufferedReader from;
+		StringBuilder response = new StringBuilder("");
+		StringBuilder header = new StringBuilder("");
 		
-		if(downloader.initDownloader())
+		if(request != null && downloader.initDownloader(request.getHost()))
 		{
-			try {
+			try (OutputStreamWriter to = new OutputStreamWriter(
+				downloader.getOutputStream(),"UTF-8");
+				BufferedReader headerResponseReader = new BufferedReader(
+				new InputStreamReader(downloader.getInputSteam(),"UTF-8"))) {
 				
-				to = new OutputStreamWriter(
-						downloader.getOutputStream(),"UTF-8");
-				to.write(request);
+				//Wykonujemy zapytanie
+				to.write(writeRequest(request));
 				to.flush();
-				log4j.info("Wykonujê request: "+request);
+				log4j.info("Wykona³em zapytanie o parametrach:"+request.getParameters());
 				
-				from = new BufferedReader(new InputStreamReader(
-						downloader.getInputSteam(),"UTF-8"));			
+							
 				
-				while((line = from.readLine()) != null)
+				//Odbieramy nag³ówek odpowiedzi
+				while((line = headerResponseReader.readLine()) != null)
 				{
 					if(line.equals(""))
 					{
@@ -93,31 +144,39 @@ public class DownloadThread extends Thread {
 					header.append(line);
 				}
 				
-				//TODO wyci¹gnijmy z headera charset dla odpowiedzi i inne ¿byry jak trzeba..
-								
-				while((line = from.readLine()) != null)
+				//Odbieramy treœæ odpowiedzi
+				while((line = headerResponseReader.readLine()) != null)
 				{
-					respond.append(line);
+					response.append(line);
 				}
 				
-				downloader.closeStreams();
-				
-			} catch (UnsupportedEncodingException e1) {
-				log4j.error("Niew³aœciwe kodowanie dokumentu:"+e1.getMessage());
-				e1.printStackTrace();		
+				log4j.info("Otrzyma³em odpowiedŸ na zapytanie o parametrach:"
+						+request.getParameters());
+			} catch (UnsupportedEncodingException e) {
+				result = false;
+				connectionProblems = true;
+				log4j.error("Niewspierane kodowanie:"+e.getMessage());
+				storeRequest(currentRequest);
 			} catch (IOException e) {
-				log4j.error("Problem z czytaniem odpowiedzi servera:"+e.getMessage());
+				//Tutaj mamy sytuacjê gdy zerwano internet, wtedy mamy zakoñczyæ run()
+				result = false;
+				connectionProblems = true;
+				log4j.warn("Utracono po³¹czenie z hostem:"+e.getMessage());
+				storeRequest(currentRequest);
 			} 
 		}
 		else
 		{
-			log4j.error("Niemo¿liwe zainicjowanie po³¹czenia.");
+			result = false;
+			connectionProblems = true;
+			log4j.warn("Niemo¿liwe zainicjowanie po³¹czenia z hostem.");
+			storeRequest(currentRequest);
 		}
 
-		//TODO to zmienimy na przypisywanie prywatnych pól!
-		String[] allRespond = {header.toString(),respond.toString()};
-		
-		return allRespond;
+		currentHeader = header.toString();
+		currentResponse = response.toString();
+				
+		return result;
 	}
 	
 	/**
@@ -125,25 +184,68 @@ public class DownloadThread extends Thread {
 	 * @param header nag³ówek zasobu otrzymanego z poprawnego zapytania
 	 * @return informacja czy pobrany zasób jest zasobem poprawnym z punktu widzenia u¿ytkownika
 	 */
-	private boolean isCorrectRespond(String[] respond)
+	private boolean checkHeaderAndResponse()
 	{
-		if(respond[0] == null || respond[0].equals("") || 
-				respond[1] == null || respond[1].equals(""))
+		
+		if(currentHeader == null  || currentResponse == null)
 		{
-			log4j.warn("Zamiast zasobu otrzyma³em null.");
+			log4j.warn("Header lub Response s¹ równe null.");
 			return false;
 		}
-		else if(respond[0].contains("HTTP/1.1 200 OK") || 
-				respond[0].contains("HTTP/1.0 200 OK"))
+		else if(currentHeader.equals("") || currentResponse.equals(""))
+		{
+			log4j.warn("Header lub Response s¹ puste.");
+			return false;
+		}
+				
+		String headerCode = currentHeader.substring(9,12);
+		
+		if(headerCode.equals("200"))
 		{
 			log4j.info("Pobrano poprawny zasób.");
 			return true;
 		}
+		else if(headerCode.equals("500") || headerCode.equals("502") || 
+				headerCode.equals("503") || headerCode.equals("110") || 
+				headerCode.equals("111"))
+		{
+			log4j.info("Konieczne ponowienie zapytania.");
+			storeRequest(currentRequest);
+			return false;
+		}
+		else if(headerCode.equals("301"))
+		{
+			log4j.info("Zasób zosta³ przeniesiony.");
+			
+			String[] splited = currentHeader.split("\r\n");
+			String newResource = "";
+			
+			for(String l : splited)
+			{
+				if(l.startsWith("Location"))
+				{
+					newResource = l.substring(10);
+					break;
+				}
+			}
+			
+			try {
+				URL newUrl = new URL(newResource);
+				
+				String newHost = newUrl.getHost();
+				String newPath = newUrl.getPath();
+				
+				storeRequest(new Request(currentRequest.getMethod(),newPath,newHost,
+						currentRequest.getParameters(),currentRequest.getAcceptCharset()));
+			} catch (MalformedURLException e) {
+				log4j.error("B³êdny format URL"+e.getMessage());
+			}
+			
+			return false;
+		}
 		else
 		{
-			log4j.
-			info("Nie zwrócono poprawnego zasobu, nie wstawiam go do kolejki:"+
-					respond[0]);
+			log4j.info("Nie obs³u¿y³em zapytania:"+currentHeader);
 			return false;
 		}
 	}
@@ -157,65 +259,43 @@ public class DownloadThread extends Thread {
 	 * zapytania do wys³ania
 	 */
 	public void run()
-	{		
-		//TODO zaprzêgniêcie w to ca³e obiektu odpowiedzialnego za zarz¹dzanie b³êdami
-		//teraz musimy odró¿niaæ kiedy w¹tek koñczy siê b³êdem a kiedy poprawnie
-		
+	{			
 		BuScrapper.numberOfWorkingDownloadThreads.incrementAndGet();
-		boolean alreadyDecrement = false;
+		connectionProblems = false;
 		
-		try {	
-			do
+		do
+		{
+			//Pobiera kolejne zapytanie z kolejki zapytañ
+			try {
+				currentRequest = requestCreator.getRequests().poll(2, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				log4j.error("Niepoprawnie wybudzony przy pobieraniu nowego zapytania:"
+						+e.getMessage());
+			} finally {
+				if(currentRequest == null)
+				{
+					continue;
+				}
+			}
+					
+			if(proceedRequest(currentRequest) && checkHeaderAndResponse())
 			{
-				String[] respondFromServer = null;
-				//Pobiera kolejne zapytanie z kolejki zapytañ
-				if(!requests.isEmpty())
-				{
-					respondFromServer = respond(requests.take());
-				}
-				else
-				{
-					BuScrapper.correctTaskExecute.set(true);
-					break;
-				}
-
-				if(isCorrectRespond(respondFromServer))
-				{
-					//Wystarczy dziêki specyfikacji BlockingQueue
-					pagesToAnalise.addPage(respondFromServer[1]);
+				//Wystarczy dziêki specyfikacji BlockingQueue
+				try {
+					pagesToAnalise.addPage(currentResponse);
 					log4j.info("Dodajê now¹ stronê do kolejki stron.");
-				}
-				
-			}while(BuScrapper.numberOfWorkingDownloadThreads.intValue() > 0);
-		} catch (InterruptedException e) {
-			log4j.error("Niepoprawnie wybudzony!"+e.getMessage());
-			BuScrapper.numberOfWorkingDownloadThreads.set(0);
-			BuScrapper.correctTaskExecute.set(false);
-		} catch (UnknownHostException e) {
-			log4j.error("Problem z po³¹czeniem internetowym!"+e.getMessage());
-			BuScrapper.numberOfWorkingDownloadThreads.set(0);
-			BuScrapper.correctTaskExecute.set(false);
-		} catch (IOException e) {
-			log4j.error("Problem ze strumieniami!"+e.getMessage());
-			BuScrapper.numberOfWorkingDownloadThreads.set(0);
-			BuScrapper.correctTaskExecute.set(false);
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny problem!"+t.getMessage());
-			BuScrapper.numberOfWorkingDownloadThreads.set(0);
-			BuScrapper.correctTaskExecute.set(false);
-		} finally {
-			
-			if(!alreadyDecrement && !BuScrapper.correctTaskExecute.get())
-			{
-				alreadyDecrement = true;
+				} catch (InterruptedException e) {
+					log4j.error("Niepoprawnie wybudzony przy dok³adaniu nowej strony:"
+							+e.getMessage());
+				}		
 			}
-			else if(!alreadyDecrement)
-			{
-				BuScrapper.numberOfWorkingDownloadThreads.decrementAndGet();
-				alreadyDecrement = true;
-			}
-		}
 				
+		}while(!requestCreator.getRequests().isEmpty() && !connectionProblems);
+		
+		currentHeader = "";
+		currentResponse = "";
+		
+		BuScrapper.numberOfWorkingDownloadThreads.decrementAndGet();
 		log4j.info("DownloadThread o id "+threadId+" koñczy pracê!");
 	}
 	
@@ -227,23 +307,22 @@ public class DownloadThread extends Thread {
 	 * kolejkê zapytañ przygotowan¹ przez RequestCreator.
 	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
 	 *        nadrzêdnym
-	 * @param requests snychronizowana kolejka zapytañ
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
+	 * @param requestCreator obiekt udostêpniaj¹cy kolejkê zapytañ do wykonania, oraz
+	 * 		  pozwalaj¹cy na zesk³adowanie wykonañ, które musz¹ zostaæ powtórzone
+	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez
+	 * @param requests kolejka blokuj¹ca zapytañ do wykonania  
 	 *        siebie metod
 	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹cy strumienie do pobierania 
 	 *        zasobów
 
 	 */
-	DownloadThread(int id,BlockingQueue<String> requests,PagesBuffer pagesToAnalise,
+	DownloadThread(int id,PagesBuffer pagesToAnalise, RequestCreator requestCreator,
 			Downloader downloader)
 	{
 		threadId = id;
-		this.requests = requests;
 		this.pagesToAnalise = pagesToAnalise;
+		this.requestCreator = requestCreator;
 		this.downloader = downloader;
 		log4j.info("DownloadThread o id "+threadId+" rozpoczyna pracê!");
 	}
-	
-	//TODO, niech w konstrutkorze dostaj¹ tylko buffer. id i downloadera, a requesty
-	//przy odpalaniu w pêtli ju¿ w osobnej funkcji!
 }

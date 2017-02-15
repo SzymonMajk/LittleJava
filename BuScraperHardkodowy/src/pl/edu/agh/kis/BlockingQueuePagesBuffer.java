@@ -3,6 +3,7 @@ package pl.edu.agh.kis;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -12,7 +13,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * w tym celu implementacjê interfejsku BlockingQueue. Udostêpnia równie¿ informacje 
  * stanie bufora oraz pozwala poprzez konstruktor sparametryzowany ustaliæ jego rozmiar.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class BlockingQueuePagesBuffer implements PagesBuffer {
@@ -73,7 +74,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	public String takePage() throws InterruptedException {
 		//metoda take u¿ywa wait oraz notify
 		log4j.info("Pobrano stronê!  Stan bufora przed:"+buffer.size());
-		return buffer.take();
+		return buffer.poll(2, TimeUnit.SECONDS);
 	}
 	
 	/**

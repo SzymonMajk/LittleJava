@@ -14,7 +14,7 @@ import org.junit.Test;
 /**
  * Test wybierania godzin
  * @author Szymon Majkut
- * @version 1.3
+ * @version %I%, %G%
  *
  */
 public class LineBrowserTest {

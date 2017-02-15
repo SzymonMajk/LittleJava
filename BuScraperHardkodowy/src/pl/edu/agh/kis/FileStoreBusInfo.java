@@ -5,22 +5,24 @@ import org.apache.logging.log4j.LogManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 
 /**
  * Klasa ma za zadanie implementowaæ metodê interfejsu StoreBusInfo, zapisuj¹c otrzymywane
- * dane w katalogach, których nazwy sugeruj¹ numer linii, w plikach których nazwy bêd¹
- * odpowiada³y nazwom przystanków oraz tworz¹c katalog plików o nazwach przystanków, 
- * w których znajd¹ siê numery linii przeje¿dzaj¹cych przez przystanek wraz z kierunkiem.
+ * dane w katalogach, których nazwy sugeruj¹ numer linii wraz z kierunkiem, w plikach których
+ * nazwy bêd¹ odpowiada³y nazwom przystanków pozbawionych niedozwolonych znaków oraz tworz¹c
+ * katalog buStops plików o nazwach przystanków, w których znajd¹ siê numery linii 
+ * przeje¿dzaj¹cych przez przystanek wraz z kierunkiem. Posiada konstruktor sparametryzowany,
+ * króry pozwala na okreœlenie katalogu nadrzêdnego dla sk³adowanych danych, oraz konstruktor
+ * domyœlny, który jako taki katalog przypisuje katalog o nazwie Data. Je¿eli kierunek linii
+ * zawiera³ w swojej nazwie znak ":", to zostanie on usuniêty.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  */
 public class FileStoreBusInfo implements StoreBusInfo {
 
@@ -28,6 +30,11 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 * System Log4J
 	 */
 	private static final Logger log4j = LogManager.getLogger(FileStoreBusInfo.class.getName());
+	
+	/**
+	 * Przechowuje nazwê katalogu, w którym bêdziemy sk³adowaæ katalogi z danymi
+	 */
+	private String toStoreDataDirectoryName;
 	
 	/**
 	 * Pole przechowuje numer aktualnie przetwarzanej linii
@@ -65,7 +72,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		}
 		else 
 		{
-			log4j.warn("Nazwa linii zawiera b³êdy!:"+infoBuStopName);
 			return false;
 		}
 	}
@@ -87,30 +93,29 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		}
 		else
 		{
-			log4j.warn("Numer linii zawiera b³êdy!:"+infoLineNumber);
 			return false;
 		}
 	}
 	
 	/**
 	 * Zadaniem funkcji jest przygotowanie kierunku linii z surowych danych otrzymanych
-	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
+	 * w parametrze oraz poinformowanie o poprawnoœci tych danych. Funkcja usuwa z numeru
+	 * linii znaki ":", które s¹ u¿ywane przy sk³adowaniu danych
 	 * @param infoDirection surowe dane dotycz¹ce kierunku linii
 	 * @return informacja czy uda³o siê przygotowaæ poprawny kierunek linii
 	 */
 	private boolean prepareDirection(String infoDirection)
 	{	
-		infoDirection = infoDirection.replace(":", "");
-		
-		if(!infoDirection.equals("") && infoDirection.contains("Do"))
+		if(infoDirection != null && !infoDirection.equals("") 
+			&& infoDirection.contains("Do"))
 		{
+			infoDirection = infoDirection.replace(":", "");
 			log4j.info("Znalaz³em kierunek linii:"+infoDirection);
 			direction = infoDirection;
 			return true;
 		}
 		else 
 		{
-			log4j.warn("Kierunek linii zawiera b³êdy!:"+infoDirection);
 			return false;
 		}
 	}
@@ -122,6 +127,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	private boolean prepareHours(String infoHours)
 	{
+		
+		if(infoHours == null)
+		{
+			return false;
+		}	
+		
+		//TODO Trzeba coœ powa¿niejszego wymyœleæ...
 		//Odcinamy od góry wszystko do s³owa kluczowego godzina
 		String timeLine;
 		int hoursNumber = 24;
@@ -142,7 +154,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		}
 		
 		timeLine = timeLine.replaceAll(" ", ",").replaceAll(",,", "");
-	
 		String[] splitedTimeLine = timeLine.split("\n");
 		
 		ArrayList<String> hoursWithMinutes = new ArrayList<String>();
@@ -159,7 +170,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			if(paragraph == 12)
 			{
 				++numberOfHourLines;
-				hoursWithMinutes.add(readyLine+"\r\n");
+				hoursWithMinutes.add(readyLine);
 				readyLine = "";
 				paragraph = starter;
 				
@@ -210,140 +221,190 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * Funkcja ma za zadanie wys³aæ przygotowane i sprawdzone wczeœniej dane do odpowiednich
-	 * katalogów, pamiêtaj¹c o tym, ¿eby zapisaæ w³aœciwe godziny odjazdów oraz zale¿noœci
-	 * pomiêdzy poszczególnymi przestankami, a liniami
+	 * W funkcji korzystam z faktu, ¿e gdy mamy dopisywaæ, to wykonujemy to tylko w przypadku
+	 * pliku pomocniczego, natomiast sk³aduj¹c dane zawsze tworzymy nowy plik i zapisujemy
+	 * do pliku i tak czystego, wiêc nie dopisujemy, w innym przypadku powinniœmy rozdzieliæ
+	 * to co znajduje siê w bloku try z zapisywaniem na dwa osobne przypadki zale¿ne od jeszcze
+	 * innej zmiennej. Je¿eli nie uda³o siê utworzyæ pliku lub utworzyæ funkcja koñczy siê
+	 * któregoœ z nadkatalogów funkcja zwróci wartoœæ fa³szu, podobnie przy wyst¹pieniu wyj¹tku
+	 * przy zapisywaniu do pliku.
+	 * @param filePath zabezpieczona uprzednio przed wyst¹pieniem niedozwolonych znaków 
+	 * 		œcie¿ka do pliku, je¿eli któryœ z plików lub sam plik nie istnieje, s¹ 
+	 * 		tworzone potrzebne katalogi oraz sam plik.
+	 * @param append wartoœæ true okreœla, ¿e funkcja ma nadpisaæ plik, którego œcie¿ka zosta³a
+	 *      podana w pierwszym argumencie, wartoœæ fa³szu sprawia ¿e plik bêdzie zawsze 
+	 *      zapisywany na nowo, dodatkowo okreœla ona rodzaj sk³adowanych informacji, 
+	 *      poniewa¿ pozwala na to logika zachowania funkcji sendInfos().
+	 * @return zwraca wartoœæ true, gdy plik, którego œcie¿ka zosta³a podana w pierwszym
+	 * 		argumencie, zosta³ poprawnie zapisany lub tylko nadpisany, w zale¿noœci od wartoœci
+	 * 		drugiego argumentu, nastomiast w przypadku nie utworzenia pliku lub jego
+	 * 		nadkatalogów, w przypadku ich nieistnienia lub wyst¹pienia b³êdu przy próbie zapisu
+	 * 		do istniej¹cego pliku, zwracana jest wartoœæ logicznego fa³szu.
 	 */
-	private void sendInfos()
-	{	
-		String fileName = lineNumber+direction+"/"+buStopName;
-		BufferedReader output = null;
-		Writer input = null;
-		String line;
-		StringBuilder builder = new StringBuilder();
+	protected boolean sendInfoToFile(String filePath, boolean append)
+	{
+		boolean result = true;
 		
-		fileName = fileName.replace("\"", "");
+		File toSend = new File(filePath);
+		File parentToSend = new File(toSend.getParent());
 		
-		File toSend = new File(fileName);
-		if(!new File(toSend.getParent()).mkdir())
+		//czêœæ odpowiedzialna za stworzenie w przypadku nieistnienia
+		if(!parentToSend.mkdirs())
 		{
-			log4j.error("Nie uda³o mi siê utworzyæ folderu!"+toSend.getParent());
+			if(!parentToSend.exists())
+			{
+				log4j.error("Nie uda³o mi siê utworzyæ folderu:"+parentToSend);
+				return false;
+			}
 		}
 		
 		try {
 			if(!toSend.createNewFile())
 			{
-				log4j.error("Nie uda³o siê utworzyæ pliku!",fileName);
-			}
-			log4j.info("Utworzy³em plik!"+fileName);
-		} catch (IOException e) {
-			log4j.error("Wyj¹tek przy tworzeniu pliku!"+fileName,e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny wyj¹tek przy tworzeniu pliku!"+fileName,t.getMessage());
-		} 
-
-		try {
-			input = new OutputStreamWriter(new FileOutputStream(toSend),"UTF-8");
-
-			for(String s : hours)
-			{
-				input.write(s);
-			}
-			
-			log4j.info("Nadpisa³em plik!"+fileName);
-		} catch (IOException e) {
-			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
-		} finally {
-			if(input != null)
-			{
-				try {
-					input.close();
-				} catch (IOException e) {
-					log4j.warn("Niepoprawnie zamkniêty strumieñ!"+e.getMessage());
-				}
-			}
-		} 
-		
-		//Dodanie nazwy linii do linii danego przystanku
-		
-		fileName = "buStops/"+buStopName;
-		fileName = fileName.replace("\"", "");
-
-		toSend = new File(fileName);
-		if(!new File(toSend.getParent()).mkdir())
-		{
-			log4j.error("Nie uda³o siê utworzyæ pliku!"+fileName);
-		}
-		
-		try {
-			if(!toSend.exists())
-			{
-				if(!toSend.createNewFile())
+				if(!toSend.exists())
 				{
-					log4j.error("Nie uda³o siê utworzyæ pliku!"+fileName);
+					log4j.error("Nie uda³o siê utworzyæ pliku:"+filePath);
+					return false;
 				}
 			}
-			
-			log4j.info("Utworzy³em plik!"+fileName);
+			log4j.info("Utworzy³em plik:"+filePath);
 		} catch (IOException e) {
-			log4j.error("Wyj¹tek przy tworzeniu pliku!"+fileName+e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny wyj¹tek przy tworzeniu pliku!"+fileName+t.getMessage());
-		} 
-
-		try {
-			
-			output = new BufferedReader(
-					new InputStreamReader(new FileInputStream(toSend),"UTF-8"));
-			
-			line = "";
-			builder = new StringBuilder(line);
-			
-			while((line = output.readLine()) != null)
-			{
-				builder.append(line);
-			}
-			
-		} catch (IOException e) {
-			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
-		} finally {
-			if(output != null)
-			{
-				try {
-					output.close();
-				} catch (IOException e) {
-					log4j.warn("Niepoprawnie zamkniêty strumieñ!");
-				}
-			}
+			StringBuilder exceptionBuilder = new StringBuilder();
+			exceptionBuilder.append("Wyj¹tek przy tworzeniu pliku:");
+			exceptionBuilder.append(filePath);
+			exceptionBuilder.append(":");
+			exceptionBuilder.append(e.getMessage());
+			log4j.error(exceptionBuilder.toString());
+			result = false;
 		}
 		
-		try {
-			
-			input = new FileWriter(toSend,true); //chcemy nadpisywaæ
-
-			if(!builder.toString().contains(lineNumber+direction))
+		//Teraz czêœæ odpowiedzialna za zapis
+		try (OutputStreamWriter input = 
+				new OutputStreamWriter(new FileOutputStream(toSend,append),"UTF-8")) {
+			if(append)
 			{
 				input.write(lineNumber+direction+"\n");
+				log4j.info("Nadpisa³em plik:"+filePath);
+			}
+			else
+			{
+				input.write(buStopName+"\n");
+				for(String s : hours)
+				{
+					input.write(s+"\r\n");
+				}
+				log4j.info("Zapisa³em plik:"+filePath);
+			}
+		} catch (IOException e) {
+			StringBuilder exceptionBuilder = new StringBuilder();
+			exceptionBuilder.append("Problem z zapisem do pliku:");
+			exceptionBuilder.append(filePath);
+			exceptionBuilder.append(":");
+			exceptionBuilder.append(e.getMessage());
+			log4j.error(exceptionBuilder.toString());
+			result = false;
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Funkcja ma za zadanie przypisaæ zawartoœæ pliku, którego œcie¿ka jest podawana
+	 * w pierwszym argumencie do pamiêci przy pomocy obiektu StringBuilder, aby nastêpnie
+	 * sprawdziæ czy w utworzonym ci¹gu znaków znajduje siê ten okreœlony w drugim parametrze.
+	 * Funkcja zosta³a zaprojektowana dla plików pomocniczych, przechowuj¹cych dane dotycz¹ce
+	 * numerów linii wraz z kierunkami przeje¿dzaj¹cymi przez dany przystanek, z tej racji
+	 * mamy do czynienia z du¿¹ iloœci¹ niewielkich plików i mo¿liwe jest zastosowanie takiego
+	 * rozwi¹zania.
+	 * @param filePath zabezpieczona przed wyst¹pieniem niedozwolonych znaków œcie¿ka do pliku,
+	 * 		w funkcji sprawdzamy istnienie takiego pliku.
+	 * @param toCheck obiekt String, zawarty w nim ci¹g znaków, ma zostaæ sprawdzony przez
+	 * 		funkcjê pod k¹tem wystêpowania w pliku, którego œcie¿ka zosta³a podana w pierwszym
+	 * 		argumencie.
+	 * @return zwraca prawdê, je¿eli plik istnia³ oraz zawiera³ ci¹g znaków zawarty w obiekcie
+	 * 		String z drugiego argumentu, w przypadku nieistnienia pliku lub niezawierania
+	 * 		w nim podanego ci¹gu znaków, zwracana jest wartoœæ logicznego fa³szu.
+	 */
+	protected boolean checkIfFileContains(String filePath, String toCheck)
+	{
+		File from = new File(filePath);
+		StringBuilder builder = new StringBuilder();
+		
+		if(from.exists())
+		{
+			try (BufferedReader output = new BufferedReader(
+					new InputStreamReader(new FileInputStream(from),"UTF-8"))) {
+				
+				String line = "";
+				builder = new StringBuilder(line);
+				
+				while((line = output.readLine()) != null)
+				{
+					builder.append(line);
+				}
+				
+			} catch (IOException e) {
+				StringBuilder exceptionBuilder = new StringBuilder();
+				exceptionBuilder.append("Problem z odczytem z pliku:");
+				exceptionBuilder.append(filePath);
+				exceptionBuilder.append(":");
+				exceptionBuilder.append(e.getMessage());
+				log4j.error(exceptionBuilder.toString());
 			}
 			
-			log4j.info("Nadpisa³em plik!",fileName);
-		} catch (IOException e) {
-			log4j.error("Problem z zapisem do pliku!"+fileName+e.getMessage());
-		} catch (Throwable t) {
-			log4j.error("Powa¿ny problem z zapisaniem do pliku!"+fileName+t.getMessage());
-		} finally {
-			if(input != null)
+			return builder.toString().contains(toCheck);
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Funkcja ma za zadanie zek³adowaæ dane otrzymane przez obiekt w plikach, na pocz¹tku 
+	 * tworzy nazwê œcie¿ki do pliku z danymi, która sk³ada siê ze œcie¿ki podanej przez
+	 * u¿ytkownika, katalogu z numerem linii oraz nazw¹ kierunku, sam plik nazywaj¹c nazw¹
+	 * przystanku. Wszystkie nazwy plików oraz katalogów zostaj¹ sprawdzone pod k¹tem znaków
+	 * niedozwolonych, a nastêpnie znaki te je¿eli trzeba s¹ usuwane. Wyszukiwarki musz¹
+	 * braæ pod uwagê brak znaków niedozwolonych przy sk³adanych danych. W pierwszej linii 
+	 * pliku z danymi zapisujemy pe³n¹ nazwê przystanku, a nastêpnie godziny odjazdów. Funkcja
+	 * wczytuje plik z katalogu pomocniczego buStops z pliku o tej samej nazwie, sprawdza czy 
+	 * plik pomocniczy posiada ju¿ podan¹ liniê wraz z nazw¹ kierunku, je¿eli nie dopisuje 
+	 * okreœlony numer linii oraz kierunek do pliku pomocniczego.
+	 */
+	protected void sendInfos()
+	{	
+				
+		String safeToStoreDataDirectoryName 
+			= toStoreDataDirectoryName.replaceAll("[.\\:*?\"|<>]", "");
+		String safeLineNumber = lineNumber.replaceAll("[\\/.\\:*?\"|<>]", "");
+		String safeDirection = direction.replaceAll("[\\/.\\:*?\"|<>]", "");
+		String safeBuStopName = buStopName.replaceAll("[\\/.\\:*?\"|<>]", "");
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append(safeToStoreDataDirectoryName);
+		builder.append(safeLineNumber);
+		builder.append(safeDirection);
+		builder.append("/");
+		builder.append(safeBuStopName);
+		
+		if(sendInfoToFile(builder.toString(),false))
+		{
+			builder = new StringBuilder();
+			builder.append(safeToStoreDataDirectoryName);
+			builder.append("buStops/");
+			builder.append(safeBuStopName);
+			
+			if(!checkIfFileContains(builder.toString(),lineNumber+direction))
 			{
-				try {
-					input.close();
-				} catch (IOException e) {
-					log4j.warn("Niepoprawnie zamkniêty strumieñ!");
+				if(!sendInfoToFile(builder.toString(),true))
+				{
+					log4j.error("Nast¹pi³ problem przy nadpisaniu pliku:"
+							+builder.toString());
 				}
 			}
+		}
+		else
+		{
+			log4j.error("Nast¹pi³ problem przy zapisie do pliku:",builder.toString());
 		}
 	}
 	
@@ -361,13 +422,14 @@ public class FileStoreBusInfo implements StoreBusInfo {
 
 	/**
 	 * Funkcja otrzymuje paczkê danych wyodrêbnionych przez w¹tki wy³uskuj¹ce, ma za
-	 * zadanie sprawdziæ poprawnoœæ tych danych, a je¿eli uda siê z nich wyci¹gn¹æ 
-	 * przydatne informacje, zapisaæ je w katalogach z nazwami linii wraz z kierunkiem,
-	 * w plikach o nazwach przystanków, dodatkowo tworz¹c katalog pomocniczy dla wyszukiwania
-	 * zawieraj¹cy pliki z wszystkimi przystankami, w których znajduj¹ siê numery linii wraz
+	 * zadanie sprawdziæ poprawnoœæ tych danych, a je¿eli oka¿¹ siê podane poprawnie, 
+	 * zapisaæ je w katalogach z nazwami linii wraz z kierunkiem, w plikach o nazwach 
+	 * przystanków, dodatkowo tworz¹c katalog pomocniczy dla wyszukiwania zawieraj¹cy pliki
+	 * o nazwach identycznych z nazwami przystanków, w których znajduj¹ siê numery linii wraz
 	 * z kierunkiem przeje¿dzaj¹ce przez dany przystanek.
-	 * @param allInformations paczka danych, których poprawnoœæ musimy sprawdziæ oraz
-	 *        wyci¹gn¹æ z nich przydatne informacje
+	 * @param allInformations mapa, której kluczami s¹ nazwy odpowiednich wyra¿eñ XPath,
+	 * 		natomiast wartoœciami s¹ dane, które zosta³y wyodrêbnione przy pomocy wyra¿enia
+	 * 		XPath o nazwie z klucza.
 	 */
 	@Override
 	public void storeInfo(Map<String,String> allInformations) {
@@ -411,5 +473,26 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		
 		//Sprz¹tamy dla kolejnego u¿ycia
 		clear();
+	}
+	
+	/**
+	 * Kostruktor domyœlny, który przypisuje dla sk³adowanych danych katalog Data, znajduj¹cy
+	 * siê w katalogu programu.
+	 */
+	FileStoreBusInfo()
+	{
+		this("Data/");
+	}
+	
+	/**
+	 * Konstruktor pozwalaj¹cy na przypisanie œcie¿ki do katalogu, w którym maj¹ byæ sk³adowane
+	 * przez ten obiekt dane. W przypadku nie istnienia katalogu lub katalogów nadrzêdnych,
+	 * obiekt bêdzie w stanie go utworzyæ o ile bêdzie to mo¿liwe z poziomu aplikacji.
+	 * @param toStoreDataDirectoryName œcie¿ka do katalogu, w którym maj¹ zostaæ zesk³adowane
+	 * 		infomacje, nie powinien posiadaæ na koñcu znaku "/"
+	 */
+	FileStoreBusInfo(String toStoreDataDirectoryName)
+	{
+		this.toStoreDataDirectoryName = toStoreDataDirectoryName+"/";
 	}
 }

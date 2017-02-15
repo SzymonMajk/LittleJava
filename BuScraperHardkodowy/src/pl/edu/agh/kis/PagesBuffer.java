@@ -6,7 +6,7 @@ package pl.edu.agh.kis;
  * bufora ( pusty/pe³ny), na którym oprzemy metodê producent-konsument pomocn¹
  * przy wydobywaniu danych z internetu.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public interface PagesBuffer {

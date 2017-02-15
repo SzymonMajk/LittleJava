@@ -3,6 +3,7 @@ package pl.edu.agh.kis;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.util.Map;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 
 /**
@@ -11,7 +12,7 @@ import java.util.HashMap;
  * ustalanie kolejnoœci wykonywania zadañ, udostêpnia metody pozwalaj¹ca na operowanie
  * na ob³ugiwanych zadaniach.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class TaskManager {
@@ -26,13 +27,23 @@ public class TaskManager {
 	 */
 	private Map<Integer,Task> tasksToDo = new HashMap<Integer,Task>();
 	
+	private ArrayDeque<Task> taskOrder = new ArrayDeque<Task>();
+	
 	/**
 	 * Umieszcza nowe zadanie w mapie zadañ do wykonania.
 	 * @param newTask nowe zadanie do wykonania
 	 */
 	public void put(Task newTask)
 	{
+		log4j.info("Dodajê nowy task o id: "+newTask.getId());
 		tasksToDo.put(newTask.getId(), newTask);
+		taskOrder.addLast(newTask);
+	}
+	
+	public void pushBack(Task newTask)
+	{
+		log4j.info("Przesuwam task na koniec wykonania, o id: "+newTask.getId());
+		taskOrder.addLast(newTask);
 	}
 	
 	/**
@@ -51,17 +62,15 @@ public class TaskManager {
 	 */
 	public Task getNextTask()
 	{
-		for(Integer i : tasksToDo.keySet())
+		Task result;
+		
+		if((result = taskOrder.pollFirst()) != null)
 		{
-			//Bierzemy pierwszy do zrobienia
-			if(tasksToDo.get(i).getStatus() == 0)
-			{
-				return tasksToDo.get(i);
-			}
+			log4j.info("Pobieram nowy Task o id: "+result.getId());
+			return tasksToDo.get(result.getId());
 		}
 		
-		//TODO Oj, tutaj trzeba coœ wymyœleæ!
-		return new Task(9999,"","","","","");
+		return new Task();
 	}
 	
 	/**
@@ -72,11 +81,7 @@ public class TaskManager {
 	 */
 	public void removeTask(Integer i)
 	{
-		System.out.println("Usuwam zadanie o id: "+i);
+		log4j.info("Usuwam zadanie o id: "+i);
 		tasksToDo.remove(i);
 	}
-	
-	//TODO, wracamy do innej koncepcji... No có¿ po pierwsze zadania niewykonane musz¹
-	//trafiaæ na koniec KOLEJKI, no i teraz jeszcze sprawa, ¿e musimy mieæ mo¿liwoœæ
-	//utworzenia i przypisania na koniec kolejki nowych zadañ, tych z b³êdnymi requestami!
 }

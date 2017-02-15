@@ -3,11 +3,8 @@ package pl.edu.agh.kis;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.net.Socket;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
+import java.io.InputStream;
 import java.io.IOException;
 
 /**
@@ -15,7 +12,7 @@ import java.io.IOException;
  * przy u¿yciu obiektów do komunikacji sieciowej oraz po³¹czenia siê z hostem podanym 
  * w konstruktorze na porcie numer 80.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class SocketDownloader implements Downloader {
@@ -36,11 +33,6 @@ public class SocketDownloader implements Downloader {
 	 */
 	private OutputStream output;
 
-	/**
-	 * Pole przechowuj¹ce nazwê hosta
-	 */
-	private String hostName;
-	
 	/**
 	 * Pole przechowuj¹ce numer portu
 	 */
@@ -82,42 +74,19 @@ public class SocketDownloader implements Downloader {
 	 *         i przypisaniem ich do w³aœciwych pól prywatnych
 	 */
 	@Override
-	public boolean initDownloader() throws UnknownHostException, IOException {
+	public boolean initDownloader(String hostName) {
 		boolean result = true;
 		
-		socket = new Socket(hostName, portNumber);
-		socket.setSoTimeout(1000);//odpowiada za uchronienie przed blokowaniem
-		output = socket.getOutputStream();
-		input = socket.getInputStream();
+		try {
+			socket = new Socket(hostName, portNumber);
+			socket.setSoTimeout(2000);//odpowiada za uchronienie przed blokowaniem
+			output = socket.getOutputStream();
+			input = socket.getInputStream();
+		} catch (IOException e) {
+			result = false;
+			log4j.warn("Wyj¹tek przy inicjowaniu po³¹czenia"+e.getMessage());
+		}
 
 		return result;
-	}
-	
-	//TODO mo¿e to wywalimy co?
-	/**
-	 * Zadaniem funkcji jest zamkniêcie strumieni.
-	 * @throws IOException wyrzucany przy problemach z zamkniêciem strumieni lub
-	 *         socket'u odpowiedzialnych za komunikacjê sieciow¹
-	 */
-	public void closeStreams() throws IOException 
-	{
-		input.close();
-		output.close();
-		socket.close();
-	}
-	
-	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie nazwy Hosta
-	 * @param pageURL adres URL strony, z której wyodrêbnimy nazwê hosta
-	 */
-	SocketDownloader(String pageURL) {
-		
-		URL url;
-		try {
-			url = new URL(pageURL);
-			hostName = url.getHost();
-		} catch (MalformedURLException e) {
-			log4j.error("Problem z po³¹czeniem z URL"+e.getMessage());
-		} 
 	}
 }

@@ -1,9 +1,7 @@
 package pl.edu.agh.kis;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.UnknownHostException;
+import java.io.InputStream;
 
 /**
  * Interfejs, którego implementacje bior¹ udzia³ przy pracy w¹tków DownloadThread
@@ -13,7 +11,7 @@ import java.net.UnknownHostException;
  * i mo¿liwoœæ dobrego odseparowania logiki w¹tków pobieraj¹cych od niskopoziomowej
  * komunikacji z serverem.
  * @author Szymon Majkut
- * version 1.4
+ * @version %I%, %G%
  *
  */
 public interface Downloader {
@@ -23,20 +21,10 @@ public interface Downloader {
 	 * informuje o powodzeniu swojego dzia³ania. Deklaruje mo¿liwoœæ wyrzucania
 	 * wyj¹tków, mo¿liwych do wyrzucenia przede wszystkim przy tworzeniu obiektów
 	 * umo¿liwiaj¹cych komunikacjê sieciow¹.
+	 * @param hostName nazwa hosta na rzecz którego inicjujemy obiekt
 	 * @return informacja o powodzeniu tworzenia strumieni
-	 * @throws UnknownHostException wyj¹tki zwi¹zane z nieudanym po³¹czeniem sieciowym
-	 * @throws IOException wyj¹tki zwi¹zane z obs³ug¹ wejœcia/wyjœcia
 	 */
-	public boolean initDownloader() throws IOException;
-	
-	/**
-	 * Zadaniem funkcji jest zamkniêcie strumieni. Deklaruje mo¿liwoœæ wyrzucania
-	 * wyj¹tków, mo¿liwych do wyrzucenia przede wszystkim przy zamykaniu strumieni dla
-	 * komunikacji sieciowej.
-	 * @throws UnknownHostException wyj¹tki zwi¹zane z nieudanym po³¹czeniem sieciowym
-	 * @throws IOException wyj¹tki zwi¹zane z obs³ug¹ wejœcia/wyjœcia
-	 */
-	public void closeStreams() throws UnknownHostException, IOException;
+	public boolean initDownloader(String hostName);
 	
 	/**
 	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w implementacji

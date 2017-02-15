@@ -15,6 +15,12 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+/**
+ * 
+ * @author Szymon Majkut
+ * @version %I%, %G%
+ *
+ */
 public class BrowserTest {
 
 	@Test

@@ -4,6 +4,12 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+/**
+ * 
+ * @author Szymon Majkut
+ * @version %I%, %G%
+ *
+ */
 public class TaskManagerTest {
 
 	@Test

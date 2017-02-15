@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * Klasa której zadaniem jest zwrócenie listy wyodrêbnionych godzin odjazdówz przystanku
  * pocz¹tkowego bior¹c pod uwagê wszystkie otrzymane ograniczenia oraz kierunek przejazdu.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class HourBrowser {
@@ -23,7 +23,6 @@ public class HourBrowser {
 	 * System Log4J
 	 */
 	private static final Logger log4j = LogManager.getLogger(HourBrowser.class.getName());
-	
 	
 	/**
 	 * Lista gotowych wyodrêbnionych godzin
@@ -48,43 +47,23 @@ public class HourBrowser {
 	private ArrayList<String> readLinesFromFile(String fileName)
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		
 		File file = new File(fileName);
-		
-		if(file.exists())
-		{
-			BufferedReader buffReader = null;
+						
+		try (BufferedReader buffReader = new BufferedReader(
+				new InputStreamReader ( new FileInputStream(file),"UTF-8"))) {
+			String line = "";
 				
-			try {
-				buffReader = new BufferedReader(
-						new InputStreamReader ( new FileInputStream(file),"UTF-8"));
-				String line = "";
-				
+			log4j.info("Wydobywam linie dla przystanku"+buffReader.readLine());
 				while((line = buffReader.readLine()) != null)
 				{
 					result.add(line);
 				}
-				
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if(buffReader != null)
-				{
-					try {
-						buffReader.close();
-					} catch (IOException e) {
-						log4j.error("Nie zamkniêto poprawnie strumienia:"+e.getMessage());
-					}
-				}
-			}
+		} catch (FileNotFoundException e) {
+			log4j.warn("Nie znaleziono pliku: "+fileName);
+		} catch (IOException e) {
+			log4j.warn("Wyst¹pi³ wyj¹tek podczas czytania z pliku: "+fileName);
 		}
-		else
-		{
-			log4j.warn("Brak pliku: "+fileName);
-		}
-		
+
 		return result;
 	}
 	
@@ -95,7 +74,7 @@ public class HourBrowser {
 	 * @param linesToCheckFormat dane wydobyte z pliku, które maj¹ zostaæ sprawdzone
 	 * @return informacja o poprawnoœci formatu wydyobytych danych
 	 */
-	private boolean isGoodFormat(ArrayList<String> linesToCheckFormat)
+	private boolean checkHoursLineFormat(ArrayList<String> linesToCheckFormat)
 	{
 		for(String l : linesToCheckFormat)
 		{
@@ -381,7 +360,7 @@ public class HourBrowser {
 		ArrayList<String> timeOfStartStop = readLinesFromFile(firstBuStopName);
 		ArrayList<String> timeOfEndStop = readLinesFromFile(secondBuStopName);
 		
-		if(isGoodFormat(timeOfStartStop) && isGoodFormat(timeOfEndStop))
+		if(checkHoursLineFormat(timeOfStartStop) && checkHoursLineFormat(timeOfEndStop))
 		{
 			firstLineOfFirstStop = firstLineOfStop(timeOfStartStop,typeOfDay);
 			firstLineOfSecondStop = firstLineOfStop(timeOfEndStop,typeOfDay);

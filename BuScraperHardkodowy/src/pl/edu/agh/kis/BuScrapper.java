@@ -2,9 +2,8 @@ package pl.edu.agh.kis;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * logów, za wyszukiwanie wiadomoœci oraz okreœlanie czy aktualizacja ma zostaæ przeprowadzona
  * odpowiadaj¹ metody klas kolejno Browser oraz Configurator.
  * @author Szymon Majkut
- * @version 1.4
+ * @version %I%, %G%
  *
  */
 public class BuScrapper {
@@ -51,11 +50,10 @@ public class BuScrapper {
 	static AtomicInteger numberOfWorkingDownloadThreads = new AtomicInteger(0);
 	
 	/**
-	 * Pole logiczne sprawdzaj¹ce czy aktualnie wykonywane zadanie jest wci¹¿ wykonaywane
-	 * i sprawdzaj¹c wartoœæ pola w odpowiednim momencie, zosta³o wykonane bezb³êdnie
+	 * Pole przechowuj¹ce informacjê o iloœci nadal pracuj¹cych w¹tków wy³uskuj¹cych
 	 */
-	static AtomicBoolean correctTaskExecute = new AtomicBoolean();
-	
+	static AtomicInteger numberOfWorkingSnatchThreads = new AtomicInteger(0);
+		
 	/**
 	 * Funkcja odpowiada za sekwencjê programu przeprowadzaj¹c¹ aktualizacjê danych, na
 	 * aktualizacjê sk³adaj¹ siê:
@@ -81,73 +79,97 @@ public class BuScrapper {
 	public void updateData()
 	{
 		RequestCreator requestCreator = new RequestCreator();
+		ConnectionTester connectionTester = new ConnectionTester();
+		String lastConnectedHost = "";
+
+		ExecutorService downloaders = Executors.newFixedThreadPool(5);
+		ExecutorService snatchers = Executors.newFixedThreadPool(5);
 		
 		while(tasks.hasNextTask())
 		{
-			
-			//TODO taki ma³y obiekcik, który bêdzie sprawdza³ czy jest po³¹czenie internetowe
-			//z URL podanym w tasku, póki nie bêdzie to przerzuca to zadanie na koniec
-			//i idzie do nastêpnego zadania powtarza dla nowego URL, ale ale! Wypisuje
-			//informajê o tym ¿e nie ma internetu tylko przy pierwszym, ¿eby nie zaspamiæ logów
-			correctTaskExecute.set(false);
 			Task newTask = tasks.getNextTask();
-			Set<DownloadThread> downloadThreads = new HashSet<DownloadThread>();
-			Set<SnatchThread> snatchThreads = new HashSet<SnatchThread>();
-			
-			//TODO nie no, musimy zrobiæ to pul¹ w¹tków...
-			
+									
 			if(requestCreator.isGoodTask(newTask))
 			{
-				requestCreator.prepareNewRequests(newTask);
+				log4j.info("Wyci¹gam nowy poprawny Task");
 				
+				if(!connectionTester.testHost(newTask.getHost()))
+				{
+					if(!newTask.getHost().equals(lastConnectedHost))
+					{
+						System.out.println("Brak po³¹czenia z hostem: "+newTask.getHost());
+					}
+					lastConnectedHost = newTask.getHost();
+					tasks.pushBack(newTask);
+					continue;
+				}
+				else
+				{
+					System.out.println("Uda³o siê nawi¹zaæ po³¹czenie z hostem: "
+							+ newTask.getHost()+" rozpoczynamy pobieranie danych z linii: "
+							+ newTask.getLineNumber());
+				}
+				
+				//TODO dlaczego to task nie mo¿e mieæ tych kolejek po prostu od razu?
+				requestCreator.prepareRequests(newTask);
+			    
 				for(int i = 0; i < 5; ++i)
 				{
-					//TODO no niech on nie dostaje startowego, tylko ten z zadania!
-					downloadThreads.add(new DownloadThread(i,requestCreator.
-							getRequests(),buffer, new SocketDownloader(configurator.
-									getStartPageURL())));
-					snatchThreads.add(new SnatchThread(i,buffer,new FileStoreBusInfo(),
+					//Zamiast request cretora niech dostanie Task, natomiast request creator
+					//no to bêdzie sk³adow¹ obiektu task albo tylko jego funkcje
+					downloaders.execute(new DownloadThread(i,buffer,requestCreator,
+							new SocketDownloader()));
+				}
+				
+				for(int i = 0; i < 2; ++i)
+				{
+					snatchers.execute(new SnatchThread(i,buffer,new FileStoreBusInfo(),
 				    		configurator.getXPaths()));
 				}
-			    
-				for(DownloadThread d : downloadThreads)
+				
+				while(BuScrapper.numberOfWorkingDownloadThreads.get() 
+						+ BuScrapper.numberOfWorkingSnatchThreads.get() > 0)
 				{
-					d.start();
+					Thread.yield();
 				}
 				
-				for(SnatchThread s : snatchThreads)
+				log4j.info("Zadanie siê zakoñczy³o");
+				
+				//Tutaj dorzucimy do invalid requests, te które nie zd¹¿yliœmy wykonaæ
+				//Nieee, trzeba zrobiæ tak, ¿eby taks ju¿ to mia³
+				requestCreator.addUnifinishedRequests();
+				
+				//A to sprwadzenie te¿ w tasku!
+				if(requestCreator.isEmptyInvalidRequests())
 				{
-					s.start();
+					System.out.println("Linia "+newTask.getLineNumber()+
+							" zosta³a poprawnie zaktualizowana.");
+					tasks.removeTask(newTask.getId());
+				}
+				else
+				{
+					System.out.println("Linia "+newTask.getLineNumber()+
+							" zostanie dokoñczona w nowej turze.");
+					newTask.setRequestsToRepeat(requestCreator.getInvalidRequests());
+					newTask.setStatus(1);
+					tasks.pushBack(newTask);
 				}
 				
-			    try {
-			    
-				    for(DownloadThread d : downloadThreads)
-					{
-						d.join();
-					}
-						
-					for(SnatchThread s : snatchThreads)
-					{
-						s.join();
-					}			    	    
-			    
-			    } catch (InterruptedException e) {
-			    	log4j.error("Nast¹pi³o nieoczekiwane wybudzenie w¹tków)",e.getMessage());
-			    }
-			    
-			    if(correctTaskExecute.get())
-			    {
-			    	//dodaj szczegó³y tasku, np. id
-			    	log4j.trace("Poprawnie zakoñczy³em Task");
-			    	//Zadanie zosta³o wykonane poprawnie, mo¿emy je usun¹æ
-				    tasks.removeTask(newTask.getId());
-			    }
+				
+
 			}
-			//Czyszczenie przed kolejn¹ iteracj¹
-		    BuScrapper.numberOfWorkingDownloadThreads.set(0);
+			
 		    requestCreator.clear();
 		}
+
+		downloaders.shutdown();
+		snatchers.shutdown();
+
+		while(BuScrapper.numberOfWorkingDownloadThreads.get() 
+				+ BuScrapper.numberOfWorkingSnatchThreads.get() > 0)
+		{
+			Thread.yield();
+		}		
 	}
 	
 	/**
@@ -162,7 +184,7 @@ public class BuScrapper {
 		if(b.configurator.getUpdateData())
 		{
 			b.updateData();
-		}	
+		}
 		
 		//Teraz wyszukujemy zgodnie z zaleceniami u¿ytkownika
 		b.browser.serch(b.configurator.getToSerach());
