@@ -1,5 +1,6 @@
 package pl.edu.agh.kis;
 
+import pl.edu.agh.kis.storeinfo.FileStoreBusInfo;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.util.concurrent.Executors;
@@ -78,7 +79,6 @@ public class BuScrapper {
 	 */
 	public void updateData()
 	{
-		RequestCreator requestCreator = new RequestCreator();
 		ConnectionTester connectionTester = new ConnectionTester();
 		String lastConnectedHost = "";
 
@@ -88,78 +88,56 @@ public class BuScrapper {
 		while(tasks.hasNextTask())
 		{
 			Task newTask = tasks.getNextTask();
-									
-			if(requestCreator.isGoodTask(newTask))
+			log4j.info("Wyci¹gam nowy Task");
+				
+			if(!connectionTester.testHost(newTask.getHost()))
 			{
-				log4j.info("Wyci¹gam nowy poprawny Task");
-				
-				if(!connectionTester.testHost(newTask.getHost()))
+				if(!newTask.getHost().equals(lastConnectedHost))
 				{
-					if(!newTask.getHost().equals(lastConnectedHost))
-					{
-						System.out.println("Brak po³¹czenia z hostem: "+newTask.getHost());
-					}
-					lastConnectedHost = newTask.getHost();
-					tasks.pushBack(newTask);
-					continue;
+					System.out.println("Brak po³¹czenia z hostem: "+newTask.getHost());
 				}
-				else
-				{
-					System.out.println("Uda³o siê nawi¹zaæ po³¹czenie z hostem: "
-							+ newTask.getHost()+" rozpoczynamy pobieranie danych z linii: "
-							+ newTask.getLineNumber());
-				}
-				
-				//TODO dlaczego to task nie mo¿e mieæ tych kolejek po prostu od razu?
-				requestCreator.prepareRequests(newTask);
-			    
-				for(int i = 0; i < 5; ++i)
-				{
-					//Zamiast request cretora niech dostanie Task, natomiast request creator
-					//no to bêdzie sk³adow¹ obiektu task albo tylko jego funkcje
-					downloaders.execute(new DownloadThread(i,buffer,requestCreator,
-							new SocketDownloader()));
-				}
-				
-				for(int i = 0; i < 2; ++i)
-				{
-					snatchers.execute(new SnatchThread(i,buffer,new FileStoreBusInfo(),
-				    		configurator.getXPaths()));
-				}
-				
-				while(BuScrapper.numberOfWorkingDownloadThreads.get() 
-						+ BuScrapper.numberOfWorkingSnatchThreads.get() > 0)
-				{
-					Thread.yield();
-				}
-				
-				log4j.info("Zadanie siê zakoñczy³o");
-				
-				//Tutaj dorzucimy do invalid requests, te które nie zd¹¿yliœmy wykonaæ
-				//Nieee, trzeba zrobiæ tak, ¿eby taks ju¿ to mia³
-				requestCreator.addUnifinishedRequests();
-				
-				//A to sprwadzenie te¿ w tasku!
-				if(requestCreator.isEmptyInvalidRequests())
-				{
-					System.out.println("Linia "+newTask.getLineNumber()+
-							" zosta³a poprawnie zaktualizowana.");
-					tasks.removeTask(newTask.getId());
-				}
-				else
-				{
-					System.out.println("Linia "+newTask.getLineNumber()+
-							" zostanie dokoñczona w nowej turze.");
-					newTask.setRequestsToRepeat(requestCreator.getInvalidRequests());
-					newTask.setStatus(1);
-					tasks.pushBack(newTask);
-				}
-				
-				
-
+				lastConnectedHost = newTask.getHost();
+				tasks.pushBack(newTask);
+				continue;
+			}
+			else
+			{
+				System.out.println("Uda³o siê nawi¹zaæ po³¹czenie z hostem: "
+						+ newTask.getHost()+" rozpoczynam pobieranie danych z linii: "
+						+ newTask.getLineNumber());
+				newTask.prepareRequestsBeforeUsing();
 			}
 			
-		    requestCreator.clear();
+			for(int i = 0; i < 5; ++i)
+			{
+				downloaders.execute(new DownloadThread(i,buffer,newTask.getRequestsToDo(),
+						newTask.getRequestsToRepeat(),new SocketDownloader()));
+			}
+				
+			for(int i = 0; i < 2; ++i)
+			{
+				snatchers.execute(new SnatchThread(i,buffer,new FileStoreBusInfo(),
+				    	configurator.getXPaths()));
+			}
+				
+			while(BuScrapper.numberOfWorkingDownloadThreads.get() 
+					+ BuScrapper.numberOfWorkingSnatchThreads.get() > 0)
+			{
+				Thread.yield();
+			}
+				
+			if(newTask.isEmptyRequestsToRepeat())
+			{
+				System.out.println("Linia "+newTask.getLineNumber()+
+						" zosta³a poprawnie zaktualizowana.");
+				tasks.removeTask(newTask.getId());
+			}
+			else
+			{
+				System.out.println("Linia "+newTask.getLineNumber()+
+						" zostanie dokoñczona w nowej turze.");
+				tasks.pushBack(newTask);
+			}
 		}
 
 		downloaders.shutdown();

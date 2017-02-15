@@ -1,12 +1,14 @@
-package pl.edu.agh.kis;
+package pl.edu.agh.kis.storeinfo;
 
 import org.apache.logging.log4j.Logger;
+
 import org.apache.logging.log4j.LogManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,172 +54,76 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	private String direction;
 	
 	/**
-	 * Pole przechowuje listê wierszy, z których bêdzie siê sk³adaæ tabela odjazdów 
+	 * Lista przechowuj¹ca gotowe linie z godzinami oraz minutami oddzielone dwukropkami
+	 * w formacie gotowym do zesk³adowania
 	 */
-	private ArrayList<String> hours;
+	private ArrayList<String> readyTimeLines;
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie nazwy przystanku z surowych danych otrzymanych
-	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
-	 * @param infoBuStopName nazwa przystanku wyodrêbniona przez XPath
-	 * @return informacja czy uda³o siê przygotowaæ poprawn¹ nazwê przystanku
+	 * Mapa obiektów s³u¿¹cych do sprawdzania otrzymywanych danych
 	 */
-	private boolean prepareBuStopName(String infoBuStopName)
+	private Map<String,CheckInformations> checkInformationImplementations;
+	
+	/**
+	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz
+	 * przetworzenie kolejnej porcji informacji
+	 */
+	private void clear()
 	{
-		if(infoBuStopName != null && !infoBuStopName.equals("") )
-		{
-			log4j.info("Znalaz³em nazwê linii:"+infoBuStopName);
-			buStopName = infoBuStopName;
-			return true;
-		}
-		else 
-		{
-			return false;
-		}
+		lineNumber = "";
+		buStopName = "";
+		direction = "";
+		readyTimeLines = new ArrayList<String>();
 	}
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie numeru linii z surowych danych otrzymanych
-	 * w parametrze oraz poinformowanie o poprawnoœci tych danych
-	 * @param infoLineNumber numer linii wyodrêbniony przez XPath
-	 * @return informacja czy uda³o siê przygotowaæ poprawny numer linii
+	 * 
+	 * @param implementationName
+	 * @param storedInformation
+	 * @return
 	 */
-	private boolean prepareLineNumber(String infoLineNumber)
+	private boolean checkInformation(String implementationName, String storedInformation)
 	{
-		if(infoLineNumber != null && !infoLineNumber.equals("") 
-				&& infoLineNumber.matches("^\\d{1,3}$"))
-		{
-			log4j.info("Znalaz³em numer linii:"+infoLineNumber);
-			lineNumber = infoLineNumber;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return checkInformationImplementations.get(implementationName).
+				checkInformation(storedInformation);
 	}
 	
 	/**
-	 * Zadaniem funkcji jest przygotowanie kierunku linii z surowych danych otrzymanych
-	 * w parametrze oraz poinformowanie o poprawnoœci tych danych. Funkcja usuwa z numeru
-	 * linii znaki ":", które s¹ u¿ywane przy sk³adowaniu danych
-	 * @param infoDirection surowe dane dotycz¹ce kierunku linii
-	 * @return informacja czy uda³o siê przygotowaæ poprawny kierunek linii
+	 * 
+	 * @param allInformations
+	 * @return
 	 */
-	private boolean prepareDirection(String infoDirection)
-	{	
-		if(infoDirection != null && !infoDirection.equals("") 
-			&& infoDirection.contains("Do"))
-		{
-			infoDirection = infoDirection.replace(":", "");
-			log4j.info("Znalaz³em kierunek linii:"+infoDirection);
-			direction = infoDirection;
-			return true;
-		}
-		else 
-		{
-			return false;
-		}
-	}
-	
-	/**
-	 * Zadaniem funkcji jest przystêpne przygotowanie listy godzin z surowych danych
-	 * @param infoHours surowe dane wyci¹gniête z XPath
-	 * @return lista godzina przygotowana z surowych danych
-	 */
-	private boolean prepareHours(String infoHours)
+	private boolean prepareNewInformations(Map<String,String> allInformations)
 	{
-		
-		if(infoHours == null)
+		for(String l : allInformations.keySet())
 		{
-			return false;
-		}	
-		
-		//TODO Trzeba coœ powa¿niejszego wymyœleæ...
-		//Odcinamy od góry wszystko do s³owa kluczowego godzina
-		String timeLine;
-		int hoursNumber = 24;
-		
-		if(infoHours.contains("Godzina"))
-		{
-			timeLine = infoHours.substring(infoHours.lastIndexOf("Godzina"));
-		}
-		else
-		{
-			return false;
-		}
-		
-		//Sprwadzamy czy mamy do czynienia z lini¹ nocn¹
-		if(!infoHours.contains("15\n"))
-		{
-			hoursNumber = 8;
-		}
-		
-		timeLine = timeLine.replaceAll(" ", ",").replaceAll(",,", "");
-		String[] splitedTimeLine = timeLine.split("\n");
-		
-		ArrayList<String> hoursWithMinutes = new ArrayList<String>();
-		//W tym momencie mamy 4 linijki danych ( mog¹ byæ puste ), 
-		//nastêpnie dwie linijki przerwy
-		
-		int starter = 7;
-		int paragraph = starter;
-		int numberOfHourLines = 0;
-		String readyLine = "";
-		
-		for(int i = starter; i < splitedTimeLine.length; ++i)
-		{
-			if(paragraph == 12)
+			if(!checkInformation(l,allInformations.get(l)))
 			{
-				++numberOfHourLines;
-				hoursWithMinutes.add(readyLine);
-				readyLine = "";
-				paragraph = starter;
+				return false;
+			}
+		}
 				
-				if(numberOfHourLines == hoursNumber)
-				{
-					break;
-				}
-			}
-			else if(paragraph < 11)
-			{
-				readyLine += splitedTimeLine[i]+":";
-				++paragraph;
-			}
-			else
-			{
-				++paragraph;
-			}
+		lineNumber = allInformations.get("lineNumber");
+		buStopName = allInformations.get("buStopName");
+		direction = allInformations.get("direction");
 		
+		StringBuilder timeLineBuilder;
+		String[] hourLines = allInformations.get("hours").split("\n");
+		String[] casualMinutesLines = allInformations.get("casualMinutes").split("\n");
+		String[] saturdayMinutesLines = allInformations.get("saturdayMinutes").split("\n");
+		String[] sundayMinutesLines = allInformations.get("sundayMinutes").split("\n");
+		
+		for(int i = 0; i < hourLines.length; ++i)
+		{
+			timeLineBuilder = new StringBuilder();
+			timeLineBuilder.append(hourLines[i].replace(" ", ","));
+			timeLineBuilder.append(casualMinutesLines[i].replace(" ", ","));
+			timeLineBuilder.append(saturdayMinutesLines[i].replace(" ", ","));
+			timeLineBuilder.append(sundayMinutesLines[i].replace(" ", ","));
+			readyTimeLines.add(timeLineBuilder.toString());
 		}
-		
-		//Teraz hoursWithMinutes zawiera w ka¿dym elemencie godzinê 
-		//i minuty dla poszczególnych sekji	
-		hours = hoursWithMinutes;
 		
 		return true;
-	}
-	
-	/**
-	 * Zadaniem funkcji jest przygotowanie pojedynczej linijki z danymi czasowymi z surowych 
-	 * danych otrzymanych w parametrze oraz poinformowanie o poprawnoœci tych danych
-	 * @param infoHour linijka, w której bêdziemy poszukiwaæ informacji dotycz¹cych czasu
-	 * @return informacja czy uda³o siê przygotowaæ poprawn¹ godzinê i minuty
-	 */
-	private boolean prepareHour(String infoHour)
-	{
-		//Do naprawy infoHour.matches......
-		if(infoHour != null && !infoHour.equals(""))//&& infoHour.matches("\\d"))
-		{
-
-			log4j.info("Znalazlem godzinê odjazdu:"+infoHour);	
-			return true;
-		}
-		else
-		{
-			log4j.warn("Godzina zawiera b³êdy!:"+infoHour);
-			return false;
-		}
 	}
 	
 	/**
@@ -289,7 +195,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			else
 			{
 				input.write(buStopName+"\n");
-				for(String s : hours)
+				for(String s : readyTimeLines)
 				{
 					input.write(s+"\r\n");
 				}
@@ -372,7 +278,7 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	protected void sendInfos()
 	{	
-				
+		
 		String safeToStoreDataDirectoryName 
 			= toStoreDataDirectoryName.replaceAll("[.\\:*?\"|<>]", "");
 		String safeLineNumber = lineNumber.replaceAll("[\\/.\\:*?\"|<>]", "");
@@ -407,92 +313,50 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			log4j.error("Nast¹pi³ problem przy zapisie do pliku:",builder.toString());
 		}
 	}
+
 	
 	/**
-	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz
-	 * przetworzenie kolejnej porcji informacji
-	 */
-	private void clear()
-	{
-		lineNumber = "";
-		buStopName = "";
-		direction = "";
-		hours = new ArrayList<String>();
-	}
-
-	/**
-	 * Funkcja otrzymuje paczkê danych wyodrêbnionych przez w¹tki wy³uskuj¹ce, ma za
-	 * zadanie sprawdziæ poprawnoœæ tych danych, a je¿eli oka¿¹ siê podane poprawnie, 
-	 * zapisaæ je w katalogach z nazwami linii wraz z kierunkiem, w plikach o nazwach 
-	 * przystanków, dodatkowo tworz¹c katalog pomocniczy dla wyszukiwania zawieraj¹cy pliki
-	 * o nazwach identycznych z nazwami przystanków, w których znajduj¹ siê numery linii wraz
-	 * z kierunkiem przeje¿dzaj¹ce przez dany przystanek.
-	 * @param allInformations mapa, której kluczami s¹ nazwy odpowiednich wyra¿eñ XPath,
-	 * 		natomiast wartoœciami s¹ dane, które zosta³y wyodrêbnione przy pomocy wyra¿enia
-	 * 		XPath o nazwie z klucza.
+	 * @param allInformations
 	 */
 	@Override
 	public void storeInfo(Map<String,String> allInformations) {
 		
-		boolean wellPrepared = true;
-		
-		//Uruchamiamy funkcje, których zadaniem jest odpowiednie przygotowanie danych
-		if(!prepareBuStopName(allInformations.get("buStopName")))
-		{
-			wellPrepared = false;
-		}
-		if(!prepareLineNumber(allInformations.get("lineNumber")))
-		{
-			wellPrepared = false;
-		}
-		if(!prepareDirection(allInformations.get("direction")))
-		{
-			wellPrepared = false;
-		}
-		if(!prepareHours(allInformations.get("hours")))
-		{
-			wellPrepared = false;
-		}
-		
-		if(hours != null)
-		{
-			for(String s : hours)
-			{
-				if(!prepareHour(s))
-				{
-					wellPrepared = false;
-				}
-			}
-		}
-		
-		//Uruchamiamy funkcjê wysy³aj¹c¹, je¿eli dane zosta³y przygotowane prawid³owo
-		if(wellPrepared)
+		if(prepareNewInformations(allInformations))
 		{
 			sendInfos();
+			clear();
 		}
-		
-		//Sprz¹tamy dla kolejnego u¿ycia
-		clear();
 	}
 	
 	/**
-	 * Kostruktor domyœlny, który przypisuje dla sk³adowanych danych katalog Data, znajduj¹cy
-	 * siê w katalogu programu.
+	 * Konstruktor domyœlny, wywo³uj¹cy konstruktor sparamertryzowany FileStoreBusInfo(String),
+	 * przypisuj¹cy sk³adowanym danym katalog nadrzêdny Data. Pliki tworzone w czasie
+	 * aktualizacji danych bêd¹ znajdowa³y siê w katalogu Data, znajduj¹cym siê w katalogu
+	 * g³ównym programu.
 	 */
-	FileStoreBusInfo()
+	public FileStoreBusInfo()
 	{
 		this("Data/");
 	}
 	
 	/**
-	 * Konstruktor pozwalaj¹cy na przypisanie œcie¿ki do katalogu, w którym maj¹ byæ sk³adowane
-	 * przez ten obiekt dane. W przypadku nie istnienia katalogu lub katalogów nadrzêdnych,
-	 * obiekt bêdzie w stanie go utworzyæ o ile bêdzie to mo¿liwe z poziomu aplikacji.
-	 * @param toStoreDataDirectoryName œcie¿ka do katalogu, w którym maj¹ zostaæ zesk³adowane
-	 * 		infomacje, nie powinien posiadaæ na koñcu znaku "/"
+	 * 
+	 * @param toStoreDataDirectoryName nazwa katalogu, w którym maj¹ zostaæ zesk³adowane
+	 * 		dane. Utworzony katalog bêdzie znajdowa³ siê w katalogu projektu, je¿eli
+	 * 		w argumencie znajd¹ siê znaki niedozwolne dla nazwy pliku, zostan¹ usuniête.
 	 */
-	FileStoreBusInfo(String toStoreDataDirectoryName)
+	public FileStoreBusInfo(String toStoreDataDirectoryName)
 	{
 		this.toStoreDataDirectoryName = toStoreDataDirectoryName+"/";
+		readyTimeLines = new ArrayList<String>();
+		checkInformationImplementations = new HashMap<String,CheckInformations>();
+		checkInformationImplementations.put("buStopName", new CheckBuStopName());
+		checkInformationImplementations.put("lineNumber", new CheckLineNumber());
+		checkInformationImplementations.put("direction", new CheckDirection());
+		CheckInformations checkTime = new CheckTimeArray();
+		checkInformationImplementations.put("hours",checkTime);
+		checkInformationImplementations.put("casualMinutes",checkTime);
+		checkInformationImplementations.put("saturdayMinutes",checkTime);
+		checkInformationImplementations.put("sundayMinutes",checkTime);
 	}
 }

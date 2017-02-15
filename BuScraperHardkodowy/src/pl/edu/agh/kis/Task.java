@@ -23,24 +23,37 @@ public class Task {
 	 */
 	private static final Logger log4j = LogManager.getLogger(TaskManager.class.getName());
 
+	/**
+	 * 
+	 */
 	private int id;
 	
+	/**
+	 * Kolejka poprawnych zapytañ
+	 */
+	private BlockingQueue<Request> requestsToDo;
 	
 	/**
 	 * Kolejka zadañ do powtórzenia
 	 */
 	private BlockingQueue<Request> requestsToRepeat;
 	
-	public void setRequestsToRepeat(BlockingQueue<Request> requestsToRepeat)
+	/**
+	 * 
+	 * @return
+	 */
+	public BlockingQueue<Request> getRequestsToDo()
 	{
-		this.requestsToRepeat = requestsToRepeat;
+		return requestsToDo;
 	}
 	
-	public BlockingQueue<Request> pollRequestsToRepeat()
+	/**
+	 * 
+	 * @return
+	 */
+	public BlockingQueue<Request> getRequestsToRepeat()
 	{
-		BlockingQueue<Request> result = requestsToRepeat;
-		requestsToRepeat = new ArrayBlockingQueue<Request>(1);
-		return result;
+		return requestsToRepeat;
 	}
 	
 	/**
@@ -50,29 +63,6 @@ public class Task {
 	public int getId()
 	{
 		return id;
-	}
-	
-	private int status;
-	
-	/**
-	 * Funkcja pozwala na zmianê statusu zadania wraz z okreœleniem poprawnoœci argumentu.
-	 * @param i nowy status zadania
-	 */
-	public void setStatus(int i)
-	{
-		if(i >= 0 && i <= 2)
-		{
-			status = i;
-		}
-	}
-	
-	/**
-	 * Funkcja zwraca status zadania.
-	 * @return status zadania
-	 */
-	public int getStatus()
-	{
-		return status;
 	}
 	
 	/**
@@ -159,6 +149,99 @@ public class Task {
 		return host;
 	}
 	
+	/**
+	 * Funkcja s³u¿y do utworzenia kolejki requestów zgodnie z wytycznymi z pól prywatnych
+	 * danego zadania
+	 * @param newTask nowe zadanie, na podstawie którego tworzymy kolejkê zapytañ
+	 */
+	private void prepareNewRequests()
+	{
+		String lineNumber = getLineNumber();
+		int maxBuStop = 1;
+		int maxDirection = 1;
+		
+		try {
+			maxBuStop = Integer.parseInt(getMaxBuStop());
+			maxDirection = Integer.parseInt(getMaxDirection());
+		} catch (NumberFormatException e) {
+			log4j.warn("Z³y format liczby: "+e.getMessage());
+			return;
+		}
+			
+		requestsToDo = new ArrayBlockingQueue<Request>(maxBuStop*maxDirection);
+		requestsToRepeat = new ArrayBlockingQueue<Request>(maxBuStop*maxDirection);
+			
+		for(int i = 0; i < maxDirection; ++i)
+		{
+			for(int j = 0; j < maxBuStop; ++j)
+			{
+				StringBuilder builder = new StringBuilder();
+				builder.append("lang=PL&rozklad=20170120&linia=");
+				builder.append(lineNumber);
+				builder.append("__");
+				builder.append(i);
+				builder.append("__");
+				builder.append(j);
+				requestsToDo.add(new Request(getMethod(), getUrlPath(),
+						getHost(),builder.toString(),"utf-8"));
+				log4j.info("Doda³em nowe zapytanie o parametrach:"+builder.toString());	
+			}
+		}
+	}
+	
+	/**
+	 * Funkcja ma za zadanie poprawnie ustaliæ stan kolejek z zapytaniami do wykonania
+	 * oraz zapytaniami do powtórzenia, przed rozpoczêciem korzystania z tych kolejek
+	 * przez w¹tki pobieraj¹ce. Sprawdza czy kolejka zapytañ do powtórzenia jest pusta
+	 * je¿eli tak, oznacza to, ¿e Task nie by³ jeszcze wykonywany i nale¿y dla niego
+	 * przygotowaæ nowy zestaw zapytañ wed³ug wytycznych zdobytych w konstruktorze,
+	 * natomiast w przeciwnym wypadku przek³ada kolejkê do powtórzenia w miejsce kolejki
+	 * zapytañ do wykonania, oraz tworzy now¹ kolejkê do powtórzenia, o rozmiarze równym
+	 * rozmiarowi kolejce do zrobienia, dziêki czemu zabezpieczamy siê przed mo¿liwoœci¹,
+	 * ¿e wszystkie zapytania z kolejki do wykonania bêd¹ potrzebowa³y powtórzenia.
+	 */
+	public void prepareRequestsBeforeUsing()
+	{
+		if(requestsToRepeat.isEmpty())
+		{
+			prepareNewRequests();
+		}
+		else
+		{
+			requestsToDo = requestsToRepeat;
+			requestsToRepeat = new ArrayBlockingQueue<Request>(requestsToDo.size());
+		}
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isEmptyRequestsToRepeat()
+	{
+		if(requestsToRepeat.isEmpty())
+		{
+			return true;
+		}
+		
+		for(Request r : requestsToDo)
+		{
+			try {
+				requestsToRepeat.add(r);
+			} catch (IllegalStateException e) {
+				log4j.error("Nieudane umieszczenie zapytania w kolejsce do powtórzenia"
+						+e.getMessage());
+			}
+			
+		}
+
+		requestsToDo.clear();
+		return false;
+	}
+	
+	/**
+	 * 
+	 */
 	Task()
 	{
 		this.id = 0;
@@ -168,7 +251,6 @@ public class Task {
 		this.method = "";
 		this.host = "";
 		this.urlPath = "";
-		status = 0;
 	}
 	
 	/**
@@ -195,9 +277,10 @@ public class Task {
 			this.host = url.getHost();
 			this.urlPath = url.getPath();
 		} catch (MalformedURLException e) {
-			log4j.error("Problem z po³¹czeniem z URL"+e.getMessage());
+			log4j.error("Niew³aœciwy format url"+e.getMessage());
 		}
 		
-		status = 0;
+		requestsToDo = new ArrayBlockingQueue<Request>(1);
+		requestsToRepeat = new ArrayBlockingQueue<Request>(1);
 	}
 }

@@ -64,7 +64,7 @@ public class ConfiguratorTest {
 		Task newTask = tasks.getNextTask();
 		tasks.removeTask(newTask.getId());
 		
-		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("",newTask.getUrlPath());
 		assertEquals("4",newTask.getLineNumber());
 		assertEquals("5",newTask.getMaxBuStop());
 		assertEquals("5",newTask.getMaxDirection());
@@ -74,7 +74,7 @@ public class ConfiguratorTest {
 		newTask = tasks.getNextTask();
 		tasks.removeTask(newTask.getId());
 		
-		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("",newTask.getUrlPath());
 		assertEquals("5",newTask.getLineNumber());
 		assertEquals("5",newTask.getMaxBuStop());
 		assertEquals("5",newTask.getMaxDirection());
@@ -84,7 +84,7 @@ public class ConfiguratorTest {
 		newTask = tasks.getNextTask();
 		tasks.removeTask(newTask.getId());
 		
-		assertEquals("rozklady.mpk.krakow.pl",newTask.getHost());
+		assertEquals("",newTask.getUrlPath());
 		assertEquals("6",newTask.getLineNumber());
 		assertEquals("5",newTask.getMaxBuStop());
 		assertEquals("5",newTask.getMaxDirection());

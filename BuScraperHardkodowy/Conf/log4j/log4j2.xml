@@ -7,7 +7,7 @@
   </Appenders> 
   <Loggers> 
     <Logger name="pl.edu.kis.agh" level="info"/>
-    <Root level="warn">
+    <Root level="info">
       <AppenderRef ref="STDOUT"/> 
     </Root> 
   </Loggers> 

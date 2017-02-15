@@ -9,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,9 +38,14 @@ public class DownloadThread extends Thread {
 	private int threadId;
 	
 	/**
-	 * Referencja do kolejki zapytañ, które w¹tek powinieñ wykonaæ
+	 * Kolejka poprawnych zapytañ
 	 */
-	private RequestCreator requestCreator;
+	private BlockingQueue<Request> requestsToDo;
+	
+	/**
+	 * Kolejka zadañ do powtórzenia
+	 */
+	private BlockingQueue<Request> requestsToRepeat;
 	
 	/**
 	 * Obiekt udostêpniaj¹cy strumienie do wysy³ania zapytañ oraz odbierania odpowiedzi
@@ -61,7 +67,12 @@ public class DownloadThread extends Thread {
 	
 	private void storeRequest(Request request)
 	{
-		requestCreator.putInvalidRequest(request);
+		try {
+			requestsToRepeat.put(request);
+		} catch (InterruptedException e) {
+			log4j.error("Nieudana próba zesk³adowania zapytania do powtórzenia: "
+					+e.getMessage());
+		}
 	}
 	
 	private String writeRequest(Request request)
@@ -267,7 +278,7 @@ public class DownloadThread extends Thread {
 		{
 			//Pobiera kolejne zapytanie z kolejki zapytañ
 			try {
-				currentRequest = requestCreator.getRequests().poll(2, TimeUnit.SECONDS);
+				currentRequest = requestsToDo.poll(2, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				log4j.error("Niepoprawnie wybudzony przy pobieraniu nowego zapytania:"
 						+e.getMessage());
@@ -290,7 +301,7 @@ public class DownloadThread extends Thread {
 				}		
 			}
 				
-		}while(!requestCreator.getRequests().isEmpty() && !connectionProblems);
+		}while(!requestsToDo.isEmpty() && !connectionProblems);
 		
 		currentHeader = "";
 		currentResponse = "";
@@ -316,12 +327,13 @@ public class DownloadThread extends Thread {
 	 *        zasobów
 
 	 */
-	DownloadThread(int id,PagesBuffer pagesToAnalise, RequestCreator requestCreator,
-			Downloader downloader)
+	DownloadThread(int id,PagesBuffer pagesToAnalise, BlockingQueue<Request> requestsToDo,
+			BlockingQueue<Request> requestsToRepeat,Downloader downloader)
 	{
 		threadId = id;
 		this.pagesToAnalise = pagesToAnalise;
-		this.requestCreator = requestCreator;
+		this.requestsToDo = requestsToDo;
+		this.requestsToRepeat = requestsToRepeat;
 		this.downloader = downloader;
 		log4j.info("DownloadThread o id "+threadId+" rozpoczyna pracê!");
 	}

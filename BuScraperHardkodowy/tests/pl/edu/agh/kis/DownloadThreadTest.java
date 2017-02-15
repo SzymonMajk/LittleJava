@@ -242,14 +242,18 @@ public class DownloadThreadTest {
 	@Test
 	public void testRunRespond200() throws IOException, InterruptedException {
 	
-		RequestCreator requestCreator = new RequestCreator();
 		//TODO trzeba zmieniæ requestCreatora, zeby mo¿na mu by³o ustawiæ requesty te¿
 		//zewnêtrzn¹ funkcj¹...
 		
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
-		BlockingQueue<String> request = new ArrayBlockingQueue<String>(3);
-		request.add("Zapytanie1");
-		request.add("Zapytanie2");
+		BlockingQueue<Request> requestsToDo = new ArrayBlockingQueue<Request>(3);
+		BlockingQueue<Request> requestsToRepeat = new ArrayBlockingQueue<Request>(3);
+		try {
+			requestsToDo.add(new Request());
+		} catch (IllegalStateException e) {
+			fail("Pojawi³ siê wyj¹tek: "+e.getMessage());
+		}
+		//I bêdziemy testowaæ co bêdzie siê pojawiaæ w requestsToRepeat
 		
 		String testRoot = "tests/testData/";
 		
@@ -261,7 +265,7 @@ public class DownloadThreadTest {
 		String nameOfTestFile = "Tests/ServerRespond200";
 		File testFile = new File(nameOfTestFile);
 		
-		DownloadThread d1 = new DownloadThread(999,pages,requestCreator,
+		DownloadThread d1 = new DownloadThread(999,pages,requestsToDo,requestsToRepeat,
 				new FileDownloader(testRoot+"RespondTestFile1",nameOfTestFile));
 		
 		

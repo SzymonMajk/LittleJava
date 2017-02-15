@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +23,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 import org.xml.sax.SAXException;
+
+import pl.edu.agh.kis.storeinfo.StoreBusInfo;
 
 /**
  * Klasa w¹tków, których zadaniem jest wyodrêbnienie zawartoœci ze strony, która znajduje
@@ -52,7 +55,7 @@ public class SnatchThread extends Thread {
 	 * odpowiada za numer linii, druga za nazwê przystanku, trzecia za godzinê, czwarta
 	 * za minuty dnia powszedniego, pi¹ta sobotê, a szósta niedzieli
 	 */
-	private HashMap<String,String> xPathExpressions;
+	private Map<String,String> xPathExpressions;
 	
 	/**
 	 * Referencja do bufora przechowuj¹cego strony do przetworzenia
@@ -126,15 +129,27 @@ public class SnatchThread extends Thread {
 	 */
 	private Map<String,String> analiseXMLPage(String pageXHTML) {
 		
-		//Wiemy ¿e kluczami musz¹ byæ direction, lineNumber, buStopName, hours
+		Map<String,String> timeXPathExpressions = new HashMap<String,String>();
 		
-		//Przygotowujê zmienne, do przechowywania wyodrêbnionych informacji
+		timeXPathExpressions.put("hours", "//td[text()=\"Godzina\"]"
+	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][1]");
+		
+		timeXPathExpressions.put("casualMinutes", "//td[text()=\"Godzina\"]"
+	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][2]");
+		
+		timeXPathExpressions.put("saturdayMinutes", "//td[text()=\"Godzina\"]"
+	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][3]");
+		
+		timeXPathExpressions.put("sundayMinutes", "//td[text()=\"Godzina\"]"
+	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][4]");
+	
 		Map<String,String> results = new HashMap<String,String>();
 		String direction = "";
 		String lineNumber = "";
 		String buStopName = "";
-		String hours = "";
-		StringBuilder buildHours = new StringBuilder();
+		int hoursLength = 0;
+		ArrayList<String> validMinutes = new ArrayList<String>();
+		StringBuilder builder = new StringBuilder();
 		
 		try {
 
@@ -145,8 +160,6 @@ public class SnatchThread extends Thread {
 		    
 		    XPath xPath =  XPathFactory.newInstance().newXPath();
  		    
-		    //Tutaj wyci¹gamy pojedyncze String nazwy linii, przystanku i kierunku
-		  
 		    buStopName = xPath.compile(xPathExpressions.get("buStopName")).
 		    		evaluate(docXML).replaceAll("\\s","");
 		   
@@ -155,45 +168,62 @@ public class SnatchThread extends Thread {
 		    
 		    direction = xPath.compile(xPathExpressions.get("direction"))
 		    		.evaluate(docXML).replaceAll("\\s","");
+		    	
+		    NodeList timeNodes; 
 		    
-		    //Tutaj bêdziemy wyci¹gaæ ca³e wiersze, aby wyci¹gn¹æ z nich nastêpnie odpowiednie czasy
-		    NodeList hourss = (NodeList) xPath.compile(xPathExpressions.get("hours")).
-		    		evaluate(docXML, XPathConstants.NODESET);
-		    		    
-		    //Przelatujê po wszystkich linijkach pasuj¹cych do XPath
-		    for (int i = 0;null!=hourss && i < hourss.getLength(); ++i) 
+		    for(String l : timeXPathExpressions.keySet())
 		    {
-	    		Node nod = hourss.item(i);
-	    		if(nod.getNodeType() == Node.ELEMENT_NODE)
-	    		{
-	    			String tmpTimes = "";
-	    			if(!(tmpTimes = nod.getTextContent()).equals(""))
-	    			{
-	    				buildHours.append(tmpTimes);
-	    			}
-	    		}
-	    	}
-		    
-		    hours = buildHours.toString();
-		    
+		    	builder = new StringBuilder();
+		    	timeNodes = (NodeList) xPath.compile(timeXPathExpressions.get(l)).
+			    		evaluate(docXML, XPathConstants.NODESET);
+		    			
+		    	if(timeNodes == null || timeNodes.getLength() == 0)
+		    	{
+		    		validMinutes.add(l);
+		    	}
+		    	
+		    	for (int i = 0; i < timeNodes.getLength(); ++i) 
+			    {
+		    		Node nod = timeNodes.item(i);
+		    		if(nod.getNodeType() == Node.ELEMENT_NODE)
+		    		{
+		    			builder.append(nod.getTextContent());
+		    			builder.append(":\n");
+		    			if(l.equals("hours"))
+		    				hoursLength++;
+		    		}
+		    	}
+		    	
+		    	results.put(l, builder.toString());
+		    }
 		    log4j.info("Wyodrêbni³em informacje ze strony XHTML");
 		} catch (SAXException e) {
 			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
 		} catch (ParserConfigurationException e) {
-			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
 		} catch (UnsupportedEncodingException e) {
-			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
 		} catch (XPathExpressionException e) {
-			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace();
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());
 		} catch (IOException e) {
-			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage());			e.printStackTrace(); 
+			log4j.error("Problem przy analizowaniu dokumentu XHTML:"+e.getMessage()); 
+		}
+		
+		builder = new StringBuilder();
+		for(int i = 0; i < hoursLength; ++i)
+		{
+			builder.append(":\n");
+		}
+		
+		for(String l : validMinutes)
+		{
+			results.put(l, builder.toString());
 		}
 		
 		results.put("lineNumber", lineNumber);
 		results.put("direction", direction);
 		results.put("buStopName", buStopName);
-		results.put("hours", hours);
-		
+				
 		return results;
 	}
 	/**
@@ -260,7 +290,7 @@ public class SnatchThread extends Thread {
 	 *        danych
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
-			HashMap<String,String> xPathExpressions)
+			Map<String,String> xPathExpressions)
 	{
 		threadId = id;
 		this.pagesToAnalise = pagesToAnalise;
