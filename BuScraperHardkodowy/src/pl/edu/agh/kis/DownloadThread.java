@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * natomiast correctTaskExecute okreœla czy w¹tki pobieraj¹ce nie pope³ni³y b³êdu przy
  * wykonywaniu danego zadania, aby w ten sposób unikn¹æ pomijania danych niepobranych
  * w poprawny sposób. Niepoprawnoœæ pobieranych danych jest okreœlana poprzez wy³apywane
- * z metod prywatnych wyj¹tki.
+ * z metod prywatnych wyj¹tki. B³êdy oraz wa¿niejsze kroki programu s¹ umieszczane w logach.
  * @author Szymon Majkut
  * @version %I%, %G%
  */
@@ -117,80 +117,6 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * Funkcja otrzymuje poprawnie u³o¿one zapytanie do servera, oraz zwraca odpowiedŸ,
-	 * któr¹ od niego otrzymuje. Funckja jest publiczna, poniewa¿ w ten sposób pozwala
-	 * na dogodne testowanie, posiada na sztywno ustalone kodowanie UTF-8.
-	 * @param request poprawne zapytanie do servera uzyskane z kolejki udostêpnionej przez
-	 * 		  RequestCreator
-	 * @return 
-	 */
-	public boolean proceedRequest(Request request)
-	{
-		boolean result = true;
-		String line = "";
-		StringBuilder response = new StringBuilder("");
-		StringBuilder header = new StringBuilder("");
-		
-		if(request != null && downloader.initDownloader(request.getHost()))
-		{
-			try (OutputStreamWriter to = new OutputStreamWriter(
-				downloader.getOutputStream(),"UTF-8");
-				BufferedReader headerResponseReader = new BufferedReader(
-				new InputStreamReader(downloader.getInputSteam(),"UTF-8"))) {
-				
-				//Wykonujemy zapytanie
-				to.write(writeRequest(request));
-				to.flush();
-				log4j.info("Wykona³em zapytanie o parametrach:"+request.getParameters());
-				
-							
-				
-				//Odbieramy nag³ówek odpowiedzi
-				while((line = headerResponseReader.readLine()) != null)
-				{
-					if(line.equals(""))
-					{
-						break;
-					}
-					header.append(line);
-				}
-				
-				//Odbieramy treœæ odpowiedzi
-				while((line = headerResponseReader.readLine()) != null)
-				{
-					response.append(line);
-				}
-				
-				log4j.info("Otrzyma³em odpowiedŸ na zapytanie o parametrach:"
-						+request.getParameters());
-			} catch (UnsupportedEncodingException e) {
-				result = false;
-				connectionProblems = true;
-				log4j.error("Niewspierane kodowanie:"+e.getMessage());
-				storeRequest(currentRequest);
-			} catch (IOException e) {
-				//Tutaj mamy sytuacjê gdy zerwano internet, wtedy mamy zakoñczyæ run()
-				result = false;
-				connectionProblems = true;
-				log4j.warn("Utracono po³¹czenie z hostem:"+e.getMessage());
-				storeRequest(currentRequest);
-			} 
-		}
-		else
-		{
-			result = false;
-			connectionProblems = true;
-			log4j.warn("Niemo¿liwe zainicjowanie po³¹czenia z hostem.");
-			storeRequest(currentRequest);
-		}
-
-		currentHeader = header.toString();
-		currentResponse = response.toString();
-				
-		return result;
-	}
-	
-	/**
 	 * Funkcja s³u¿y do odfiltrowania od niepoprawnych odpowiedzi
 	 * @param header nag³ówek zasobu otrzymanego z poprawnego zapytania
 	 * @return informacja czy pobrany zasób jest zasobem poprawnym z punktu widzenia u¿ytkownika
@@ -262,12 +188,102 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * G³ówna pêtla w¹tku - producenta, jej zadaniem budzenie w¹tków dzia³aj¹cych na buforze,
-	 * je¿eli sama umieœci w nim jakieœ dane otrzymane poprzezodpowiednio nastawiony strumieñ
-	 * wejœcia, wysy³aj¹c uprzednio strumieniem wyjœcia odpowiednie zapytanie, które jest 
-	 * pobierane z kolejki przygotowanej przez RequestCreator za poœrednictwem BuScrapper,
-	 * zasypia gdy bufor oka¿e siê przepe³niony, funkcja dzia³a dopóki pozostaj¹ jeszcze jakieœ
-	 * zapytania do wys³ania
+	 * Funkcja odpowiada za przeprowadzenie procesu wys³ania zapytania oraz pobrania
+	 * odpowiedzi od servera przy zg³oszeniu problemów w przypadku problemów z przeprowadzeniem
+	 * tego procesu. Otrzymuje obiekt Request, przy pomocy którego buduje zapytanie 
+	 * do servera, nastêpnie wysy³a to zapytanie, odczytuje nag³ówek oraz treœæ odpowiedzi,
+	 * po czym zapisuje je do prywatnych pól obiektu. Je¿eli w trakcie komunikacji wyst¹pi
+	 * wyj¹tek zwi¹zany z niepoprawnym kodowaniem lub wyj¹tek typu wejœcia/wyjœcia, lub
+	 * obiekt odpowiedzialny za stworzenie zapytania bêdzie pusty lub strumienie do komunikacji
+	 * nie zostan¹ poprawnie zainicjowane, spowoduje to ustalenie prywatnego pola logicznego
+	 * connectionProglems na wartoœæ prawdy oraz przerwanie samej funkcji z wartoœci¹
+	 * logicznego fa³szu.
+	 * @param request obiekt Request przechowuj¹cy dane potrzebne do utworzenia zapytania, które
+	 * 		mo¿e zostaæ wys³ane do servera.
+	 * @return zwraca wartoœæ logicznej prawdy, je¿eli podczas wykonywania funkcji nie dosz³o
+	 * 		do pobrania pustego zapytania, niemo¿liwoœci zainicjowania strumieni, wyst¹pienia
+	 * 		wyj¹tku typu wejœcia/wyjœcia przy wysy³aniu zapytania lub odbieraniu odpowiedzi,
+	 *		wyj¹tku typu niewspieranego kodowania, w przeciwnym wypadku zwróci wartoœæ
+	 *		logicznej prawdy.
+	 */
+	public boolean proceedRequest(Request request)
+	{
+		boolean result = true;
+		String line = "";
+		StringBuilder response = new StringBuilder("");
+		StringBuilder header = new StringBuilder("");
+		
+		if(request != null && downloader.initDownloader(request.getHost()))
+		{
+			try (OutputStreamWriter to = new OutputStreamWriter(
+				downloader.getOutputStream(),"UTF-8");
+				BufferedReader headerResponseReader = new BufferedReader(
+				new InputStreamReader(downloader.getInputSteam(),"UTF-8"))) {
+				
+				//Wykonujemy zapytanie
+				to.write(writeRequest(request));
+				to.flush();
+				log4j.info("Wykona³em zapytanie o parametrach:"+request.getParameters());
+				
+				//Odbieramy nag³ówek odpowiedzi
+				while((line = headerResponseReader.readLine()) != null)
+				{
+					if(line.equals(""))
+					{
+						break;
+					}
+					header.append(line);
+				}
+				
+				//Odbieramy treœæ odpowiedzi
+				while((line = headerResponseReader.readLine()) != null)
+				{
+					response.append(line);
+				}
+				
+				log4j.info("Otrzyma³em odpowiedŸ na zapytanie o parametrach:"
+						+request.getParameters());
+			} catch (UnsupportedEncodingException e) {
+				result = false;
+				connectionProblems = true;
+				log4j.error("Niewspierane kodowanie:"+e.getMessage());
+				storeRequest(currentRequest);
+			} catch (IOException e) {
+				//Tutaj mamy sytuacjê gdy zerwano internet, wtedy mamy zakoñczyæ run()
+				result = false;
+				connectionProblems = true;
+				log4j.warn("Utracono po³¹czenie z hostem:"+e.getMessage());
+				storeRequest(currentRequest);
+			} 
+		}
+		else
+		{
+			result = false;
+			connectionProblems = true;
+			log4j.warn("Niemo¿liwe zainicjowanie po³¹czenia z hostem.");
+			storeRequest(currentRequest);
+		}
+
+		currentHeader = header.toString();
+		currentResponse = response.toString();
+				
+		return result;
+	}
+	
+	/**
+	 * G³ówna pêtla w¹tku - producenta, dzia³aj¹cego na implementacji PagesBuffer otrzymanej
+	 * w konstruktorze. Na pocz¹tku dzia³ania funkcji zwiêkszana jest wartoœæ pola statycznego
+	 * obiektu BuScrapper informuj¹cego o iloœci w¹tków œci¹gaj¹cych, natomiast po przejœciu
+	 * funkcji wartoœæ ta jest zmniejszana. Funckja wykonuje pêtle, której warunkami zakoñczenia
+	 * s¹ niepustoœæ kolejki zapytañ do wykonania oraz wartoœæ logiczna pola prywatnego
+	 * connectionProblems, która mo¿e zostaæ ustalona na logiczn¹ prawdê w funkcji
+	 * proceedRequest. W poprawnym wykonaniu z kolejki pobierane jest nowe zapytanie,
+	 * nastêpnie poprzez funkcjê proceedRequest jest ono wysy³ane a nag³ówek oraz cia³o
+	 * odpowiedzi zostaje zapisne w prywatnych polach obiektu. Sprawdzana jest poprawnoœæ
+	 * otrzymanych pól, je¿eli nast¹pi wyst¹pienie nag³ówka powoduj¹cego koniecznoœæ powtórzenia
+	 * zapytania, zapytanie trafia do kolejki zapytañ do ponownego wykonania, a cia³o odpowiedzi
+	 * nie jest umieszczana w buforze producenta. Je¿eli natomiast nag³ówek jak i cia³o
+	 * odpowiedzi oka¿¹ siê poprawne, cia³o odpowiedzi zostaje umieszczone w buforze producenta.
 	 */
 	public void run()
 	{			
@@ -276,7 +292,6 @@ public class DownloadThread extends Thread {
 		
 		do
 		{
-			//Pobiera kolejne zapytanie z kolejki zapytañ
 			try {
 				currentRequest = requestsToDo.poll(2, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
@@ -291,7 +306,6 @@ public class DownloadThread extends Thread {
 					
 			if(proceedRequest(currentRequest) && checkHeaderAndResponse())
 			{
-				//Wystarczy dziêki specyfikacji BlockingQueue
 				try {
 					pagesToAnalise.addPage(currentResponse);
 					log4j.info("Dodajê now¹ stronê do kolejki stron.");
@@ -311,21 +325,23 @@ public class DownloadThread extends Thread {
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadanie polega na tym, aby ka¿dy nowo utworzony
-	 * w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ w systemie
-	 * logów, implementacjê Downloader, która bêdzie udostêpnia³a strumienie potrzebne przy
-	 * uzyskiwaniu zasobów, implementacjê PagesBuffer do zesk³adowania ju¿ pobranych zasobów,
-	 * kolejkê zapytañ przygotowan¹ przez RequestCreator.
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
-	 *        nadrzêdnym
-	 * @param requestCreator obiekt udostêpniaj¹cy kolejkê zapytañ do wykonania, oraz
-	 * 		  pozwalaj¹cy na zesk³adowanie wykonañ, które musz¹ zostaæ powtórzone
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez
-	 * @param requests kolejka blokuj¹ca zapytañ do wykonania  
-	 *        siebie metod
-	 * @param downloader obiekt przechowuj¹cy i udostêpniaj¹cy strumienie do pobierania 
-	 *        zasobów
-
+	 * Konstruktor sparametryzowany, który przypisuje nowotworzonemu obiektowi jego numer
+	 * identyfikacyjny, bufor stron producenta, kolejkê zapytañ, które nale¿y wykonaæ,
+	 * kolejkê zapytañ do ponownego wykonania, w której obiekt mo¿e umieszczaæ takowe
+	 * zapytania, je¿eli stwierdzi tak¹ koniecznoœæ, oraz obiekt implementuj¹cy interfejs
+	 * Downloader, którego zadaniem jest inicjowanie oraz udostêpnianie strumieni, potrzebnych
+	 * przy komunikacji, w celu uzyskania odpowiedzi dla jakiegoœ zapytania.
+	 * @param id unikatowy numer w¹tku wzglêdem innych w¹tków tej klasy, wykonywanych
+	 * 		w jednej puli w¹tków.
+	 * @param pagesToAnalise implementacja interfejsu PagesBuffer, umo¿liwiaj¹ca umieszczanie
+	 * 		poprawnie pobranych stron w buforze dla w¹tków wy³uskuj¹cych.
+	 * @param requestsToDo kolejka obiektów Request, zawieraj¹cych detale, z których mo¿liwe
+	 * 		jest utworzenie zapytania.
+	 * @param requestsToRepeat kolejka obiektów Request, które musz¹ zostaæ powtórzone,
+	 * 		ze wzglêdu na mo¿liwe, ale nie stwarzaj¹ce poprawnych danych dzia³anie obiektu.
+	 * @param downloader obiekt implementuj¹cy interfejs Downloader, umo¿liwiaj¹cy
+	 * 		zainicjowanie strumieni do komunikacji: zadania zapytania oraz odczytania
+	 * 		odpowiedzi na to zapytanie, oraz udostêpniaj¹cy te strumienie.
 	 */
 	DownloadThread(int id,PagesBuffer pagesToAnalise, BlockingQueue<Request> requestsToDo,
 			BlockingQueue<Request> requestsToRepeat,Downloader downloader)

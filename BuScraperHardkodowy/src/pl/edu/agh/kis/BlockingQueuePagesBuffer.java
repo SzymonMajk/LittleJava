@@ -30,8 +30,9 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	private BlockingQueue<String> buffer;
 	
 	/**
-	 * Zadaniem funkcji jest sprawdzenie czy kolejka jest pusta
-	 * @return informacja czy kolejka jest pusta
+	 * Zadaniem funkcji jest sprawdzenie czy kolejka jest pusta. Zwraca informacjê o stanie
+	 * zape³nienia bufora blokuj¹cego.
+	 * @return zwraca prawdê jeœli bufor jest pusty oraz fa³sz jeœli nie jest pusty.
 	 */
 	@Override
 	synchronized public boolean isEmpty() {
@@ -39,8 +40,9 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	}
 
 	/**
-	 * Zadaniem funkcji jest sprawdzenie czy kolejka jest zape³niona
-	 * @return informacja czy kolejka jest zape³niona
+	 * Zadaniem funkcji jest sprawdzenie czy kolejka jest pe³na. Zwraca informacjê o stanie
+	 * zape³nienia bufora blokuj¹cego.
+	 * @return zwraca prawdê jeœli bufor jest pe³ny oraz fa³sz jeœli nie jest pe³ny.
 	 */
 	@Override
 	synchronized public boolean isFull() {
@@ -66,12 +68,13 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	 * strony z bufora, a nastêpnie usuniêcie jej, bêd¹c œwiadomym, i¿ takowa znajduje
 	 * siê w ju¿ w buforze, dlatego u¿ytkownik jest zobligowany do umieszczenia wywo³ania 
 	 * funkcji bezpoœrednio po wywo³aniu funkcji isEmpty() oraz zwrócenie przez ni¹ wartoœci
-	 * logicznego fa³szu.
+	 * logicznego fa³szu. Je¿eli kolejka oka¿e siê pusta, w¹tek bêdzie czeka³ na pojawienie
+	 * siê w niej nowego elementu. Ustalony jest jednak 
 	 * @return Pierwszy kod Ÿród³owy strony, pobierany z bufora
 	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
 	 */
 	@Override
-	public String takePage() throws InterruptedException {
+	public String pollPage() throws InterruptedException {
 		//metoda take u¿ywa wait oraz notify
 		log4j.info("Pobrano stronê!  Stan bufora przed:"+buffer.size());
 		return buffer.poll(2, TimeUnit.SECONDS);
@@ -79,8 +82,9 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	
 	/**
 	 * Konstruktor sparametryzowany, którego zadaniem jest utworzenie  obiektu 
-	 * odpowiedzialnego za buforowanie stron o rozmiarze ustalonym przez argument
-	 * @param size rozmiar bufora podany przez u¿ytkownika
+	 * odpowiedzialnego za przetrzymywanie stron w buforze o rozmiarze ustalonym
+	 * poprzez argument.
+	 * @param size rozmiar bufora podany przez u¿ytkownika.
 	 */
 	BlockingQueuePagesBuffer(int size)
 	{
@@ -89,7 +93,7 @@ public class BlockingQueuePagesBuffer implements PagesBuffer {
 	
 	/**
 	 * Konstruktor domyœlny, którego zadaniem jest utworzenie obiektu odpowiedzialnego
-	 * za buforowanie stron, ustala domyœlny rozmiar bufora równy 50
+	 * za buforowanie stron, ustala domyœlny rozmiar bufora równy 50.
 	 */
 	BlockingQueuePagesBuffer()
 	{

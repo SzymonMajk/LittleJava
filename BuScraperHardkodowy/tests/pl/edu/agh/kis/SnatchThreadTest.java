@@ -1,15 +1,15 @@
 package pl.edu.agh.kis;
 
+import pl.edu.agh.kis.storeinfo.FileStoreBusInfo;
 import static org.junit.Assert.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Test;
-
-import pl.edu.agh.kis.storeinfo.FileStoreBusInfo;
 
 /**
  * Test klasy SnatchThread
@@ -19,55 +19,76 @@ import pl.edu.agh.kis.storeinfo.FileStoreBusInfo;
  */
 public class SnatchThreadTest {
 
-	/**
-	 * Sprawadzamy przypadek przystanku tylko z podzia³em na zwyk³y dzieñ tygodnia i soboty
-	 */
 	@Test
-	public void testRunRuczaj() throws IOException, InterruptedException {
+	public void testRunRuczaj()  {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage23Ruczaj");
 		if(!testFile.exists())
 		{
-			fail("Brak ¿adanego pliku testowego");
+			fail("Brak ¿¹danego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
 		
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader buffReader1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {	
+		
+			while((line = buffReader1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
 		
-		//Odpalmy to!
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
+		
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -88,31 +109,29 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader buffReader2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {	
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = buffReader2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
+			buffReader2.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader buffReader3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {	
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = buffReader3.readLine()) != null)
 			{
 				got.append(line);
 			}
 
-			from.close();
+			buffReader3.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -169,25 +188,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z podzia³em na Czw/Pt, Pt/Sob-Sob/Nd oraz Nd/Pon
-	 */
 	@Test
-	public void testRunCentralna() throws IOException, InterruptedException {
+	public void testRunCentralna() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage62Centralna");
@@ -195,29 +230,35 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
-		
+			
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -238,31 +279,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -319,25 +354,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku tylko z rozk³adem na dzieñ powszedni
-	 */
 	@Test
-	public void testRunConrada() throws IOException, InterruptedException {
+	public void testRunConrada() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage118Conrada");
@@ -345,29 +396,36 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
 		
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzone");
+
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -388,31 +446,26 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -469,25 +522,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z rozk³adem na dzieñ powszedni, soboty i œwiêta
-	 */
 	@Test
-	public void testRunStruga() throws IOException, InterruptedException {
+	public void testRunStruga() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage139Struga");
@@ -495,29 +564,35 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
-		
+			
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -538,31 +613,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -619,25 +688,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z rozk³adem na dzieñ powszedni, soboty i œwiêta
-	 */
 	@Test
-	public void testRunBibice() throws IOException, InterruptedException {
+	public void testRunBibice() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage257Bibice");
@@ -645,29 +730,35 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
-		
+			
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -688,31 +779,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
-		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
+
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -769,25 +854,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z rozk³adem na wszystkie dni tygodnia w jednym polu
-	 */
 	@Test
-	public void testRunArka() throws IOException, InterruptedException {
+	public void testRunArka() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage601Arka");
@@ -796,28 +897,34 @@ public class SnatchThreadTest {
 			fail("Brak ¿adanego pliku testowego");
 		}
 				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
-		
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -838,31 +945,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -919,25 +1020,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z rozk³adem na Pt/Sob-Sob/Nd w jednym polu
-	 */
 	@Test
-	public void testRunProsta() throws IOException, InterruptedException {
+	public void testRunProsta() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage643Prosta");
@@ -945,29 +1062,35 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
 		
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -988,31 +1111,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");
@@ -1069,25 +1186,41 @@ public class SnatchThreadTest {
 		assertEquals(expected.toString(),got.toString());
 	}
 	
-	/**
-	 * Sprawadzamy przypadek przystanku z rozk³adem na Pon/Wt, Wt/Œr, Œr/Czw w jednym polu
-	 */
 	@Test
-	public void testRunCzyzyny() throws IOException, InterruptedException {
+	public void testRunCzyzyny() {
 
 		BlockingQueuePagesBuffer pages = new BlockingQueuePagesBuffer(5);
 		String testRoot = "tests/testData/";
+		String snatchTestRoot = "tests/testData";
 		
 		if(!new File("Tests/testConf").exists())
 		{
 			fail("Nie odnaleziono pliku testowego!");
 		}
 		
-		Configurator configurator = new Configurator("Tests/testConf",
-				new TaskManager());
+		Map<String,String> xPaths = new HashMap<String,String>();
+		xPaths.put("XPathBusStopName", 
+				"//td/p[@style=' font-size: 24px; text-align: left; white-space: nowrap;']");
+		xPaths.put("XPathLineNumber", 
+				"//td/div/p[@style=' font-size: 40px;']");
+		xPaths.put("XPathLineDirection", 
+				"//table/tr/td/table/tr/td/div[@style=' text-align: left; white-space: "
+				+ "nowrap; border-left: solid black; border-radius: 20px; padding: 10px;']");
+		xPaths.put("XPathHours", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][1]");
+		xPaths.put("XPathMinutesOrdinary", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][2]");
+		xPaths.put("XPathMinutesSaturday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][3]");
+		xPaths.put("XPathMinutesSunday", 
+				"//td[text()=\"Godzina\"]/parent::tr/following-sibling::tr"
+				+ "/td[not(@colspan)][4]");
 		
-		SnatchThread s1 = new SnatchThread(999,pages,new FileStoreBusInfo(testRoot),
-				configurator.getXPaths());
+		SnatchThread s1 = new SnatchThread(999,pages,
+				new FileStoreBusInfo(snatchTestRoot),xPaths);
 
 		//Przygotowanie danych testowych
 		File testFile = new File("Tests/AnaliseHTMLPage664Czy¿yny");
@@ -1095,29 +1228,35 @@ public class SnatchThreadTest {
 		{
 			fail("Brak ¿adanego pliku testowego");
 		}
-				
-		BufferedReader from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(testFile),"UTF-8"));
-		
+			
 		String line = "";
 		StringBuilder XMLDocument = new StringBuilder();
 		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from1 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(testFile),"UTF-8"))) {
+		
+			while((line = from1.readLine()) != null)
 			{
 				XMLDocument.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku testAnaliseHTMLPage");
 		}
-		pages.addPage(XMLDocument.toString());
+		
+		try {
+			pages.addPage(XMLDocument.toString());
+		} catch (InterruptedException e1) {
+			fail("B³¹d przy próbie dodania strony");
+		}
 		
 		//Odpalmy to!
 		s1.start();
-		s1.join();
+		try {
+			s1.join();
+		} catch (InterruptedException e1) {
+			fail("Niepoprawnie wybudzony");
+		}
 		
 		//Wczytujemy plik porównawczy oraz utwrzony i porównujemy
 		StringBuilder expected = new StringBuilder();
@@ -1138,31 +1277,25 @@ public class SnatchThreadTest {
 			fail("Brak pliku wynikowego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(expectedFile)));
+		try (BufferedReader from2 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(expectedFile)))) {
 		
-		try {
-			while((line = from.readLine()) != null)
+			while((line = from2.readLine()) != null)
 			{
 				expected.append(line);
 			}
 			
-			from.close();
-
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu z pliku oczekiwanego");
 		}
 		
-		from = new BufferedReader(new InputStreamReader
-				(new FileInputStream(gotFile)));
-		
-		try {
-			while((line = from.readLine()) != null)
+		try (BufferedReader from3 = new BufferedReader(new InputStreamReader
+				(new FileInputStream(gotFile)))) {
+
+			while((line = from3.readLine()) != null)
 			{
 				got.append(line);
 			}
-
-			from.close();
 
 		} catch (IOException e) {
 			fail("Pojawi³ siê wyj¹tek przy czytaniu pliku otrzymanego z testu");

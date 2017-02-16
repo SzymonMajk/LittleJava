@@ -18,25 +18,23 @@ public interface Downloader {
 
 	/**
 	 * Funkcja odpowiada za utworzenie strumieni oraz ich w³aœciwe pod³¹czenie
-	 * informuje o powodzeniu swojego dzia³ania. Deklaruje mo¿liwoœæ wyrzucania
-	 * wyj¹tków, mo¿liwych do wyrzucenia przede wszystkim przy tworzeniu obiektów
-	 * umo¿liwiaj¹cych komunikacjê sieciow¹.
-	 * @param hostName nazwa hosta na rzecz którego inicjujemy obiekt
-	 * @return informacja o powodzeniu tworzenia strumieni
+	 * informuje o powodzeniu swojego dzia³ania.
+	 * @param hostName nazwa hosta na rzecz którego inicjujemy obiekt.
+	 * @return informacja o powodzeniu zainicjowania strumieni.
 	 */
 	public boolean initDownloader(String hostName);
 	
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w implementacji
+	 * Funkcja ma za zadanie zwracaæ strumieñ wyjœciowy przechowywany w implementacji.
 	 * interfejsu.
-	 * @return strumieñ wyjœciowy przechowywany w implementacji interfejsu
+	 * @return strumieñ wyjœciowy przechowywany w implementacji interfejsu.
 	 */
 	public OutputStream getOutputStream();
 	
 	/**
-	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w implementacji
+	 * Funkcja ma za zadanie zwracaæ strumieñ wejœciowy przechowywany w implementacji.
 	 * interfejsu.
-	 * @return strumieñ wejœciowy przechowywany w implementacji interfejsu
+	 * @return strumieñ wejœciowy przechowywany w implementacji interfejsu.
 	 */
 	public InputStream getInputSteam();
 }

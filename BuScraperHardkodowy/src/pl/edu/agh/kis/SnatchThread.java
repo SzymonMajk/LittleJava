@@ -28,16 +28,18 @@ import pl.edu.agh.kis.storeinfo.StoreBusInfo;
 
 /**
  * Klasa w¹tków, których zadaniem jest wyodrêbnienie zawartoœci ze strony, która znajduje
- * siê ju¿ w buforze, metod tej klasy nie interesuje pochodzenie stron, a jedynie to za
- * pomoc¹ jakich wyra¿eñ XPath ma dobraæ siê do elementów, które musi wyodrêbniæ, posiada 
- * obiekt implementuj¹cy interfejs StoreBusInfo, do którego oddelegowuje obowi¹zek 
- * zesk³adowania wyodrêbnionych informacji, posiada równie¿ swój w³asny system logów, 
- * z wyjœciem do pliku o nazwie równej id dzia³aj¹cego w¹tku.
+ * siê ju¿ w buforze. W przypadku zauwa¿enia pustoœci bufora, w¹tek jest usypiany w celu
+ * umo¿liwienia producentom nadrobienia stron. W przypadku zauwa¿enia pustoœci bufora oraz
+ * braku pracuj¹cych w¹tków pobieraj¹cych, w¹tek wy³uskuj¹cy decyduje siê na zakoñczenie
+ * swojej metody run. B³êdy oraz wa¿niejsze kroki programu s¹ umieszczane w logach. B³êdy 
+ * oraz wa¿niejsze kroki programu s¹ umieszczane w logach.
  * @author Szymon Majkut
  * @version %I%, %G%
  *
  */
 public class SnatchThread extends Thread {
+	
+	private String allLinesEx = "//a[starts-with(@class,'linia')]";
 	
 	/**
 	 * System Log4J
@@ -131,25 +133,25 @@ public class SnatchThread extends Thread {
 		
 		Map<String,String> timeXPathExpressions = new HashMap<String,String>();
 		
-		timeXPathExpressions.put("hours", "//td[text()=\"Godzina\"]"
-	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][1]");
+		timeXPathExpressions.put("XPathHours", 
+				xPathExpressions.get("XPathHours"));
 		
-		timeXPathExpressions.put("casualMinutes", "//td[text()=\"Godzina\"]"
-	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][2]");
+		timeXPathExpressions.put("XPathMinutesOrdinary", 
+				xPathExpressions.get("XPathMinutesOrdinary"));
 		
-		timeXPathExpressions.put("saturdayMinutes", "//td[text()=\"Godzina\"]"
-	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][3]");
+		timeXPathExpressions.put("XPathMinutesSaturday", 
+				xPathExpressions.get("XPathMinutesSaturday"));
 		
-		timeXPathExpressions.put("sundayMinutes", "//td[text()=\"Godzina\"]"
-	    		+ "/parent::tr/following-sibling::tr/td[not(@colspan)][4]");
-	
+		timeXPathExpressions.put("XPathMinutesSunday", 
+				xPathExpressions.get("XPathMinutesSunday"));
+			
 		Map<String,String> results = new HashMap<String,String>();
 		String direction = "";
 		String lineNumber = "";
 		String buStopName = "";
 		int hoursLength = 0;
 		ArrayList<String> validMinutes = new ArrayList<String>();
-		StringBuilder builder = new StringBuilder();
+		StringBuilder builder;
 		
 		try {
 
@@ -159,14 +161,14 @@ public class SnatchThread extends Thread {
 		    		parse(new ByteArrayInputStream(pageXHTML.getBytes("UTF-8")));
 		    
 		    XPath xPath =  XPathFactory.newInstance().newXPath();
- 		    
-		    buStopName = xPath.compile(xPathExpressions.get("buStopName")).
+ 		    		    
+		    buStopName = xPath.compile(xPathExpressions.get("XPathBusStopName")).
 		    		evaluate(docXML).replaceAll("\\s","");
 		   
-		    lineNumber = xPath.compile(xPathExpressions.get("lineNumber")).
+		    lineNumber = xPath.compile(xPathExpressions.get("XPathLineNumber")).
 		    		evaluate(docXML).replaceAll("\\s","");
 		    
-		    direction = xPath.compile(xPathExpressions.get("direction"))
+		    direction = xPath.compile(xPathExpressions.get("XPathLineDirection"))
 		    		.evaluate(docXML).replaceAll("\\s","");
 		    	
 		    NodeList timeNodes; 
@@ -189,7 +191,7 @@ public class SnatchThread extends Thread {
 		    		{
 		    			builder.append(nod.getTextContent());
 		    			builder.append(":\n");
-		    			if(l.equals("hours"))
+		    			if(l.equals("XPathHours"))
 		    				hoursLength++;
 		    		}
 		    	}
@@ -220,18 +222,25 @@ public class SnatchThread extends Thread {
 			results.put(l, builder.toString());
 		}
 		
-		results.put("lineNumber", lineNumber);
-		results.put("direction", direction);
-		results.put("buStopName", buStopName);
-				
+		results.put("XPathLineNumber", lineNumber);
+		results.put("XPathLineDirection", direction);
+		results.put("XPathBusStopName", buStopName);
+
 		return results;
 	}
 	/**
 	 * G³ówna pêtla w¹tku - konsumenta, jej zadaniem jest pobieranie strony z bufora, oraz 
 	 * wœród zawartych na niej danych, wyodrêbnienie danych pasuj¹cych do posiadanych przez
 	 * w¹tek wyra¿eñ XPath oraz pózniejsze zesk³adowanie ich, oddelegowuj¹c zadanie do
-	 * odpowiedniego obiektu implementuj¹cego interfejs StoreBusInfo, w przypadku pustego
-	 * Bufora, maj¹ zostaæ obudzone w¹tki pobieraj¹ce.
+	 * odpowiedniego obiektu implementuj¹cego interfejs StoreBusInfo. Na pocz¹tku funkcji
+	 * nastêpuje zwiêkszenie wartoœci pola statycznego przechowywuj¹cego liczbê pracuj¹cych
+	 * w¹tków wy³uskuj¹cych, natomiast na koñcu funkcji nast¹pi zmniejszenie tej iloœci, za
+	 * ka¿dym razem nastêpuje zmiana o wartoœæ równ¹ jeden. W przypadku pustego
+	 * bufora, maj¹ zostaæ obudzone w¹tki pobieraj¹ce, je¿eli zostanie przekroczony czas
+	 * oczekiwania na buforze, zostanie zwrócony obiekt null, dlatego bezpoœrednio po
+	 * pobraniu zabezpieczamy siê sprawdzaj¹c czy otrzymany zasób nie jest null'em.
+	 * W sytuacji gdy w¹tki pobieraj¹ce jeszczce pracuj¹, ale bufor jest pusty, w¹tek
+	 * wy³uskuj¹cy zostaje uœpiony.
 	 */
 	public void run()
 	{	
@@ -242,7 +251,7 @@ public class SnatchThread extends Thread {
 			if(!pagesToAnalise.isEmpty())
 			{
 				try {
-					currentPage = pagesToAnalise.takePage();
+					currentPage = pagesToAnalise.pollPage();
 					log4j.info("Pobieram z kolejki stron");
 				} catch (InterruptedException e) {
 					log4j.error("W¹tek niepoprawnie wybudzony:"+e.getMessage());
@@ -261,7 +270,7 @@ public class SnatchThread extends Thread {
 			{
 				log4j.info("Kolejka pusta, usypiamy w oczekiwaniu na producenta.");
 				try {
-					sleep(5000);
+					sleep(1000);
 					yield();
 				} catch (InterruptedException e) {
 					log4j.error("W¹tek niepoprawnie wybudzony:"+e.getMessage());
@@ -275,33 +284,31 @@ public class SnatchThread extends Thread {
 		log4j.info("SnatchThread o id "+threadId+" koñczy pracê!");
 	}
 	
+
 	/**
-	 * Konstruktor sparametryzowany, którego znaczenie polega na tym, aby ka¿dy nowo
-	 * utworzony w¹tek przetwarzaj¹cy, posiada³ unikatow¹ nazwê, któr¹ bêdziemy wykorzystywaæ
-	 * w systemie logów, mia³ te¿ dostêp do bufora z kolejnymi pobranymi stronami, oraz 
-	 * podarowany przez w¹tek nadrzêdny obiekt, któremu bêdzie delegowa³ sk³adowanie 
-	 * uzyskanych danych.
-	 * @param id unikatowy numer, przyznawany jeszcze w czasie tworzenia w¹tków w w¹tku
-	 *        nadrzêdnym
-	 * @param pagesToAnalise bufor stron, zapewniaj¹cy blokowanie udostêpnianych przez 
-	 *        siebie metod
-	 * @param infoSaving obiekt odpowiedzialny za zes³adowanie danych
-	 * @param xPathExpressions mapa wyra¿eñ XPath wykorzystywanych przy wyodrêbnianiu
-	 *        danych
+	 * Konstruktor sparametryzowany, który przypisuje nowotworzonemu obiektowi jego numer
+	 * identyfikacyjny, bufor stron dla konsumenta, implementacjê interfejsu StoreBusInfo,
+	 * do której bêdzie oddelegowywa³ zadanie zapisania informacji wyodrêbionych ze stron,
+	 * oraz mapê zapytañ XPath, gdzie kluczemjest nazwa danego zapytania, natomiast
+	 * wartoœci¹ samo zapytanie.
+	 * @param id unikatowy numer w¹tku wzglêdem innych w¹tków tej klasy, wykonywanych
+	 * 		w jednej puli w¹tków.
+	 * @param pagesToAnalise implementacja interfejsu PagesBuffer, umo¿liwiaj¹ca pobranie
+	 * 		stron w celu wyodrêbnienia z nich informacji.
+	 * @param infoSaving implementacja interfejsu StoreBusInfo, odpowiedzialna za zesk³adowanie
+	 * 		wyodrêbnionych informacji.
+	 * @param xPathExpressions mapa zapytañ XPath, gdzie kluczem jest nazwa danego zapytania,
+	 * natomiast wartoœci¹ samo zapytanie. Wa¿ne, aby zarówno obiekt wy³uskuj¹cy jak
+	 * i przechowywana przez niego implementacja interfejsu StoreBusInfo zna³a mo¿liwe
+	 * nazwy zapytañ i aby by³y one spójne.
 	 */
 	SnatchThread(int id, PagesBuffer pagesToAnalise, StoreBusInfo infoSaving,
 			Map<String,String> xPathExpressions)
 	{
+		log4j.info("SnatchThread o id "+id+" rozpoczyna pracê!");
 		threadId = id;
 		this.pagesToAnalise = pagesToAnalise;
 		this.infoSaving = infoSaving;
 		this.xPathExpressions = xPathExpressions;
-		log4j.info("SnatchThread o id "+threadId+" rozpoczyna pracê!");
-		StringBuilder regexs = new StringBuilder();
-		for(String s : xPathExpressions.keySet())
-		{
-			regexs.append(s);
-		}
-		log4j.info("Otrzyma³em œcie¿ki XPath:"+regexs.toString());
 	}
 }

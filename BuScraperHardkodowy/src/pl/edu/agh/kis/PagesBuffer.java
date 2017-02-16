@@ -26,16 +26,16 @@ public interface PagesBuffer {
 	/**
 	 * Implementacja ma za zadanie dodaæ stronê do niezape³nionego bufora, u¿ytkonik
 	 * jest zobligowany do wczeœniejszego wykonania implementacji metody isFull().
-	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
-	 * @param pageHTML Kod Ÿród³owy strony HTML, który umieszczamy w niezape³nionym buforze
+	 * @throws InterruptedException wyj¹tek pojawia siê przy nieprawid³owym zakoñczeniu w¹tku.
+	 * @param pageHTML Kod Ÿród³owy strony HTML, który umieszczamy w niezape³nionym buforze.
 	 */
 	public void addPage(String pageHTML) throws InterruptedException;
 	
 	/**
 	 * Implementacja ma za zadanie pobraæ oraz usun¹æ stronê z niepustego bufora, u¿ytkonik
 	 * jest zobligowany do wczeœniejszego wykonania implementacji metody isEmpty().
-	 * @throws InterruptedException wyj¹tek pojawia siê przy próbie nieprawid³owego wybudzenia
-	 * @return Kod Ÿród³owy strony HTML, który zosta³ pobrany z bufora
+	 * @throws InterruptedException wyj¹tek pojawia siê przy nieprawid³owym zakoñczeniu w¹tku.
+	 * @return Kod Ÿród³owy strony HTML, który zosta³ pobrany z bufora.
 	 */
-	public String takePage() throws InterruptedException;
+	public String pollPage() throws InterruptedException;
 }

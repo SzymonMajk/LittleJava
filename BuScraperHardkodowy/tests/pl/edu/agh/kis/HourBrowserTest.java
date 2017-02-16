@@ -14,6 +14,8 @@ import java.io.PrintWriter;
 
 import org.junit.Test;
 
+import pl.edu.agh.kis.search.HourBrowser;
+
 /**
  * Testy wyszukiwarki godzin, osobne przypadki linii nocnej, dziennej autobusowej
  * oraz tramwajowej, oraz kilka mo¿liwych przypadków niepowodzenia

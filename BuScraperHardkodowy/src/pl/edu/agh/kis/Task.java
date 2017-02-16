@@ -10,8 +10,11 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Klasa przechowuj¹ca pojedyncze zadanie do wykonania dla BuScrappera
- * mo¿e zwracaæ szczegó³y zadania, a jego stan jest ustalany w konstruktorze.
- * Jeden Task przeprowadza zapytania dla jednego hosta.
+ * mo¿e zwracaæ swoje szczegó³y: numer identyfikacyjny, kolejkê zapytañ do wykonania oraz
+ * zapytañ do powtórzenia, numer linii, oraz dane zwi¹zane z nowotrzowonymi zapytaniami.
+ * Nowoutrzowony Task przechowuje w kolejce obiekty Request, z których wszystkie
+ * posiadaj¹ ten sam adres hosta. Dany taks pobiera dane dla konkretnej linii.
+ * B³êdy oraz wa¿niejsze kroki programu s¹ umieszczane w logach.
  * @author Szymon Majkut
  * @version %I%, %G%
  *
@@ -39,87 +42,24 @@ public class Task {
 	private BlockingQueue<Request> requestsToRepeat;
 	
 	/**
-	 * 
-	 * @return
-	 */
-	public BlockingQueue<Request> getRequestsToDo()
-	{
-		return requestsToDo;
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public BlockingQueue<Request> getRequestsToRepeat()
-	{
-		return requestsToRepeat;
-	}
-	
-	/**
-	 * Funkcja zwraca indywidualny numer zadania jednoznacznie je okreœlaj¹cy.
-	 * @return indywidualny numer zadania jednoznacznie je okreœlaj¹cy
-	 */
-	public int getId()
-	{
-		return id;
-	}
-	
-	/**
 	 * Przechowuje numer linii obs³ugiwanej przez zadanie
 	 */
 	private String lineNumber;
 	
 	/**
-	 * Zwraca numer linii obs³ugiwanej przez zadanie.
-	 * @return numer linii obs³ugiwanej przez zadanie
-	 */
-	public String getLineNumber()
-	{
-		return lineNumber;
-	}
-	
-	/**
 	 * Przechowuje maksymaln¹ liczbê przystanków
 	 */
-	private String maxBuStop;
-	
-	/**
-	 * Zwraca maksymaln¹ liczbê przystanków.
-	 * @return maksymalna liczba przystanków
-	 */
-	public String getMaxBuStop()
-	{
-		return maxBuStop;
-	}
+	private int maxBuStop;
 	
 	/**
 	 * Przechowuje maksymaln¹ liczbê kierunków
 	 */
-	private String maxDirection = "1";
-	
-	/**
-	 * Zwraca maksymaln¹ liczbê kierunków.
-	 * @return maksymalna liczba kierunków
-	 */
-	public String getMaxDirection()
-	{
-		return maxDirection;
-	}
+	private int maxDirection;
 	
 	/**
 	 * Przechowuje nazwê metody dla zapytañ
 	 */
-	private String method = "GET";
-	
-	/**
-	 * Zwraca nazwê metody dla zapytañ.
-	 * @return nazwa metody dla zapytañ
-	 */
-	public String getMethod()
-	{
-		return method;
-	}
+	private String method;
 	
 	/**
 	 * Przechowuje nazwê hosta dla zapytañ
@@ -127,27 +67,9 @@ public class Task {
 	private String urlPath = "";
 	
 	/**
-	 * Zwraca nazwê hosta zapytañ.
-	 * @return nazwa hosta zapytañ
-	 */
-	public String getUrlPath()
-	{
-		return urlPath;
-	}
-	
-	/**
 	 * Przechowuje nazwê hosta dla zapytañ
 	 */
 	private String host = "";
-	
-	/**
-	 * Zwraca nazwê hosta zapytañ.
-	 * @return nazwa hosta zapytañ
-	 */
-	public String getHost()
-	{
-		return host;
-	}
 	
 	/**
 	 * Funkcja s³u¿y do utworzenia kolejki requestów zgodnie z wytycznymi z pól prywatnych
@@ -157,16 +79,9 @@ public class Task {
 	private void prepareNewRequests()
 	{
 		String lineNumber = getLineNumber();
-		int maxBuStop = 1;
-		int maxDirection = 1;
+		maxBuStop = getMaxBuStop();
+		maxDirection = getMaxDirection();
 		
-		try {
-			maxBuStop = Integer.parseInt(getMaxBuStop());
-			maxDirection = Integer.parseInt(getMaxDirection());
-		} catch (NumberFormatException e) {
-			log4j.warn("Z³y format liczby: "+e.getMessage());
-			return;
-		}
 			
 		requestsToDo = new ArrayBlockingQueue<Request>(maxBuStop*maxDirection);
 		requestsToRepeat = new ArrayBlockingQueue<Request>(maxBuStop*maxDirection);
@@ -187,6 +102,98 @@ public class Task {
 				log4j.info("Doda³em nowe zapytanie o parametrach:"+builder.toString());	
 			}
 		}
+	}
+	
+	/**
+	 * Zadaniem funkcji jest zwrócenie blokuj¹cej kolejki zapytañ do wykonania. Je¿eli 
+	 * nie zosta³a jeszcze wykonana funkcja prepareRequestsBeforeUsing, zostanie zwrócona 
+	 * pusta kolejka.
+	 * @return kolejka zapytañ do wykonania, przechowywana w polu prywatnym.
+	 */
+	public BlockingQueue<Request> getRequestsToDo()
+	{
+		return requestsToDo;
+	}
+	
+	/**
+	 * Zadaniem funkcji jest zwrócenie blokuj¹cej kolejki zapytañ do powtórzenia. Mo¿liwe
+	 * jest zwrócenie pustej kolejki.
+	 * @return kolejka zapytañ do wykonania, przechowywana w polu prywatnym.
+	 */
+	public BlockingQueue<Request> getRequestsToRepeat()
+	{
+		return requestsToRepeat;
+	}
+	
+	/**
+	 * Funkcja zwraca indywidualny numer obiektu Task jednoznacznie go okreœlaj¹cy. Numer
+	 * identyfikacyjny jest przeznawany jeszcze w momencie tworzenia obiektu przez obiekt
+	 * odpowiedzialny za konfiguracjê, na obiekcie tym spoczywa odpowiedzialnoœæ ustalenia
+	 * unikalnoœci przyznawanych numerów identyfikacyjnych.
+	 * @return indywidualny numer obiektu Task jednoznacznie go okreœlaj¹cy.
+	 */
+	public int getId()
+	{
+		return id;
+	}
+	
+	/**
+	 * Zwraca numer linii obs³ugiwanej przez obiekt Task.
+	 * @return numer linii obs³ugiwanej przez obiekt Task.
+	 */
+	public String getLineNumber()
+	{
+		return lineNumber;
+	}
+	
+	/**
+	 * Zwraca maksymaln¹ liczbê przystanków. Jest wykorzystywany przy tworzeniu kolejki
+	 * zapytañ do wykonania przy pierwszym u¿yciu obiektu Task.
+	 * @return maksymalna liczba przystanków obiektu Task.
+	 */
+	public int getMaxBuStop()
+	{
+		return maxBuStop;
+	}
+	
+	/**
+	 * Zwraca maksymaln¹ liczbê kierunków. Jest wykorzystywana przy tworzeniu kolejki
+	 * zapytañ do wykonania przy pierwszym u¿yciu obiektu Task.
+	 * @return maksymalna liczba kierunków nowotworzonych zapytañ obiektu Task.
+	 */
+	public int getMaxDirection()
+	{
+		return maxDirection;
+	}
+	
+	/**
+	 * Zwraca nazwê metody dla zapytañ. Jest wykorzystywana przy tworzeniu kolejki
+	 * zapytañ do wykonania przy pierwszym u¿yciu obiektu Task.
+	 * @return nazwa metody dla zapytañ  nowotworzonych zapytañ obiektu Task.
+	 */
+	public String getMethod()
+	{
+		return method;
+	}
+	
+	/**
+	 * Zwraca nazwê pierwotny adres zasobu zapytañ. Jest wykorzystywana przy tworzeniu kolejki
+	 * zapytañ do wykonania przy pierwszym u¿yciu obiektu Task.
+	 * @return nazwa pierwotnego adresu zasobu nowotworzonych zapytañ obiektu Task.
+	 */
+	public String getUrlPath()
+	{
+		return urlPath;
+	}
+
+	/**
+	 * Zwraca nazwê pierwotnego hosta zapytañ. Jest wykorzystywana przy tworzeniu kolejki
+	 * zapytañ do wykonania przy pierwszym u¿yciu obiektu Task.
+	 * @return nazwa pierwotnego hosta nowotworzonych zapytañ obiektu Task.
+	 */
+	public String getHost()
+	{
+		return host;
 	}
 	
 	/**
@@ -214,12 +221,17 @@ public class Task {
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Funkcja zwraca wartoœæ logiczn¹ pytania czy kolejka zapytañ do powtórzenia oraz
+	 * kolejka zapytañ do wykonania s¹ jednoczeœnie puste. Je¿eli odzpowiedŸ bêdzie
+	 * przecz¹ca, nast¹pi przepisanie wszystkich zapytañ znajduj¹cych siê w kolejce zapytañ
+	 * do powtórzenia, do kolejki zapytañ do wykonania oraz wyczyszczenie kolejki zapytañ
+	 * do wykonania.
+	 * @return zwróci prawdê je¿eli kolejka zapytañ do wykonania oraz kolejka zapytañ
+	 * 		do powtórzenia oka¿¹ siê jednoczeœnie puste, w przeciwnym razie zwróci fa³sz.
 	 */
-	public boolean isEmptyRequestsToRepeat()
+	public boolean isEmptyRequestsQueues()
 	{
-		if(requestsToRepeat.isEmpty())
+		if(requestsToRepeat.isEmpty() && requestsToDo.isEmpty())
 		{
 			return true;
 		}
@@ -240,30 +252,33 @@ public class Task {
 	}
 	
 	/**
-	 * 
+	 * Konstruktor domyœlny uruchamiaj¹cy konstruktor sparametryzowany wartoœciami
+	 * zerowymi. S³u¿y do utworzenia pustego obiektu Task, który ma s³u¿yæ dzia³aniom
+	 * tymczasowym, nie powinno siê korzystaæ z jego funkcji publicznych.
 	 */
-	Task()
+	public Task()
 	{
-		this.id = 0;
-		this.lineNumber = "";
-		this.maxBuStop = "";
-		this.maxDirection = "";
-		this.method = "";
-		this.host = "";
-		this.urlPath = "";
+		this(0,"",0,0,"","");
 	}
 	
 	/**
-	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie wszystkich
-	 * danych potrzebnych do ustalenia stanu pocz¹tkowego zadania, otrzymanych w argumentach.
-	 * @param lineNumber numer linii dla zapytañ
-	 * @param maxBuStop maksymalna liczba przystanków
-	 * @param maxDirection maksymalna liczba kierunków
-	 * @param method metoda dla zapytañ
-	 * @param host nazwa hosta dla zapytañ
+	 * Konstruktor sparametryzowany, którego zadaniem jest poprawne przypisanie numeru
+	 * identyfikuj¹cego, numeru linii, maksymalnej liczby przystanków, maksymalnej liczby
+	 * kierunków, metody oraz adresu hosta oraz zasobu, zdobytych z podanego w argumencie
+	 * adresu url. Funkcja przypisuje równie¿ nowe puste kolejki blokuj¹ce dla kolejek
+	 * zapytañ do wykonania oraz do powtórzenia.
+	 * @param id unikalny numer identyfikacyjny danego obiektu Task.
+	 * @param lineNumber numer linii potrzebny przy konstrukcji pierwotnych zapytañ.
+	 * @param maxBuStop maksymalna liczba przystanków potrzebna przy konstrukcji 
+	 * 		pierwotnych zapytañ.
+	 * @param maxDirection maksymalna liczba kierunków potrzebna przy konstrukcji 
+	 * 		pierwotnych zapytañ.
+	 * @param method metoda dla zapytañ potrzebna przy konstrukcji pierwotnych zapytañ.
+	 * @param pageUrl adres url strony, z której wydobiêdziemy adres hosta oraz adres
+	 * 		zasobu.
 	 */
-	Task(int id,String lineNumber, String maxBuStop, String maxDirection, String method, 
-			String pageUrl)
+	public Task(int id,String lineNumber, int maxBuStop, int maxDirection,
+			String method, String pageUrl)
 	{
 		this.id = id;
 		this.lineNumber = lineNumber;

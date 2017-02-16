@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 
 import org.junit.Test;
 
+import pl.edu.agh.kis.search.LineBrowser;
+
 /**
  * Test wybierania godzin
  * @author Szymon Majkut

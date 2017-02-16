@@ -19,10 +19,13 @@ import java.io.OutputStreamWriter;
  * dane w katalogach, których nazwy sugeruj¹ numer linii wraz z kierunkiem, w plikach których
  * nazwy bêd¹ odpowiada³y nazwom przystanków pozbawionych niedozwolonych znaków oraz tworz¹c
  * katalog buStops plików o nazwach przystanków, w których znajd¹ siê numery linii 
- * przeje¿dzaj¹cych przez przystanek wraz z kierunkiem. Posiada konstruktor sparametryzowany,
- * króry pozwala na okreœlenie katalogu nadrzêdnego dla sk³adowanych danych, oraz konstruktor
- * domyœlny, który jako taki katalog przypisuje katalog o nazwie Data. Je¿eli kierunek linii
- * zawiera³ w swojej nazwie znak ":", to zostanie on usuniêty.
+ * przeje¿dzaj¹cych przez przystanek wraz z kierunkiem, pod warunkiem, ¿e dane przejd¹
+ * walidacjê. Posiada konstruktor sparametryzowany, króry pozwala na okreœlenie katalogu 
+ * nadrzêdnego dla sk³adowanych danych, oraz konstruktor domyœlny, który jako taki katalog 
+ * przypisuje katalog o nazwie Data. Je¿eli kierunek linii zawiera³ w swojej nazwie znak ":", 
+ * to zostanie on usuniêty. Przy walidacji posi³kujemy siê wzorcem strategii poprzez
+ * wykorzystanie implementacji interfejsku CheckInformations. Potrzebna mapa jest tworzona
+ * i inicjowana w konstruktorze. B³êdy oraz wa¿niejsze kroki programu s¹ umieszczane w logach.
  * @author Szymon Majkut
  * @version %I%, %G%
  */
@@ -64,10 +67,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	 */
 	private Map<String,CheckInformations> checkInformationImplementations;
 	
-	/**
-	 * Funkcja odpowiada za wyczyszczenie pól, przygotowuj¹c je na przyjêcie oraz
-	 * przetworzenie kolejnej porcji informacji
-	 */
 	private void clear()
 	{
 		lineNumber = "";
@@ -76,23 +75,12 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		readyTimeLines = new ArrayList<String>();
 	}
 	
-	/**
-	 * 
-	 * @param implementationName
-	 * @param storedInformation
-	 * @return
-	 */
 	private boolean checkInformation(String implementationName, String storedInformation)
 	{
 		return checkInformationImplementations.get(implementationName).
 				checkInformation(storedInformation);
 	}
 	
-	/**
-	 * 
-	 * @param allInformations
-	 * @return
-	 */
 	private boolean prepareNewInformations(Map<String,String> allInformations)
 	{
 		for(String l : allInformations.keySet())
@@ -103,21 +91,25 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			}
 		}
 				
-		lineNumber = allInformations.get("lineNumber");
-		buStopName = allInformations.get("buStopName");
-		direction = allInformations.get("direction");
+		lineNumber = allInformations.get("XPathLineNumber");
+		buStopName = allInformations.get("XPathBusStopName");
+		direction = allInformations.get("XPathLineDirection");
 		
 		StringBuilder timeLineBuilder;
-		String[] hourLines = allInformations.get("hours").split("\n");
-		String[] casualMinutesLines = allInformations.get("casualMinutes").split("\n");
-		String[] saturdayMinutesLines = allInformations.get("saturdayMinutes").split("\n");
-		String[] sundayMinutesLines = allInformations.get("sundayMinutes").split("\n");
+		String[] hourLines = 
+				allInformations.get("XPathHours").split("\n");
+		String[] ordinaryMinutesLines = 
+				allInformations.get("XPathMinutesOrdinary").split("\n");
+		String[] saturdayMinutesLines = 
+				allInformations.get("XPathMinutesSaturday").split("\n");
+		String[] sundayMinutesLines = 
+				allInformations.get("XPathMinutesSunday").split("\n");
 		
 		for(int i = 0; i < hourLines.length; ++i)
 		{
 			timeLineBuilder = new StringBuilder();
 			timeLineBuilder.append(hourLines[i].replace(" ", ","));
-			timeLineBuilder.append(casualMinutesLines[i].replace(" ", ","));
+			timeLineBuilder.append(ordinaryMinutesLines[i].replace(" ", ","));
 			timeLineBuilder.append(saturdayMinutesLines[i].replace(" ", ","));
 			timeLineBuilder.append(sundayMinutesLines[i].replace(" ", ","));
 			readyTimeLines.add(timeLineBuilder.toString());
@@ -154,7 +146,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		File toSend = new File(filePath);
 		File parentToSend = new File(toSend.getParent());
 		
-		//czêœæ odpowiedzialna za stworzenie w przypadku nieistnienia
 		if(!parentToSend.mkdirs())
 		{
 			if(!parentToSend.exists())
@@ -184,7 +175,6 @@ public class FileStoreBusInfo implements StoreBusInfo {
 			result = false;
 		}
 		
-		//Teraz czêœæ odpowiedzialna za zapis
 		try (OutputStreamWriter input = 
 				new OutputStreamWriter(new FileOutputStream(toSend,append),"UTF-8")) {
 			if(append)
@@ -316,7 +306,14 @@ public class FileStoreBusInfo implements StoreBusInfo {
 
 	
 	/**
-	 * @param allInformations
+	 * Funkcja sprawdza poprawnoœæ podanych informacji przy pomocy implementacji
+	 * interfejsu CheckInformations poprzez funkcjê prywatn¹. Je¿eli poprzez
+	 * walidacjê dane oka¿¹ siê prawid³owe, funkcja dopuœci do ich zesk³adowania,
+	 * po którym przeprowadzi czyszczenie wszystkich pól prywatnych, na wypadek
+	 * ponownego sk³adowania.
+	 * @param allInformations mapa w której klucz okreœla z jakiego typu danymi mamy
+	 * 		do czynienia implementacja StoreBusInfo rozpoznaje informacje po wartoœci
+	 * 		tego klucza, natomiast same informacje znajduj¹ siê w wartoœci dla danego klucza.
 	 */
 	@Override
 	public void storeInfo(Map<String,String> allInformations) {
@@ -340,7 +337,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 	}
 	
 	/**
-	 * 
+	 * Konstruktor sparametryzowany, który w argumencie otrzymuje œcie¿kê dostêpu
+	 * do katalogu, którym maj¹ zostaæ zesk³adowane dane otrzymywane przez obiekt. Je¿eli
+	 * katalog lub katalogi nadrzêdne nie istniej¹ oraz s¹ mo¿liwe do utworzenia, zostan¹
+	 * utworzone. Nastêpnie tworzy mapê zawieraj¹c¹ jako klucze wszelkie mo¿liwe nazwy 
+	 * wyra¿eñ XPath, natomiast jako wartoœæ odpowiedni obiekt implementuj¹cy interfejs 
+	 * CheckInformations, pozwalaj¹cy na odpowiednie sprawdzenie oraz zesk³adowanie 
+	 * poprawnych danych przy u¿yciu s³owa kluczowego wyra¿enia XPath.
 	 * @param toStoreDataDirectoryName nazwa katalogu, w którym maj¹ zostaæ zesk³adowane
 	 * 		dane. Utworzony katalog bêdzie znajdowa³ siê w katalogu projektu, je¿eli
 	 * 		w argumencie znajd¹ siê znaki niedozwolne dla nazwy pliku, zostan¹ usuniête.
@@ -350,13 +353,13 @@ public class FileStoreBusInfo implements StoreBusInfo {
 		this.toStoreDataDirectoryName = toStoreDataDirectoryName+"/";
 		readyTimeLines = new ArrayList<String>();
 		checkInformationImplementations = new HashMap<String,CheckInformations>();
-		checkInformationImplementations.put("buStopName", new CheckBuStopName());
-		checkInformationImplementations.put("lineNumber", new CheckLineNumber());
-		checkInformationImplementations.put("direction", new CheckDirection());
+		checkInformationImplementations.put("XPathBusStopName", new CheckBuStopName());
+		checkInformationImplementations.put("XPathLineNumber", new CheckLineNumber());
+		checkInformationImplementations.put("XPathLineDirection", new CheckDirection());
 		CheckInformations checkTime = new CheckTimeArray();
-		checkInformationImplementations.put("hours",checkTime);
-		checkInformationImplementations.put("casualMinutes",checkTime);
-		checkInformationImplementations.put("saturdayMinutes",checkTime);
-		checkInformationImplementations.put("sundayMinutes",checkTime);
+		checkInformationImplementations.put("XPathHours",checkTime);
+		checkInformationImplementations.put("XPathMinutesOrdinary",checkTime);
+		checkInformationImplementations.put("XPathMinutesSaturday",checkTime);
+		checkInformationImplementations.put("XPathMinutesSunday",checkTime);
 	}
 }

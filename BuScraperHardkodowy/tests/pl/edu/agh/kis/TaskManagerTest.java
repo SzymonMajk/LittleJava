@@ -15,7 +15,7 @@ public class TaskManagerTest {
 	@Test
 	public void testPut() {
 		TaskManager manager = new TaskManager();
-		manager.put(new Task(0,"999","5","5","Post","host"));
+		manager.put(new Task(0,"999",5,5,"Post","host"));
 		
 		assertEquals(true,manager.hasNextTask());
 		
@@ -27,7 +27,7 @@ public class TaskManagerTest {
 		
 		for(int i = 0; i < 100; ++i)
 		{
-			manager.put(new Task(i,"999","5","5","Post","host"));
+			manager.put(new Task(i,"999",5,5,"Post","host"));
 		}
 		
 		for(int i = 0; i < 100; ++i)
@@ -57,7 +57,7 @@ public class TaskManagerTest {
 		
 		assertEquals(false,manager.hasNextTask());
 		
-		manager.put(new Task(0,"999","5","5","Post","host"));
+		manager.put(new Task(0,"999",5,5,"Post","host"));
 		
 		assertEquals(true,manager.hasNextTask());
 		
@@ -76,5 +76,4 @@ public class TaskManagerTest {
 		assertEquals(false,manager.hasNextTask());
 
 	}
-//TODO zmienimy ten test, gdy informacja o usuwania trafi do logów
 }

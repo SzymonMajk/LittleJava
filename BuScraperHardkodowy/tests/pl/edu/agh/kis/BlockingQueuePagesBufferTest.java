@@ -36,7 +36,7 @@ public class BlockingQueuePagesBufferTest {
 		assertEquals(false,b.isEmpty());
 		
 		try {
-		b.takePage();
+		b.pollPage();
 		} catch (InterruptedException e) {
 			fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
 		}
@@ -56,7 +56,7 @@ public class BlockingQueuePagesBufferTest {
 		{
 			assertEquals(false,b.isEmpty());
 			try {
-				b.takePage();
+				b.pollPage();
 			} catch (InterruptedException e) {
 				fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
 			}
@@ -86,7 +86,7 @@ public class BlockingQueuePagesBufferTest {
 		assertEquals(false,b.isFull());
 		
 		try {
-			b.takePage();
+			b.pollPage();
 			} catch (InterruptedException e) {
 				fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
 			}
@@ -108,7 +108,7 @@ public class BlockingQueuePagesBufferTest {
 		for(int i = 0; i < size; ++i)
 		{
 			try {
-				b.takePage();
+				b.pollPage();
 				} catch (InterruptedException e) {
 					fail("W¹tek zosta³ niew³aœciwie wybudzony przy wyci¹ganiu");
 				}
@@ -172,7 +172,7 @@ public class BlockingQueuePagesBufferTest {
 		
 		while(!b.isEmpty())
 		{
-			result.append(b.takePage());
+			result.append(b.pollPage());
 		}
 		
 		assertEquals(false,b.isFull());
@@ -203,7 +203,7 @@ public class BlockingQueuePagesBufferTest {
 				{
 					assertEquals(false,b.isEmpty());
 					try {
-						result.put(b.takePage());
+						result.put(b.pollPage());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -220,7 +220,7 @@ public class BlockingQueuePagesBufferTest {
 				{
 					assertEquals(false,b.isEmpty());
 					try {
-						result.put(b.takePage());
+						result.put(b.pollPage());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -271,7 +271,7 @@ public class BlockingQueuePagesBufferTest {
 				for(int i = 0; i < size*4; ++i)
 				{
 					try {
-						result.put(b.takePage());
+						result.put(b.pollPage());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -350,5 +350,3 @@ class TestThread extends Thread {
 		this.setS(s);
 	}
 }
-//TODO zmieniamy testy, to nie te maj¹ dzia³aæ, tylko te nasze 
-//w¹tki maj¹ dzia³aæ na tym buforze!

@@ -15,6 +15,9 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import pl.edu.agh.kis.search.Browser;
+import pl.edu.agh.kis.search.Search;
+
 /**
  * 
  * @author Szymon Majkut
@@ -164,14 +167,14 @@ public class BrowserTest {
 		}
 		
 		//kolejka wyszukañ
-		ArrayList<String> toSearch = new ArrayList<String>();
+		ArrayList<Search> toSearch = new ArrayList<Search>();
 		
-		toSearch.add("Przystanek2:Przystanek1:0:12:05:3");
-		toSearch.add("Przystanek2:Przystanek1:1:13:05:2");
-		toSearch.add("Przystanek2:Przystanek1:2:14:05:1");
+		toSearch.add(new Search("Przystanek2","Przystanek1",0,12,05,3));
+		toSearch.add(new Search("Przystanek2","Przystanek1",1,13,05,2));
+		toSearch.add(new Search("Przystanek2","Przystanek1",2,14,05,1));
 		
 		//przygotowanie obiektu i testy
-		new Browser().serch(toSearch);
+		new Browser().search(toSearch);
 				
 		//Sprawdzanie
 		assertEquals(true,new String(outContent.toByteArray())
@@ -384,14 +387,14 @@ public class BrowserTest {
 		}
 		
 		//kolejka wyszukañ
-		ArrayList<String> toSearch = new ArrayList<String>();
+		ArrayList<Search> toSearch = new ArrayList<Search>();
 		
-		toSearch.add("Przystanek2:Przystanek1:0:12:05:3");
-		toSearch.add("Przystanek2:Przystanek1:1:13:05:2");
-		toSearch.add("Przystanek2:Przystanek1:2:14:05:1");
+		toSearch.add(new Search("Przystanek2","Przystanek1",0,12,05,3));
+		toSearch.add(new Search("Przystanek2","Przystanek1",1,13,05,2));
+		toSearch.add(new Search("Przystanek2","Przystanek1",2,14,05,1));
 		
 		//przygotowanie obiektu i testy
-		new Browser().serch(toSearch);
+		new Browser().search(toSearch);
 				
 		//Sprawdzanie
 
