@@ -1,0 +1,21 @@
+﻿<hierarchy>
+	<criterion><name>Ostatecznie</name><layer>3</layer><lowerCriterionNames>Lokal Jedzenia</lowerCriterionNames><lowerLayerWeights>2</lowerLayerWeights></criterion>
+	
+	<criterion><name>Lokal</name><layer>2</layer><lowerCriterionNames>Miejsce Cena</lowerCriterionNames><lowerLayerWeights>1</lowerLayerWeights></criterion>
+	
+	<criterion><name>Jedzenia</name><layer>2</layer><lowerCriterionNames>Jedzenie-jakość Jedzenie-ilość</lowerCriterionNames><lowerLayerWeights>3</lowerLayerWeights></criterion>
+
+	<criterion><name>Jedzenie-jakość</name><layer>1</layer><lowerCriterionNames>Budka Restauracja Stołówka</lowerCriterionNames><lowerLayerWeights>2 3 4</lowerLayerWeights></criterion>
+
+	<criterion><name>Jedzenie-ilość</name><layer>1</layer><lowerCriterionNames>Budka Restauracja Stołówka</lowerCriterionNames><lowerLayerWeights>1 2 3</lowerLayerWeights></criterion>
+	
+	<criterion><name>Miejsce</name><layer>1</layer><lowerCriterionNames>Budka Restauracja Stołówka</lowerCriterionNames><lowerLayerWeights>5 3 4</lowerLayerWeights></criterion>
+
+	<criterion><name>Cena</name><layer>1</layer><lowerCriterionNames>Budka Restauracja Stołówka</lowerCriterionNames><lowerLayerWeights>2 4 1</lowerLayerWeights></criterion>
+
+	<alternative><name>Budka</name><layer>0</layer><alternativePriorityVector>1 0 0</alternativePriorityVector></alternative>
+
+	<alternative><name>Restauracja</name><layer>0</layer><alternativePriorityVector>0 1 0</alternativePriorityVector></alternative>
+
+	<alternative><name>Stołówka</name><layer>0</layer><alternativePriorityVector>0 0 1</alternativePriorityVector></alternative>
+</hierarchy>
