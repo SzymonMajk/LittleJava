@@ -258,7 +258,8 @@ public class AhpSolver
 		System.out.println("\nProgram got data from xml file, now it start calculating:\n");
 		
 		solver.proceedAllCalculation();
-		//solver.printAllCriterion();
+		if(args.length >= 2 && args[1].equals("-p"))
+			solver.printAllCriterion();
 		solver.printFinalResult(true);
 	}
 }

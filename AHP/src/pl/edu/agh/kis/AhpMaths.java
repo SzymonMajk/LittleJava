@@ -53,21 +53,7 @@ public class AhpMaths
 		return pairCompareMatrix;
 	}
 	
-	private static Double[] createPriorityVectorSimple(Double[][] pairWeightMatrix)
-	{
-		if(pairWeightMatrix == null || pairWeightMatrix.length == 0)
-			return null;
-		
-		Double[] priorityVector = new Double[pairWeightMatrix.length];
-		
-		for(int i = 0; i < pairWeightMatrix.length; ++i)
-			priorityVector[i] = pairWeightMatrix[i][pairWeightMatrix.length-1];
-		
-		return normalizeVector(priorityVector);
-	}
-	
-	/*private static Double[] createPriorityVectorGeometricMean(
-			Double[][] pairWeightMatrix)
+	/*private static Double[] createPriorityVectorSimple(Double[][] pairWeightMatrix)
 	{
 		if(pairWeightMatrix == null || pairWeightMatrix.length == 0)
 			return null;
@@ -79,6 +65,30 @@ public class AhpMaths
 		
 		return normalizeVector(priorityVector);
 	}*/
+	
+	private static Double[] createPriorityVectorGeometricMean(
+			Double[][] pairWeightMatrix)
+	{
+		if(pairWeightMatrix == null || pairWeightMatrix.length == 0)
+			return null;
+		
+		Double[] priorityVector = new Double[pairWeightMatrix.length];
+		
+		for(int i = 0; i < pairWeightMatrix.length; ++i)
+		{
+			Double result = new Double("0");
+			
+			for(int j = 0; j < pairWeightMatrix.length; ++j)
+			{
+				result += pairWeightMatrix[i][j];
+			}
+			priorityVector[i] = 
+					Math.pow(result, 1/(double)pairWeightMatrix.length)
+					/(double)pairWeightMatrix.length;
+		}
+		
+		return normalizeVector(priorityVector);
+	}
 	
 	private static Double[] normalizeVector(Double[] vector)
 	{
@@ -111,7 +121,7 @@ public class AhpMaths
 		Double[][] pairCompareMatrix = createPairCompareMatrix(
 				lowerLayerCriterionWeightsEntry.split(" "));
 		
-		return createPriorityVectorSimple(pairCompareMatrix);
+		return createPriorityVectorGeometricMean(pairCompareMatrix);
 	}
 	
 	/**

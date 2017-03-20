@@ -14,16 +14,17 @@ public class MathTests
 
 		Double[] test = AhpMaths.calculateLowerCriterionsPriorityVector("2 5 3");
 		
-		assertEquals(test[0], new Double(0.5555555555555556));
-		assertEquals(test[1], new Double(0.3333333333333333));
-		assertEquals(test[2], new Double(0.1111111111111111));
+		assertEquals(test[0], new Double(0.4163114848181448));
+		assertEquals(test[1], new Double(0.3436575589372035));
+		assertEquals(test[2], new Double(0.24003095624465184));
 		
 		test = AhpMaths.calculateLowerCriterionsPriorityVector("2 5 3 4 2 5");
 		
-		assertEquals(test[0], new Double(0.2727272727272727));
-		assertEquals(test[1], new Double(0.18181818181818182));
-		assertEquals(test[2], new Double(0.45454545454545453));
-		assertEquals(test[3], new Double(0.09090909090909091));
+		assertEquals(test[0], new Double(0.2907433986585326));
+		assertEquals(test[1], new Double(0.26419646805558833));
+		assertEquals(test[2], new Double(0.2544202178821889));
+		assertEquals(test[3], new Double(0.19063991540369019
+));
 	}
 
 	@Test
@@ -42,8 +43,8 @@ public class MathTests
 		
 		Double[] toCheck = AhpMaths.sumVectorsWithWeights(testArray,weights);
 		
-		assertEquals(toCheck[0], new Double(0.5944444444444444));
-		assertEquals(toCheck[1], new Double(0.27222222222222225));
-		assertEquals(toCheck[2], new Double(0.13333333333333333));	
+		assertEquals(toCheck[0], new Double(0.4215571566044293));
+		assertEquals(toCheck[1], new Double(0.32232456709218077));
+		assertEquals(toCheck[2], new Double(0.2561182763033901));	
 	}
 }
