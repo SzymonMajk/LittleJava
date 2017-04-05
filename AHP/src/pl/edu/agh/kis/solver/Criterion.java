@@ -1,6 +1,7 @@
-package pl.edu.agh.kis;
+package pl.edu.agh.kis.solver;
 
 import java.util.ArrayList;
+import pl.edu.agh.kis.math.AhpMaths;
 
 /**
  * Criterion storage info about single cryterion. Have method to add references to 

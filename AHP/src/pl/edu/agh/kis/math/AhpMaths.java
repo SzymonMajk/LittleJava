@@ -1,4 +1,4 @@
-package pl.edu.agh.kis;
+package pl.edu.agh.kis.math;
 
 import java.util.ArrayList;
 
@@ -53,7 +53,45 @@ public class AhpMaths
 		return pairCompareMatrix;
 	}
 	
-	/*private static Double[] createPriorityVectorSimple(Double[][] pairWeightMatrix)
+	static Double[][] createPairCompareMatrix(
+			Double[] lowerLayerCriterionWeights)
+	{
+		int n = 2;
+		
+		while( (n-1)*n/2 < lowerLayerCriterionWeights.length ) 
+		{
+			n++;
+		}
+		
+		if((n-1)*n/2 != lowerLayerCriterionWeights.length)
+		{
+			System.err.println("Incorrect size of the weights vector" +
+					lowerLayerCriterionWeights.length);
+			return null;
+		}
+		
+		Double[][] pairCompareMatrix = new Double[n][n];
+		int vectorNumberCounter = 0;
+		
+		for(int i = 0; i < n; ++i)
+		{
+			for(int j = 0; j < n; ++j)
+			{
+				if(i == j)
+					pairCompareMatrix[i][j] = 1.0;
+				
+				else if(j > i)
+					pairCompareMatrix[i][j] = 
+						lowerLayerCriterionWeights[vectorNumberCounter++];
+				else
+					pairCompareMatrix[i][j] = 1/pairCompareMatrix[j][i];
+			}
+		}
+		
+		return pairCompareMatrix;
+	}
+	
+	private static Double[] createPriorityVectorSimple(Double[][] pairWeightMatrix)
 	{
 		if(pairWeightMatrix == null || pairWeightMatrix.length == 0)
 			return null;
@@ -64,7 +102,7 @@ public class AhpMaths
 			priorityVector[i] = pairWeightMatrix[i][pairWeightMatrix.length-1];
 		
 		return normalizeVector(priorityVector);
-	}*/
+	}
 	
 	private static Double[] createPriorityVectorGeometricMean(
 			Double[][] pairWeightMatrix)
@@ -105,8 +143,8 @@ public class AhpMaths
 	}
 	
 	/**
-	 * Function transform numbers from String into pair comparison matrix
-	 * and use geometric mean method to gain priority vector which is returned.
+	 * Function transforms numbers from String into pair comparison matrix
+	 * and uses geometric mean method to gain priority vector which is returned.
 	 * If there are any errors, user is informed about it on standard error output
 	 * and function return null.
 	 * 
@@ -120,6 +158,25 @@ public class AhpMaths
 	{	
 		Double[][] pairCompareMatrix = createPairCompareMatrix(
 				lowerLayerCriterionWeightsEntry.split(" "));
+		
+		return createPriorityVectorGeometricMean(pairCompareMatrix);
+	}
+	
+	/**
+	 * Transforms numbers from parameter into pair comparison matrix and
+	 * uses geometric mean method to gain priority vector and then return it.
+	 * In case of errors return null.
+	 * 
+	 * @param lowerLayerCrterionWeightsEntry table with double values,
+	 * 		represents relatives ratios between lower layer choices.
+	 * @return normalized vector with double values, represents strong of every
+	 * 		lower layer choise or null if there were any error.
+	 */
+	public static Double[] calculateLowerCriterionsPriorityVector(
+			Double[] lowerLayerCrterionWeights)
+	{
+		Double[][] pairCompareMatrix = createPairCompareMatrix(
+				lowerLayerCrterionWeights);
 		
 		return createPriorityVectorGeometricMean(pairCompareMatrix);
 	}
