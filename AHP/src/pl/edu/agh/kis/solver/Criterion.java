@@ -1,7 +1,7 @@
 package pl.edu.agh.kis.solver;
 
 import java.util.ArrayList;
-import pl.edu.agh.kis.math.AhpMaths;
+import pl.edu.agh.kis.math.SolverCalculator;
 
 /**
  * Criterion storage info about single cryterion. Have method to add references to 
@@ -30,6 +30,19 @@ public class Criterion
 	
 	private ArrayList<Criterion> lowerLayerCriterions 
 		= new ArrayList<Criterion>();
+	
+	private Double[] transformLowerLayerCriterionWeights()
+	{
+		String[] splitedEntry = lowerLayerCriterionWeightsEntry.split(" ");
+		Double[] result = new Double[splitedEntry.length];
+		
+		for(int i = 0; i < splitedEntry.length; ++i)
+		{
+			result[i] = Double.parseDouble(splitedEntry[i]);
+		}
+		
+		return result;
+	}
 	
 	private void calculateResultAlternativeVector(String alternativePriorityVector)
 	{
@@ -106,7 +119,8 @@ public class Criterion
 	
 	/**
 	 * Function proceed math functions to correctly calculate result vector
-	 * for this criterion.
+	 * for this criterion. Check if the data from file are correct double
+	 * values.
 	 * 
 	 * @return true only if there where no error during calculating especially,
 	 * if any of lower Layer result vector were null or size of lower layer criternion
@@ -114,16 +128,27 @@ public class Criterion
 	 */
 	public boolean calculateResultCriterionVector()
 	{
-		Double[] lowerLayerCriterionWeightsValuesVector = 
-				AhpMaths.calculateLowerCriterionsPriorityVector(
-						lowerLayerCriterionWeightsEntry);
+		Double[] lowerLayerCriterionWeightsValuesVector = null;
 		
-		if(lowerLayerCriterionWeightsValuesVector == null)
+		try {
+			lowerLayerCriterionWeightsValuesVector = 
+					SolverCalculator.calculateLowerCriterionsPriorityVector(
+							transformLowerLayerCriterionWeights());
+		} catch (NullPointerException e) {
+			System.err.println("The weights entry String was null");
 			return false;
+		} catch (NumberFormatException e) {
+			System.err.println("The weights entry String has incorrect data");
+			return false;
+		}
 		
-		if(lowerLayerCriterionWeightsValuesVector.length != 
+		if(lowerLayerCriterionWeightsValuesVector == null ||
+				lowerLayerCriterionWeightsValuesVector.length != 
 				lowerLayerCriterions.size())
+		{
+			System.err.println("Priority vector have not been calculated");
 			return false;
+		}
 		
 		ArrayList<Double[]> lowerLayerResultVectors = new ArrayList<Double[]>();
 		
@@ -132,7 +157,7 @@ public class Criterion
 			lowerLayerResultVectors.add(c.getResultVector());
 		}
 		
-		resultVector = AhpMaths.sumVectorsWithWeights(lowerLayerResultVectors,
+		resultVector = SolverCalculator.sumVectorsWithWeights(lowerLayerResultVectors,
 				lowerLayerCriterionWeightsValuesVector);
 				
 		return true;

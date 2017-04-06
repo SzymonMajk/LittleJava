@@ -1,7 +1,5 @@
 package pl.edu.agh.kis.math;
 
-import java.math.*;
-
 /**
  * Class delivers method calculating consistency index using geometric mean
  * method. Every consistency index have it own range and it own meaning.
@@ -14,7 +12,7 @@ import java.math.*;
  * @version %I%, %G% 
  *
  */
-public class IndexCalculator 
+public class IndexCalculator extends BasicAhpMath
 {	
 	private static Double calculateGlobalConsistencyIndex(
 			Double[][] localQuantificatorsMatrix)
@@ -36,11 +34,8 @@ public class IndexCalculator
 	}
 	
 	private static Double[][] createLocalQuantificatorsMatrix(
-			Double[] lowerLayerWeights,Double[] priorityVector)
+			Double[][] pairCompareMatrix,Double[] priorityVector)
 	{
-		Double[][] pairCompareMatrix = AhpMaths.
-				createPairCompareMatrix(lowerLayerWeights);
-		
 		for(int i = 0; i < pairCompareMatrix.length; ++i)
 		{
 			for(int j = 0; j < pairCompareMatrix.length; ++j)
@@ -51,7 +46,6 @@ public class IndexCalculator
 		}
 		
 		return pairCompareMatrix;
-		
 	}
 	
 	/**
@@ -71,8 +65,11 @@ public class IndexCalculator
 	 */
 	public static Double checkMeanConsistencyIndex(Double[] lowerLayerWeights)
 	{
+		Double[][] pairCompareMatrix = createPairCompareMatrix(
+				lowerLayerWeights);
+		
 		Double[][] localQuantificatorsMatrix = createLocalQuantificatorsMatrix(
-				lowerLayerWeights,AhpMaths.
+				pairCompareMatrix,SolverCalculator.
 				calculateLowerCriterionsPriorityVector(lowerLayerWeights));
 		
 		return calculateGlobalConsistencyIndex(localQuantificatorsMatrix);

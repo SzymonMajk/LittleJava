@@ -17,9 +17,6 @@ public class Proceeder
 	private HashMap<Integer,ArrayList<Block>> hierarchy 
 				= new HashMap<Integer,ArrayList<Block>>();
 	
-	public XmlFormatFileCreator fileCretor = 
-			new XmlFormatFileCreator("DefaultHierarchy.xml");
-	
 	private void displayHierarchy()
 	{
 		System.out.println("Current Hierarchy:");
@@ -71,6 +68,11 @@ public class Proceeder
 		
 	}
 
+	/**
+	 * trr
+	 */
+	public XmlFormatFileCreator fileCretor = 
+			new XmlFormatFileCreator("DefaultHierarchy.xml");
 	
 	/**
 	 * First step of the program, lets user to add or reduce number of layers,
