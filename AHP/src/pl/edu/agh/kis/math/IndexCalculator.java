@@ -35,7 +35,7 @@ public class IndexCalculator extends BasicAhpMath
 	
 	private static Double[][] createLocalQuantificatorsMatrix(
 			Double[][] pairCompareMatrix,Double[] priorityVector)
-	{
+	{		
 		for(int i = 0; i < pairCompareMatrix.length; ++i)
 		{
 			for(int j = 0; j < pairCompareMatrix.length; ++j)

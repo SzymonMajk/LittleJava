@@ -8,7 +8,7 @@ package pl.edu.agh.kis.math;
  * @version %I%, %G% 
  *
  */
-class BasicAhpMath {
+public class BasicAhpMath {
 
 	private static int calculateMatrixSizeFromWeightsEntrySize(int vectorSize)
 	{
@@ -133,19 +133,21 @@ class BasicAhpMath {
 			return null;
 		
 		Double[] priorityVector = new Double[pairWeightMatrix.length];
+		Double result = new Double("1");
 		
 		for(int i = 0; i < pairWeightMatrix.length; ++i)
 		{
-			Double result = new Double("0");
+			result = new Double("1");
 			
 			for(int j = 0; j < pairWeightMatrix.length; ++j)
 			{
-				result += pairWeightMatrix[i][j];
+				result = result * pairWeightMatrix[i][j];
 			}
 			priorityVector[i] = 
-					Math.pow(result, 1/(double)pairWeightMatrix.length)
-					/(double)pairWeightMatrix.length;
+					Math.pow(result, 1/(double)pairWeightMatrix.length);
 		}
+		
+		
 		
 		return normalizeVector(priorityVector);
 	}
