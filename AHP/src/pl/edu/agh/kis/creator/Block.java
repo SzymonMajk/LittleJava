@@ -35,12 +35,12 @@ class Block
 		
 		for(int i = 0; i < lowerLayerBlocks.size()-1; ++i)
 		{
-			nameBuilder.append(lowerLayerBlocks.get(i));
+			nameBuilder.append(lowerLayerBlocks.get(i).getBlockName());
 			nameBuilder.append(" ");
 		}
 		
 		nameBuilder.append(lowerLayerBlocks.
-				get(lowerLayerBlocks.size()-1));
+				get(lowerLayerBlocks.size()-1).getBlockName());
 		
 		return nameBuilder.toString();
 	}
@@ -48,7 +48,7 @@ class Block
 	private String prepareLowerLayerWeightsEntry()
 	{
 		if(lowerLayerWeights.isEmpty())
-			return "";
+			return "\r";
 		
 		StringBuilder weightBuilder = new StringBuilder();
 		

@@ -5,6 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 /**
  * Creates and fills in xml file with consistent ahp hierarchy created and
  * set by user. Methods assume, that all elements of hierarchy have good data
@@ -20,25 +32,32 @@ class XmlFormatFileCreator
 {
 	private File endFile;
 		
+	private String alternativeEntry(int alternativesNumber, int index)
+	{
+		StringBuilder weightBuilder = new StringBuilder();
+		
+		for(int i = 0; i < alternativesNumber; ++i)
+		{
+			if(i == index)
+				weightBuilder.append(1);
+			else
+				weightBuilder.append(0);
+			if(i != alternativesNumber-1)
+			weightBuilder.append(" ");
+		}
+		
+		return weightBuilder.toString();
+	}
+	
 	private boolean prepareFile()
 	{
 		try {
-			return endFile.createNewFile() && endFile.canWrite() && 
-				endFile.canRead() && endFile.isFile();
+			return endFile.createNewFile() || (endFile.canWrite() && 
+				endFile.canRead() && endFile.isFile());
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			return false;
 		}
-	}
-	
-	private void writeBlock()
-	{
-		
-	}
-	
-	private void writeLayer()
-	{
-		
 	}
 	
 	private void clearIfPossible()
@@ -66,8 +85,91 @@ class XmlFormatFileCreator
 			
 		System.out.println("Start writing down in " + endFile.getName());
 		
-		
-		
+		try {
+
+			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+			Document doc = docBuilder.newDocument();
+			Element rootElement = doc.createElement("hierarchy");
+			doc.appendChild(rootElement);
+
+			ArrayList<Element> criterions = new ArrayList<Element>();
+			ArrayList<Element> alternatives = new ArrayList<Element>();
+			
+			for(int i = 1; i < hierarchy.size(); ++i)
+			{
+				ArrayList<Block> blocks = hierarchy.get(i);
+				
+				for(int j = 0; j < blocks.size(); ++j)
+				{
+					Element current = doc.createElement("criterion");
+					criterions.add(current);
+					rootElement.appendChild(current);
+					
+					Block currentBlock = blocks.get(j);
+					
+					Element currentChild = doc.createElement("name");
+					currentChild.appendChild(
+							doc.createTextNode(currentBlock.getBlockName()));
+					current.appendChild(currentChild);
+					currentChild = doc.createElement("layer");
+					currentChild.appendChild(
+							doc.createTextNode(currentBlock.getLayerNumber().toString()));
+					current.appendChild(currentChild);
+					currentChild = doc.createElement("lowerCriterionNames");
+					currentChild.appendChild(
+							doc.createTextNode(currentBlock.getLowerLayerBlockNames()));
+					current.appendChild(currentChild);
+					currentChild = doc.createElement("lowerLayerWeights");
+					currentChild.appendChild(
+							doc.createTextNode(currentBlock.getlowerLayerWeights()));
+					current.appendChild(currentChild);
+				}
+			}
+			
+			ArrayList<Block> blocks = hierarchy.get(0);
+			
+			for(int j = 0; j < blocks.size(); ++j)
+			{
+				Element current = doc.createElement("alternative");
+				alternatives.add(current);
+				rootElement.appendChild(current);
+				
+				Block currentBlock = blocks.get(j);
+				
+				Element currentChild = doc.createElement("name");
+				currentChild.appendChild(
+						doc.createTextNode(currentBlock.getBlockName()));
+				current.appendChild(currentChild);
+				currentChild = doc.createElement("layer");
+				currentChild.appendChild(
+						doc.createTextNode(currentBlock.getLayerNumber().toString()));
+				current.appendChild(currentChild);
+				currentChild = doc.createElement("alternativePriorityVector");
+				currentChild.appendChild(
+						doc.createTextNode(alternativeEntry(blocks.size(),j)));
+				current.appendChild(currentChild);
+			}
+
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(endFile);
+
+			transformer.transform(source, result);
+
+		  } catch (ParserConfigurationException pce) {
+			System.err.println("Error during writing to file: "
+					+pce.getMessage());
+			clearIfPossible();
+			return false;
+		  } catch (TransformerException tfe) {
+			  System.err.println("Error during writing to file: "
+						+tfe.getMessage());
+				clearIfPossible();
+				return false;
+		  }
 		
 		System.out.println("File saved.");
 		return true;

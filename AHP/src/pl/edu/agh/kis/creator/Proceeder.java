@@ -341,27 +341,29 @@ public class Proceeder
 	{
 		displayHierarchyWithIndexes();
 		
-		/*if(couldSetRelatives(3,0))
+		if(couldSetRelatives(3,0))
 			setRelatives(3,0);
 		if(couldSetRelatives(2,0))
-			setRelatives(2,0);*/
+			setRelatives(2,0);
 		if(couldSetRelatives(2,1))
 			setRelatives(2,1);
-		/*if(couldSetRelatives(1,0))
+		if(couldSetRelatives(1,0))
 			setRelatives(1,0);
 		if(couldSetRelatives(1,1))
 			setRelatives(1,1);
 		if(couldSetRelatives(1,2))
 			setRelatives(1,2);
 		if(couldSetRelatives(1,3))
-			setRelatives(1,3);*/
+			setRelatives(1,3);
+		if(couldSetRelatives(1,4))
+			setRelatives(1,4);
 		
 		displayHierarchyWithIndexes();
 		
 		if(checkRelativesSet())
 			return true;
 		
-		return false;
+		return true;//TODO
 	}
 	
 	/**
