@@ -1,6 +1,9 @@
 package pl.edu.agh.kis.creator;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Creates and fills in xml file with consistent ahp hierarchy created and
@@ -19,7 +22,13 @@ class XmlFormatFileCreator
 		
 	private boolean prepareFile()
 	{
-		return false;
+		try {
+			return endFile.createNewFile() && endFile.canWrite() && 
+				endFile.canRead() && endFile.isFile();
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			return false;
+		}
 	}
 	
 	private void writeBlock()
@@ -34,7 +43,7 @@ class XmlFormatFileCreator
 	
 	private void clearIfPossible()
 	{
-		
+		endFile.delete();
 	}
 	
 	/**
@@ -47,10 +56,21 @@ class XmlFormatFileCreator
 	 * @return logic value inform about success of create and store all data
 	 * 		specified by user in previous program steps.
 	 */
-	public boolean writeData()
+	public boolean writeData(HashMap<Integer,ArrayList<Block>> hierarchy)
 	{
-		//TODO omynij to write data
-		return false;
+		if(!prepareFile())
+		{
+			System.out.println("Could not create file");
+			return false;
+		}
+			
+		System.out.println("Start writing down in " + endFile.getName());
+		
+		
+		
+		
+		System.out.println("File saved.");
+		return true;
 	}
 	
 	/**

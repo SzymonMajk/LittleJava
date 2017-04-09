@@ -147,8 +147,6 @@ public class BasicAhpMath {
 					Math.pow(result, 1/(double)pairWeightMatrix.length);
 		}
 		
-		
-		
 		return normalizeVector(priorityVector);
 	}
 }

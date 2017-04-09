@@ -24,10 +24,10 @@ class Block
 	private String blockName;
 	
 	private ArrayList<Block> lowerLayerBlocks = new ArrayList<Block>();
-	
+
 	private ArrayList<Double> lowerLayerWeights = new ArrayList<Double>();
 	
-	private String parentName;
+	private String parentName = "";
 		
 	private String prepareLowerLayerNames()
 	{
@@ -45,8 +45,11 @@ class Block
 		return nameBuilder.toString();
 	}
 	
-	private String prepareLowerLayerWeights()
+	private String prepareLowerLayerWeightsEntry()
 	{
+		if(lowerLayerWeights.isEmpty())
+			return "";
+		
 		StringBuilder weightBuilder = new StringBuilder();
 		
 		for(int i = 0; i < lowerLayerWeights.size()-1; ++i)
@@ -59,6 +62,33 @@ class Block
 				get(lowerLayerWeights.size()-1));
 		
 		return weightBuilder.toString();
+	}
+	
+	private Double[] prepareLowerLayerWeights()
+	{
+		if(lowerLayerWeights.isEmpty())
+			return null;
+		
+		Double[] result = new Double[lowerLayerWeights.size()];
+		
+		for(int i = 0; i < lowerLayerWeights.size(); ++i)
+		{
+			result[i] = lowerLayerWeights.get(i);
+		}
+		
+		return result;
+	}
+	
+	private void addColumnToLowerLayerWeights(ArrayList<Double> column)
+	{
+		int rowWidth = column.size()-1;
+		int currentPosition = rowWidth;
+
+		for(int i = 0; i <= rowWidth; ++i)
+		{
+			lowerLayerWeights.add(currentPosition, column.get(i));
+			currentPosition += rowWidth-i;
+		}	
 	}
 	
 	private boolean checkConsistency(Double[] lowerLayerWeights)
@@ -85,6 +115,16 @@ class Block
 	}
 	
 	/**
+	 * trrr
+	 * 
+	 * @return
+	 */
+	public Integer getLowerLayerBlocksNumber()
+	{
+		return lowerLayerBlocks.size();
+	}
+	
+	/**
 	 * Lets return name of current block. Block name must be unique.
 	 * 
 	 * @return name of the current block or null if proposed name was null.
@@ -92,6 +132,17 @@ class Block
 	public String getBlockName()
 	{
 		return blockName;
+	}
+	
+	/**
+	 * Return name of current parent block. In case block is not connected
+	 * to the parent block, return empty String.
+	 * 
+	 * @return name of parent block or empty String if block is not connected.
+	 */
+	public String getParentName()
+	{
+		return parentName;
 	}
 	
 	/**
@@ -110,14 +161,15 @@ class Block
 	/**
 	 * Create a single String with lower layer blocks relatives in order existed
 	 * in lowerLayerBlocks list and return it. Should be used during writing to file or
-	 * displaing informations about block.
+	 * displaying informations about block. Return empty String if weights array
+	 * is empty, which mean that consistency has not been calculated yet.
 	 * 
 	 * @return String with relatives of lower layer blocks, separated with white
-	 * 		space.
+	 * 		space, or empty String if weight array is empty.
 	 */
 	public String getlowerLayerWeights()
 	{
-		return prepareLowerLayerWeights();
+		return prepareLowerLayerWeightsEntry();
 	}
 	
 	/**
@@ -170,7 +222,7 @@ class Block
 	{
 		if(lowerLayerBlocks.contains(lowerLayerBlock))
 		{
-			lowerLayerBlock.setParentName(null);
+			lowerLayerBlock.setParentName("");
 			return lowerLayerBlocks.remove(lowerLayerBlock);
 		}
 		
@@ -195,12 +247,11 @@ class Block
 	 * after adding every new row and column if necessary informs user
 	 * about inconsistency and ask him again about previous row and column.
 	 */
-	public void setPairRelatives()
+	public void setPairRelatives(ArrayList<Double> column)
 	{
-		//ustawmy jakieœ testowe
-		Double[] toCheck = {2.0,2.0,2.0};
-		
-		checkConsistency(toCheck);
+		addColumnToLowerLayerWeights(column);
+		if(column.size() > 1)
+			checkConsistency(prepareLowerLayerWeights());
 	}
 	
 	/**
