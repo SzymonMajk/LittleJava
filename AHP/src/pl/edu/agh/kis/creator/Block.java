@@ -98,6 +98,13 @@ class Block
 		Double index = IndexCalculator.
 				checkMeanConsistencyIndex(lowerLayerWeights);
 		
+		if(index > 1.0)
+		{
+			System.out.println("You choise is inconsistent:" + index
+					+ " try to set one more time.");
+			return false;
+		}
+		
 		System.out.println("Consistency has been checked = " + index);
 		
 		return true;
@@ -198,7 +205,8 @@ class Block
 	 */
 	public boolean addLowerLayerBlock(Block lowerLayerBlock)
 	{
-		if(layerNumber - 1 != lowerLayerBlock.getLayerNumber())
+		if(layerNumber - 1 != lowerLayerBlock.getLayerNumber() ||
+				lowerLayerBlocks.contains(lowerLayerBlock))
 			return false;
 		
 		if(lowerLayerBlock.getLayerNumber() != 0)
@@ -247,11 +255,18 @@ class Block
 	 * after adding every new row and column if necessary informs user
 	 * about inconsistency and ask him again about previous row and column.
 	 */
-	public void setPairRelatives(ArrayList<Double> column)
+	public boolean setPairRelatives(ArrayList<Double> column)
 	{
+		ArrayList<Double> backup = new ArrayList<Double>(lowerLayerWeights);
+		
 		addColumnToLowerLayerWeights(column);
 		if(column.size() > 1)
-			checkConsistency(prepareLowerLayerWeights());
+			if(!checkConsistency(prepareLowerLayerWeights()))
+			{
+				lowerLayerWeights = backup;
+				return false;
+			}
+		return true;
 	}
 	
 	/**

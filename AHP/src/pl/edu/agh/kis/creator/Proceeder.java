@@ -72,8 +72,8 @@ public class Proceeder
 				System.out.print("Layer" + i +": ");
 				for(Block b : blocks)
 				{
-					System.out.print(b.getBlockName() );
-					if(b.getlowerLayerWeights().equals(""))
+					System.out.print(b.getBlockName() + " ");
+					if(b.getlowerLayerWeights().equals("\r"))
 						System.out.print("[setRelatives] ");
 				}
 				
@@ -112,6 +112,30 @@ public class Proceeder
 		return true;
 	}
 	
+	private boolean checkBlocks()
+	{
+		ArrayList<Block> blocks = null;
+		
+		for(int i = 0; i < hierarchy.size()-1; ++i)
+		{
+			blocks = hierarchy.get(i);
+			if(blocks.size() < 2)
+			{
+				System.out.printf("Layers must have at least two blocks.");
+				return false;
+			}
+		}
+		
+		blocks = hierarchy.get(hierarchy.size()-1);
+		if(blocks.size() != 1)
+		{
+			System.out.printf("Top layer must have one block.");
+			return false;
+		}
+			
+		return true;
+	}
+	
 	private void addBlock(Integer layer, String blockName)
 	{
 		if(layer >= 0 && layer < hierarchy.size())
@@ -128,7 +152,7 @@ public class Proceeder
 	private void addConnection(Integer aboveLayer, Integer aboveIndex,
 			Integer belowLayer, Integer belowIndex)
 	{
-		if(aboveIndex*belowIndex >= 0 && 
+		if(aboveIndex*belowIndex >= 0 &&
 			aboveLayer*belowLayer > 0 &&
 			aboveLayer < hierarchy.size() && 
 			aboveLayer.equals(belowLayer + 1) && 
@@ -141,7 +165,7 @@ public class Proceeder
 			upper.addLowerLayerBlock(below);
 		}
 	}
-	
+
 	private void deleteConnection(Integer aboveLayer, Integer aboveIndex,
 			Integer belowLayer, Integer belowIndex)
 	{
@@ -200,7 +224,7 @@ public class Proceeder
 			index < hierarchy.get(Layer).size();
 	}
 	
-	private void setRelatives(Integer Layer, int index)
+	private void setRelatives(Integer Layer, int index, Scanner userDecisonGetter)
 	{
 		Block currentBlock = hierarchy.get(Layer).get(index);
 		Double userDecision = 0.0;
@@ -209,19 +233,30 @@ public class Proceeder
 		for(int i = 1; i < currentBlock.getLowerLayerBlocksNumber(); ++i)
 		{
 			for(int j = 0; j < i; ++j)
-			{
+			{				
 				System.out.print("Add ratio(" + (j+1)  + "," + (i+1) +"): ");
-				userDecision = 
-						Double.parseDouble(new Scanner(System.in).nextLine());
-				column.add(userDecision);
+				try
+				{
+					userDecision = 
+							Double.parseDouble(userDecisonGetter.nextLine());
+					if(userDecision < 0)
+						throw new NumberFormatException("Negative value");
+					column.add(userDecision);
+				} catch (NumberFormatException e) {
+					System.err.printf("Number must be positive real number.");
+					--j;
+				} 
+				
 			}
 			System.out.print("Check inconcistency Index for so far ratios:");
-			for(Double d : column)
-				System.out.print(d + " ");
-			System.out.println();
-			
-			hierarchy.get(Layer).get(index).setPairRelatives(column);
-			column.clear();
+			if(hierarchy.get(Layer).get(index).setPairRelatives(column))
+				column.clear();
+			else
+			{
+				--i;
+				column.clear();
+			}
+				
 		}
 		
 		System.out.println("All subcriterions relations for " + 
@@ -230,12 +265,13 @@ public class Proceeder
 	
 	private boolean checkRelativesSet()
 	{
-		for(ArrayList<Block> blocks : hierarchy.values())
+		for(int i = 1; i < hierarchy.size(); ++i)
 		{
-			for(Block b : blocks)
-				if(b.getlowerLayerWeights().equals(""))
+			for(Block b : hierarchy.get(i))
+				if(b.getlowerLayerWeights().equals("\r"))
 					return false;
 		}
+		
 		return true;
 	}
 	
@@ -258,8 +294,9 @@ public class Proceeder
 	 * @return true if created hierarchy have no empty layers and top layer
 	 * 		has only one block.
 	 */
-	public boolean createHierarchy()
+	public boolean createHierarchy(Scanner userDecision)
 	{
+		/*
 		displayHierarchyCreate();
 		
 		addLayer();
@@ -291,6 +328,71 @@ public class Proceeder
 		if(checkLayers())
 			return true;
 		return false;
+		*/
+		
+		char decision = 'q';
+		
+		while(true)
+		{
+			System.out.println("l - add layer, D - delete layer, a - add "
+					+ "block d - delete block, n - next step with check "
+					+ "q - quit, displaying after every decision");
+			decision = userDecision.nextLine().charAt(0);
+			switch (decision)
+			{
+				case 'q' : return false;
+				case 'n' : 
+				{
+					if(checkLayers() && checkBlocks()) 
+						return true; 
+					break;
+				}
+				case 'l' : addLayer(); break;
+				case 'D' : if(couldDeleteLayer()) deleteLayer(); break;
+				case 'd' : 
+				{
+					System.out.print("Specify layer number: ");
+					int layerNumber = -1;
+					try {
+						layerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("\nSpecify block number: ");
+					int blockIndex = -1;
+					try {
+						blockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					deleteBlock(layerNumber,blockIndex);
+					break;
+				}
+				case 'a' : 
+				{
+					System.out.print("Specify layer number: ");
+					int layerNumber = -1;
+					try {
+						layerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("\nSpecify block name: ");
+					String blockName = userDecision.nextLine();
+					addBlock(layerNumber,blockName);
+				}
+			}
+			displayHierarchyCreate();
+		}
 	}
 	
 	/**
@@ -304,13 +406,12 @@ public class Proceeder
 	 * 		and layer one have connection to block from higher layer, by its
 	 * 		parent name.
 	 */
-	public boolean createConnections()
+	public boolean createConnections(Scanner userDecision)
 	{
-		displayHierarchyConnect();
-		
 		addGoalConnections();
 		addAlternativesConnections();
 		
+		/*
 		displayHierarchyConnect();
 		
 		addConnection(2,0,1,0);
@@ -325,6 +426,121 @@ public class Proceeder
 		if(checkConnections())
 			return true;
 		return false;
+		*/
+		
+		char decision = 'q';
+		
+		while(true)
+		{
+			System.out.println("a - add connection, d - delete connection, "
+					+ "n - next step with check q - quit, "
+					+ "displaying after every decision, "
+					+ "alternatives are connect automatically");
+			decision = userDecision.nextLine().charAt(0);
+			switch (decision)
+			{
+				case 'q' : return false;
+				case 'n' : 
+				{
+					if(checkConnections()) 
+						return true; 
+					System.out.println("Every block must have parent block.");
+					break;
+				}
+				case 'd' : 
+				{
+					System.out.print("Specify upper layer number: ");
+					int upperLayerNumber = -1;
+					try {
+						upperLayerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper block index: ");
+					int upperBlockIndex = -1;
+					try {
+						upperBlockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper layer number: ");
+					int belowLayerNumber = -1;
+					try {
+						belowLayerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper block index: ");
+					int belowBlockIndex = -1;
+					try {
+						belowBlockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					deleteConnection(upperLayerNumber,upperBlockIndex,
+							belowLayerNumber,belowBlockIndex);
+					break;
+				}
+				case 'a' : 
+				{
+					System.out.print("Specify upper layer number: ");
+					int upperLayerNumber = -1;
+					try {
+						upperLayerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper block index: ");
+					int upperBlockIndex = -1;
+					try {
+						upperBlockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper layer number: ");
+					int belowLayerNumber = -1;
+					try {
+						belowLayerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify upper block index: ");
+					int belowBlockIndex = -1;
+					try {
+						belowBlockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					addConnection(upperLayerNumber,upperBlockIndex,
+							belowLayerNumber,belowBlockIndex);
+				}
+			}
+			displayHierarchyConnect();
+		}
 	}
 	
 	/**
@@ -337,8 +553,9 @@ public class Proceeder
 	 * @return true if all blocks from layer higher than zero have consistent
 	 * 		pair weight ratio.
 	 */
-	public boolean createRelatives()
+	public boolean createRelatives(Scanner userDecision)
 	{
+		/*
 		displayHierarchyWithIndexes();
 		
 		if(couldSetRelatives(3,0))
@@ -362,8 +579,56 @@ public class Proceeder
 		
 		if(checkRelativesSet())
 			return true;
+		return true;
+		*/
 		
-		return true;//TODO
+		char decision = 'q';
+		
+		while(true)
+		{
+			System.out.println("s - set relatives for block, "
+					+ "n - next step with check q - quit, "
+					+ "displaying after every decision");
+			decision = userDecision.nextLine().charAt(0);
+			switch (decision)
+			{
+				case 'q' : return false;
+				case 'n' : 
+				{
+					if(checkRelativesSet()) 
+						return true; 
+					System.out.println("Every block must have specified relatives.");
+					break;
+				}
+				case 's' : 
+				{
+					System.out.print("Specify layer number: ");
+					int layerNumber = -1;
+					try {
+						layerNumber = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					System.out.print("Specify block index: ");
+					int blockIndex = -1;
+					try {
+						blockIndex = 
+							Integer.parseInt(userDecision.nextLine());
+					} catch (NumberFormatException e) {
+						System.err.println(
+								"It have to be digit!");
+						continue;
+					}
+					if(couldSetRelatives(layerNumber,blockIndex))
+						setRelatives(layerNumber,blockIndex,userDecision);
+					break;
+				}
+			}
+			displayHierarchyWithIndexes();
+		}
 	}
 	
 	/**
@@ -374,9 +639,10 @@ public class Proceeder
 	public static void main(String[] args)
 	{
 		Proceeder p = new Proceeder();
+		Scanner userDecision = new Scanner(System.in);
 		
-		if(p.createHierarchy() && p.createConnections() &&
-				p.createRelatives())
+		if(p.createHierarchy(userDecision) && 
+			p.createConnections(userDecision) && p.createRelatives(userDecision))
 			p.fileCretor.writeData(p.getHierarchy());
 	}
 }

@@ -241,13 +241,9 @@ public class AhpSolver
 		AhpSolver solver;
 		
 		if(args.length > 0)
-		{
 			solver = new AhpSolver(new File(args[0]));
-		}
 		else
-		{
 			solver = new AhpSolver();
-		}
 		
 		if (!solver.correctPrepareData())
 		{
@@ -255,7 +251,8 @@ public class AhpSolver
 			return;
 		}
 		
-		System.out.println("\nProgram got data from xml file, now it start calculating:\n");
+		System.out.println(
+				"\nProgram got data from xml file, now it start calculating:\n");
 		
 		solver.proceedAllCalculation();
 		if(args.length >= 2 && args[1].equals("-p"))
