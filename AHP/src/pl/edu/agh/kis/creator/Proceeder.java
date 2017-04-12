@@ -152,10 +152,10 @@ public class Proceeder
 	private void addConnection(Integer aboveLayer, Integer aboveIndex,
 			Integer belowLayer, Integer belowIndex)
 	{
-		if(aboveIndex*belowIndex >= 0 &&
-			aboveLayer*belowLayer > 0 &&
+		if(aboveIndex >= 0 && belowIndex >= 0 &&
+			aboveLayer > 1 && belowLayer > 0 &&
 			aboveLayer < hierarchy.size() && 
-			aboveLayer.equals(belowLayer + 1) && 
+			aboveLayer > belowLayer && 
 			hierarchy.get(aboveLayer).size() > aboveIndex &&
 			hierarchy.get(belowLayer).size() > belowIndex)
 		{

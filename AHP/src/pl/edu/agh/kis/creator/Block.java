@@ -205,7 +205,7 @@ class Block
 	 */
 	public boolean addLowerLayerBlock(Block lowerLayerBlock)
 	{
-		if(layerNumber - 1 != lowerLayerBlock.getLayerNumber() ||
+		if(layerNumber <= lowerLayerBlock.getLayerNumber() ||
 				lowerLayerBlocks.contains(lowerLayerBlock))
 			return false;
 		
