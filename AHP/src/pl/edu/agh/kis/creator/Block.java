@@ -192,9 +192,9 @@ class Block
 	}
 	
 	/**
-	 * Create connection beetwen current block and lower layer block, where
+	 * Create connection between current block and lower layer block, where
 	 * current block become parent block for lower layer block from parameter.
-	 * The difference beetwen layers must equal one. Also method check if
+	 * The difference between layers must equal one. Also method check if
 	 * proposed block is alternative, do not specify parent name for it,
 	 * otherwise set as parent name name of current block.
 	 * 
