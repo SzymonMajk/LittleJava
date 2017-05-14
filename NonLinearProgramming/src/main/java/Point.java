@@ -19,18 +19,6 @@ public class Point {
     }
 
     /**
-     * Return double value represents value of function provided in argument
-     * for holds private coordinates. Return null if dimensions of goal
-     * function and coordinates are not equal.
-     *
-     * @param currentGoal
-     * @return
-     */
-    public Double calculatePointValue(GoalFunction currentGoal) {
-        return currentGoal.calculateFunctionValue(coordinates);
-    }
-
-    /**
      * Represent the point. If coordinates are null, then null in place
      * of coordiantes.
      *
@@ -50,12 +38,16 @@ public class Point {
     }
 
     /**
-     * Set table from argument to private field. Do not check if argument
-     * is null.
+     * Set table from argument to private field. Check if
+     * argument is null, then exit program with information about reason.
      *
      * @param coordinates represents coordinate for every dimension of point.
      */
     Point(Double[] coordinates) {
+        if(coordinates == null) {
+            System.err.printf("Program exit, null founded during create point.");
+            System.exit(1);
+        }
         this.coordinates = coordinates;
     }
 }

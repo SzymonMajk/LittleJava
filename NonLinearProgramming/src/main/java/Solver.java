@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * Main program class with starting point. Lets user to introduce nonlinear
+ * Main program class with starting point. Lets user introduce nonlinear
  * programming problem and uses monte carlo method to provide set of coordinates
  * with best goal function result.
  *
@@ -10,7 +10,7 @@ import java.util.Scanner;
  */
 public class Solver {
 
-    private Integer sampleNumber = 1000000;
+    private Integer sampleNumber = 500000;
 
     private GoalFunction goalFunction;
 
@@ -19,18 +19,18 @@ public class Solver {
     private ArrayList<PolynomialLimitation> polynomialLimitations =
             new ArrayList<PolynomialLimitation>();
 
-    private Double[] getBetterPoint(Double[] bestSet ,Double[] newSet) {
+    private Double[] getBetterPoint(Double[] bestSet ,Double[] newSet) throws DifferentDimensionException {
         if(bestSet == null)
             return newSet;
         if(goalFunction.getMaximalize()) {
-            if(new Point(bestSet).calculatePointValue(goalFunction) <
-                    new Point(newSet).calculatePointValue(goalFunction))
+            if(goalFunction.calculateFunctionValue(bestSet) <
+                    goalFunction.calculateFunctionValue(newSet))
                 return newSet;
             return bestSet;
         }
         else {
-            if(new Point(bestSet).calculatePointValue(goalFunction) >
-                    new Point(newSet).calculatePointValue(goalFunction))
+            if(goalFunction.calculateFunctionValue(bestSet) >
+                    goalFunction.calculateFunctionValue(newSet))
                 return newSet;
             return bestSet;
         }
@@ -50,7 +50,7 @@ public class Solver {
         return null;
     }
 
-    private boolean inputConstantLimitations(Scanner userInput, Integer dimension) {
+    private boolean inputConstantLimitations(Scanner userInput, Integer dimension) throws DifferentDimensionException {
         Double[] rightLimitations = new Double[dimension];
         Double[] leftLimitations = new Double[dimension];
         for(int i = 0; i < leftLimitations.length; ++i)
@@ -84,7 +84,7 @@ public class Solver {
         return true;
     }
 
-    private boolean inputGoalFunction(Scanner userInput, Integer dimension) {
+    private boolean inputGoalFunction(Scanner userInput, Integer dimension) throws DifferentDimensionException {
         boolean maximalize = false;
         Double[] coefficients = new Double[dimension];
         Integer[] indicators = new Integer[dimension];
@@ -151,7 +151,7 @@ public class Solver {
         return null;
     }
 
-    private boolean inputPolynomialLimitation(Scanner userInput, Integer dimension) {
+    private boolean inputPolynomialLimitation(Scanner userInput, Integer dimension) throws DifferentDimensionException {
         boolean greater = false;
         Double constantValue;
         Double[] coefficients = new Double[dimension];
@@ -219,8 +219,10 @@ public class Solver {
      *
      * @param userInput Scanner objects with string lines, which specify details of math problem.
      *                  There is no check for null or empty value.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public void inputData(Scanner userInput) {
+    public void inputData(Scanner userInput) throws DifferentDimensionException {
         Integer dimension = null;
         Integer numberOfPolynomialLimitations = null;
 
@@ -264,8 +266,10 @@ public class Solver {
      *
      * @return Point object, with best set of coodrinates for this problem. Coordinates
      *      will be null if no set of coordinates could have been generated for limitations.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public Point proceedMonteCarlo() {
+    public Point proceedMonteCarlo() throws DifferentDimensionException {
         Double[] bestCoordinates = null;
         Double range = 10.0;
 
@@ -292,8 +296,10 @@ public class Solver {
      *
      * @param best Point object with best set of coordinates or null value if no
      *             one could have been found.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public void presentResults(Point best) {
+    public void presentResults(Point best) throws DifferentDimensionException {
         if (best.getCoordinates() == null) {
             System.out.printf("Impossible to find solution, check limitations and try again.");
             return;
@@ -301,7 +307,7 @@ public class Solver {
 
         System.out.printf("Best point: "+best);
         System.out.printf("\nGoalFuntion value for best point: "
-                + best.calculatePointValue(goalFunction));
+                + goalFunction.calculateFunctionValue(best.getCoordinates()));
     }
 
     /**
@@ -310,6 +316,7 @@ public class Solver {
      * problem in command line and use monte carlo method to return best possible set
      * of coordinates for this problem, which is presented in command line too. If no
      * appropriate set of coordinates might have been found, inform user about problem.
+     * Catch DifferentDimensionException if any found during calculating.
      *
      * @param args not in use.
      */
@@ -318,9 +325,13 @@ public class Solver {
         Solver s = new Solver();
         Point best;
 
-        s.inputData(sc);
-        s.presentProblem();
-        best = s.proceedMonteCarlo();
-        s.presentResults(best);
+        try {
+            s.inputData(sc);
+            s.presentProblem();
+            best = s.proceedMonteCarlo();
+            s.presentResults(best);
+        } catch (DifferentDimensionException e) {
+            e.printStackTrace();
+        }
     }
 }

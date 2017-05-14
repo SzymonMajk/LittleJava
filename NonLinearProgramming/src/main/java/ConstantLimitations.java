@@ -15,19 +15,22 @@ public class ConstantLimitations {
     private Double[] rightConstrants;
 
     /**
-     * Lets user to set left and right limitation. If null gained or
-     * dimension difference announced, inform in standard error output about
-     * problems and do not change private fields, otherwise change private
-     * fields.
+     * Lets user to set left and right limitation. If null gained, inform
+     * by standard error output about problems and end program. If
+     * dimension difference announced, throw exception.
      *
      * @param left double table with values of minimal limitations.
      * @param right double table with values of maximal limitations.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public void setConstrants(Double[] left, Double[] right) {
-        if(left == null || right == null || left.length != right.length) {
-            System.err.printf("Left limits and right limits must be same length!");
-            return;
+    public void setConstrants(Double[] left, Double[] right) throws DifferentDimensionException {
+        if(left == null || right == null) {
+            System.err.printf("Program exit, null founded during setting constant limitations.");
+            System.exit(1);
         }
+        if(left.length != right.length)
+            throw new DifferentDimensionException();
         leftConstrants = left;
         rightConstrants = right;
     }
@@ -65,7 +68,6 @@ public class ConstantLimitations {
             newCoordinates[i] = leftConstrants[i] + ((rightConstrants[i]
                     -leftConstrants[i]))*generator.nextDouble();
         }
-
         return newCoordinates;
     }
 

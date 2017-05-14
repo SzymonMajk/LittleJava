@@ -12,13 +12,14 @@ public class PolynomialLimitation extends PolynomialForm {
 
     /**
      * Check if table with double values in argument is good for this limitation.
-     * Return null in case of dimension difference or null sended.
+     * Throw exception if dimensions inequality.
      *
      * @param coordinates table with double values might be sended to check.
-     * @return information is the sended point is good for limitation or not. Might
-     *      be null in case of dimension difference or null gained.
+     * @return information is the sended point is good for limitation or not.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public boolean checkCoordinates(Double[] coordinates) {
+    public boolean checkCoordinates(Double[] coordinates) throws DifferentDimensionException {
         if(greaterOrEqual)
             return calculatePolynomialValue(coordinates) >= constantTerm;
         else
@@ -58,17 +59,24 @@ public class PolynomialLimitation extends PolynomialForm {
     }
 
     /**
-     * Simple constructor sets the private fields of goal function. Do not check for
-     * null or not equality.
+     * Simple constructor sets the private fields of goal function. Check if
+     * any argument is null, then exit program with information about reason.
+     * Check if arguments have same length in this case throw exception.
      *
      * @param coefficients One for every dimension.
      * @param indicators One for every dimension.
      * @param constantTerm Constant value connected with limitation.
      * @param greaterOrEqual Inequality token, inform if this token i greaterOrEqual.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    PolynomialLimitation(Double[] coefficients, Integer[] indicators,
-                         Double constantTerm, Boolean greaterOrEqual) {
+    PolynomialLimitation(Double[] coefficients, Integer[] indicators, Double constantTerm,
+                         Boolean greaterOrEqual) throws DifferentDimensionException {
         super(coefficients,indicators);
+        if(constantTerm == null || greaterOrEqual == null) {
+            System.err.printf("Program exit, null founded during create polynomial limit.");
+            System.exit(1);
+        }
         this.constantTerm = constantTerm;
         this.greaterOrEqual = greaterOrEqual;
     }

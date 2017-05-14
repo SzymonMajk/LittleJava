@@ -1,4 +1,3 @@
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +14,7 @@ public class SolverTest {
     StringBuilder testBuilderGeo = new StringBuilder();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUpSimplex() throws Exception {
         testBuilderSimplex.append("3\n");
         testBuilderSimplex.append("10 10 10\n");
         testBuilderSimplex.append("5 4 3\n");
@@ -34,7 +33,10 @@ public class SolverTest {
         testBuilderSimplex.append("1 1 1\n");
         testBuilderSimplex.append("8\n");
         testBuilderSimplex.append("n\n");
+    }
 
+    @Before
+    public void setUpGeo() throws Exception {
         testBuilderGeo.append("4\n");
         testBuilderGeo.append("40000 40000 10000 10000\n");
         testBuilderGeo.append("4 6 3 12\n");
@@ -52,23 +54,28 @@ public class SolverTest {
     }
 
     @Test
-    public void proceedMonteCarlo() throws Exception {
-        Solver s1 = new Solver();
-        Solver s2 = new Solver();
-        Scanner sc1 = new Scanner(testBuilderSimplex.toString());
-        Scanner sc2 = new Scanner(testBuilderGeo.toString());
+    public void proceedMonteCarloSimplexExample() throws Exception {
+        Solver s = new Solver();
+        Scanner sc = new Scanner(testBuilderSimplex.toString());
         Double[] bestTestCoords;
 
-        s1.inputData(sc1);
-        bestTestCoords = s1.proceedMonteCarlo().getCoordinates();
+        s.inputData(sc);
+        bestTestCoords = s.proceedMonteCarlo().getCoordinates();
         assertEquals(2.0,bestTestCoords[0],0.00000001);
         assertEquals(0.0,bestTestCoords[1],0.00000001);
         assertEquals(1.0,bestTestCoords[2],0.00000001);
         /*for(Double d : bestTestCoords)
             System.out.println(d);*/
+    }
 
-        s2.inputData(sc2);
-        bestTestCoords = s2.proceedMonteCarlo().getCoordinates();
+    @Test
+    public void proceedMonteCarloGeoExample() throws Exception {
+        Solver s = new Solver();
+        Scanner sc = new Scanner(testBuilderGeo.toString());
+        Double[] bestTestCoords;
+
+        s.inputData(sc);
+        bestTestCoords = s.proceedMonteCarlo().getCoordinates();
         assertEquals(30000.0,bestTestCoords[0],3000);
         assertEquals(30000.0,bestTestCoords[1],3000);
         assertEquals(0.0,bestTestCoords[2],1500);

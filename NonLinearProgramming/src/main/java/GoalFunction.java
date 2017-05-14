@@ -18,13 +18,15 @@ public class GoalFunction extends PolynomialForm {
 
     /**
      * For set of coordinates return value of holding goal function. If there is difference
-     * in dimension or null sended, return null.
+     * in dimension throw exception, if null gained inform about it and end program.
      *
      * @param coordinates set of double values represents point in universe.
      * @return value of holding goal function, null if there is difference
      *                  in dimension or null sended.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    public Double calculateFunctionValue(Double[] coordinates) {
+    public Double calculateFunctionValue(Double[] coordinates) throws DifferentDimensionException {
         return calculatePolynomialValue(coordinates);
     }
 
@@ -59,15 +61,23 @@ public class GoalFunction extends PolynomialForm {
     }
 
     /**
-     * Simple constructor sets the private fields of goal function. Do not check for
-     * null or not equality.
+     * Simple constructor sets the private fields of goal function. Check if
+     * maximalize is null, then exit program with information about reason.
+     * In case of wrong dimension for first and second argument throw exception.
      *
      * @param coefficients One for every dimension.
      * @param indicators One for every dimension.
      * @param maximalize Information about inequality token.
+     * @throws DifferentDimensionException Threw if arguments lengths
+     *      are not equal.
      */
-    GoalFunction(Double[] coefficients, Integer[] indicators, Boolean maximalize) {
+    GoalFunction(Double[] coefficients, Integer[] indicators, Boolean maximalize)
+            throws DifferentDimensionException {
         super(coefficients,indicators);
+        if(maximalize == null) {
+            System.err.printf("Program exit, null founded during create goal function.");
+            System.exit(1);
+        }
         this.maximalize = maximalize;
     }
 }
