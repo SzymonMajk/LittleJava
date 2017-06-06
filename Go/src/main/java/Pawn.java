@@ -4,13 +4,8 @@
  *
  * Created by Szymon on 02.06.2017.
  */
-public class Pawn {
+class Pawn {
 
-    /**
-     * 1 -> first player color
-     * 2 -> second player color
-     * other -> free space
-     */
     private int color;
 
     boolean isFreeSpace() {
@@ -25,9 +20,12 @@ public class Pawn {
      * Create safe Pawn object, which could be set in three different
      * states, for both players and for empty Pawn.
      *
-     * @param color
+     * @param color means: <ol>
+     *              <li>1 -> first player color</li>
+     *              <li>2 -> second player color</li>
+     *              <li>other -> free space</li></ol>
      */
-    public Pawn(int color) {
+    Pawn(int color) {
         switch (color) {
             case 1 : this.color = color; break;
             case 2 : this.color = color; break;
@@ -38,7 +36,8 @@ public class Pawn {
      * Puts x or o character if user or computer have this pawn otherwise
      * puts empty space.
      *
-     * @return
+     * @return String representation of player color player or white character
+     *      if Pawn space is free.
      */
     @Override
     public String toString() {

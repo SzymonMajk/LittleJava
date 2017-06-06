@@ -5,20 +5,61 @@ import java.util.Scanner;
  * Holds current game board and provide interface for user to do his turn,
  * could use computer calculations to choose appropriate respond for player
  * move, checks when game should start or and using methods from board object.
+ * First player is always user, second player is computer in assumption.
  *
  * Created by Szymon on 02.06.2017.
  */
 public class Game {
 
-    Board gameBoard;
+    private Board gameBoard;
 
     /*TODO minmax for computer*/
 
-    private void computerSetPawn() {
+    /**
+     * Estimates integer value for added coordinates, using
+     * min max algorithm and current gameBoard.
+     */
+    private int rankComputerMove(PawnCoordinates coors) {
+        /*TODO!!!
+        * Create new Board for min max, from existing Board
+        * Estimate all possible moves of new Board choosing min
+        * Estimate all possible moves of every created Board choosing max
+        * ...
+        * return sum of the best path from root
+        * in advanced use alfa beta to cut worse subtree than current
+        * */
+        return coors.x + coors.y + gameBoard.rank();
+    }
+
+    /**
+     * Find best possible move from near empty spaces, near mean
+     * close to already set pawns.
+     */
+    private void computerSetPawnMinMax() {
+        PawnCoordinates bestMoveCoordinates = null;
+        int bestCoordsScore = Integer.MIN_VALUE;
+
+        for(PawnCoordinates coords : gameBoard.freeCloseMoves()) {
+            if(rankComputerMove(coords) > bestCoordsScore)
+                bestMoveCoordinates = coords;
+        }
+        if(bestMoveCoordinates == null)
+            computerSetPawnRandom();
+        else
+            gameBoard.setPawn(
+                    new Pawn(2),bestMoveCoordinates.x,bestMoveCoordinates.y);
+    }
+
+    /**
+     * If impossible to choose with MinMax
+     */
+    private void computerSetPawnRandom() {
         Random generator = new Random();
-        while(!gameBoard.setPawn(new Pawn(2),
-                generator.nextInt() % gameBoard.size(),
-                generator.nextInt() % gameBoard.size())) {
+        while(true) {
+            if(gameBoard.setPawn(new Pawn(2),
+                    generator.nextInt() % gameBoard.size(),
+                    generator.nextInt() % gameBoard.size()))
+                break;
         }
     }
 
@@ -53,7 +94,7 @@ public class Game {
         }
     }
 
-    void proceedGame (int boardSize) {
+    private void proceedGame (int boardSize) {
         gameBoard = new Board(boardSize);
 
         while(!gameBoard.endGame()) {
@@ -64,7 +105,7 @@ public class Game {
             } else {
                 System.out.println("Player 2 turn");
                 System.out.println("Random choose!");
-                computerSetPawn();
+                computerSetPawnMinMax();
                 System.out.println(gameBoard);
             }
 
