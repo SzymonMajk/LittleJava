@@ -10,6 +10,12 @@ class Board {
 
     private int size;
 
+    private final int freePointEstimation = 5;
+
+    private final int familiarNextPointMultiplication = 2;
+
+    private final int enemyNextPointRetribution = 10;
+
     private boolean firstPlayer = true;
 
     private ArrayList<ArrayList<Pawn>> board = new ArrayList<ArrayList<Pawn>>();
@@ -18,31 +24,218 @@ class Board {
 
     private ArrayList<PawnCoordinates> secondPlayerPawns = new ArrayList<PawnCoordinates>();
 
-    private int estimateFirstPlayerPoint(int x, int y) {
-        int result = 0;
-        /*TODO*/
-        result = -x - y;
+    private int estimateRow(int x, int y, boolean currentPlayerFirst) {
+        int result = 1;
+
+        for(int i = y + 1; i < y + 5; ++i) {
+            if(i >= size())
+                break;
+            Pawn tmp = board.get(x).get(i);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        for(int i = y - 1; i > y - 5; --i) {
+            if(i < 0)
+                break;
+            Pawn tmp = board.get(x).get(i);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
         return result;
     }
 
-    private int estimateSecondPlayerPoint(int x, int y) {
+    private int estimateColumn(int x, int y, boolean currentPlayerFirst) {
+        int result = 1;
+
+        for(int i = x + 1; i < x + 5; ++i) {
+            if(i >= size())
+                break;
+            Pawn tmp = board.get(i).get(y);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        for(int i = x - 1; i > x - 5; --i) {
+            if (i < 0)
+                break;
+            Pawn tmp = board.get(i).get(y);
+            if (tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if (tmp.isFirstPlayer()) {
+                if (currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if (!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private int estimateSlantToRightDown(int x, int y, boolean currentPlayerFirst) {
+        int result = 1;
+
+        for(int i = x + 1, j = y + 1; i < x + 5; ++i, ++j) {
+            if(i >= size() || j >= size())
+                break;
+            Pawn tmp = board.get(i).get(j);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        for(int i = x - 1, j = y - 1; i > x - 5; --i, --j) {
+            if(i < 0 || j < 0)
+                break;
+            Pawn tmp = board.get(i).get(j);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private int estimateSlantToRightUp(int x, int y, boolean currentPlayerFirst) {
+        int result = 1;
+
+        for(int i = x - 1, j = y + 1; i > x - 5; --i, ++j) {
+            if(i < 0 || j >= size())
+                break;
+            Pawn tmp = board.get(i).get(j);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        for(int i = x + 1, j = y - 1; i < x + 5; ++i, --j) {
+            if(i >= size() || j < 0)
+                break;
+            Pawn tmp = board.get(i).get(j);
+            if(tmp.isFreeSpace()) {
+                result += freePointEstimation;
+            } else if(tmp.isFirstPlayer()) {
+                if(currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            } else {
+                if(!currentPlayerFirst) {
+                    result *= familiarNextPointMultiplication;
+                } else {
+                    result -= enemyNextPointRetribution;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private int estimatePoint(int x, int y, boolean currentPlayerFirst) {
         int result = 0;
-        /*TODO*/
-        result = x + y;
+        result += estimateRow(x,y,currentPlayerFirst);
+        result += estimateColumn(x,y,currentPlayerFirst);
+        result += estimateSlantToRightDown(x,y,currentPlayerFirst);
+        result += estimateSlantToRightUp(x,y,currentPlayerFirst);
         return result;
     }
 
     private int computerRank() {
         int result = 0;
         for(PawnCoordinates coords : secondPlayerPawns)
-            result += estimateSecondPlayerPoint(coords.x,coords.y);
+            result += estimatePoint(coords.x,coords.y,false);
         return result;
     }
 
     private int playerRank() {
         int result = 0;
         for(PawnCoordinates coords : firstPlayerPawns)
-            result += estimateFirstPlayerPoint(coords.x,coords.y);
+            result += estimatePoint(coords.x,coords.y,true);
         return result;
     }
 
@@ -192,7 +385,7 @@ class Board {
     }
 
     int rank() {
-        return computerRank() + playerRank();
+        return computerRank() - playerRank();
     }
 
     boolean endGame() {
@@ -224,7 +417,7 @@ class Board {
         if(!board.get(x).get(y).isFreeSpace())
             return false;
         board.get(x).set(y,p);
-        if(firstPlayer)
+        if(p.isFirstPlayer())
             firstPlayerPawns.add(new PawnCoordinates(x,y));
         else
             secondPlayerPawns.add(new PawnCoordinates(x,y));

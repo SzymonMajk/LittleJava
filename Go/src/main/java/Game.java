@@ -16,7 +16,7 @@ public class Game {
     /*TODO minmax for computer*/
 
     /**
-     * Estimates integer value for added coordinates, using
+     * Estimates integer value for coordinates, using
      * min max algorithm and current gameBoard.
      */
     private int rankComputerMove(PawnCoordinates coors) {
@@ -27,6 +27,8 @@ public class Game {
         * ...
         * return sum of the best path from root
         * in advanced use alfa beta to cut worse subtree than current
+        *
+        * But first estimation of board state needed
         * */
         return coors.x + coors.y + gameBoard.rank();
     }

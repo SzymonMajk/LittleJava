@@ -22,7 +22,7 @@ class Pawn {
      *
      * @param color means: <ol>
      *              <li>1 -> first player color</li>
-     *              <li>2 -> second player color</li>
+     *              <li>2 -> computer player color</li>
      *              <li>other -> free space</li></ol>
      */
     Pawn(int color) {
