@@ -347,7 +347,7 @@ class Board {
 
     /**
      * Board must be square matrix, the size means then the length
-     * of row or column. There are equal.
+     * of row or column. Its length must be equal.
      *
      * @return Length of column or row, which is the same value.
      */
@@ -384,10 +384,27 @@ class Board {
         firstPlayer = !firstPlayer;
     }
 
+    /**
+     * Estimates current computer situation depends on gameboard structure.
+     *
+     * @return number which value show if the current board is good or bad for
+     *      computer player. The bigger number, the better computer situation.
+     */
     int rank() {
         return computerRank() - playerRank();
     }
 
+    /**
+     * Check loosing condition for current player if player lost, then return true
+     * and inform about his loose on standard output, otherwise check win condition,
+     * if player won, return true and inform about winning on standard output, at the
+     * end check if player could make any possible move, if he can't do any move, the
+     * game end up draw, function return true and inform on standard output, otherwise
+     * return false and lets continue game.
+     *
+     * @return true if winning, loosing or draw condition is true, otherwise
+     *      false.
+     */
     boolean endGame() {
         if(checkIfLose()) {
             if(firstPlayer)
@@ -455,6 +472,13 @@ class Board {
         return boardBuilder.toString();
     }
 
+    /**
+     * Initialize starting game board structure with size depends on parameter, if
+     * parameter is inappropriate set default value.
+     *
+     * @param size user defined board size if value is inappropriate default
+     *             value set.
+     */
     Board(int size) {
         if(size < 5 || size > 19)
             this.size = 5;
