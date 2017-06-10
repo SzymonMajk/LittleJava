@@ -2,11 +2,18 @@ import java.util.ArrayList;
 
 /**
  * Deals with creation regarding to provided size, lets to change board states
- * by user or by computer algorithm, checks for winning or loosing condition.
+ * by user or by computer algorithm, rank current board state using integer,
+ * checks for winning or loosing condition.
  *
  * Created by Szymon on 02.06.2017.
  */
 class Board {
+
+    private ArrayList<ArrayList<Pawn>> board = new ArrayList<ArrayList<Pawn>>();
+
+    private ArrayList<PawnCoordinates> firstPlayerPawns = new ArrayList<PawnCoordinates>();
+
+    private ArrayList<PawnCoordinates> secondPlayerPawns = new ArrayList<PawnCoordinates>();
 
     private int size;
 
@@ -18,11 +25,17 @@ class Board {
 
     private boolean firstPlayer = true;
 
-    private ArrayList<ArrayList<Pawn>> board = new ArrayList<ArrayList<Pawn>>();
-
-    private ArrayList<PawnCoordinates> firstPlayerPawns = new ArrayList<PawnCoordinates>();
-
-    private ArrayList<PawnCoordinates> secondPlayerPawns = new ArrayList<PawnCoordinates>();
+    private boolean playerPawnInRange(int x, int y, int range) {
+        for(int i = x - range; i <= x + range; ++i) {
+            for(int j = y - range; j <= y + range; ++j) {
+                if(i < 0 || j < 0 || i >= size() || j >= size())
+                    continue;
+                if(!board.get(i).get(j).isFreeSpace())
+                    return true;
+            }
+        }
+        return false;
+    }
 
     private int estimateRow(int x, int y, boolean currentPlayerFirst) {
         int result = 1;
@@ -355,12 +368,39 @@ class Board {
         return board.get(0).size();
     }
 
-    /*TODO near, not all free*/
+    /**
+     * Look through game board to find coordinates of all free positions.
+     *
+     * @return list of coordinates of free positions on board.
+     */
     ArrayList<PawnCoordinates> freeCloseMoves() {
-        ArrayList<PawnCoordinates> freeMoves = new ArrayList<PawnCoordinates>();
+        ArrayList<PawnCoordinates> allFreeMoves = new ArrayList<PawnCoordinates>();
         for(int i = 0; i < size(); ++i) {
             for(int j = 0; j < size(); ++j) {
                 if(board.get(i).get(j).isFreeSpace())
+                    allFreeMoves.add(new PawnCoordinates(i,j));
+            }
+        }
+        return allFreeMoves;
+    }
+
+    /**
+     * Look through game board to find coordinates of all free positions,
+     * in range provided in parameter. In case of negative range or range
+     * out of board size, default value of 2 set.
+     *
+     * @param range maximal distance beetwen player pawn on board, if provided
+     *              number is invalid, default value set.
+     * @return list of coordinates of free positions on board in range provided
+     *          in parameter.
+     */
+    ArrayList<PawnCoordinates> freeCloseMoves(int range) {
+        if(range < 1 || range >= size())
+            range = 2;
+        ArrayList<PawnCoordinates> freeMoves = new ArrayList<PawnCoordinates>();
+        for(int i = 0; i < size(); ++i) {
+            for(int j = 0; j < size(); ++j) {
+                if(board.get(i).get(j).isFreeSpace() && playerPawnInRange(i,j,range))
                     freeMoves.add(new PawnCoordinates(i,j));
             }
         }
@@ -427,8 +467,20 @@ class Board {
         return false;
     }
 
+    /**
+     * Change state of current Board by adding additional Pawn on board,
+     * color and coordinates are specified by parameters if any of them
+     * is invalid, false returns, informs function caller should check
+     * his parameters then.
+     *
+     * @param p color of Pawn, specifing player.
+     * @param x index of column for Pawn.
+     * @param y index of row for Pawn.
+     * @return true if Pawn set in free space if place was not free or any
+     *          parameter was invalid false returned.
+     */
     boolean setPawn(Pawn p, int x, int y) {
-        if(x < 0 || y < 0 || x > size || y > size)
+        if(p.isFreeSpace() || x < 0 || y < 0 || x > size || y > size)
             return false;
 
         if(!board.get(x).get(y).isFreeSpace())

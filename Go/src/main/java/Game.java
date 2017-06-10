@@ -13,6 +13,8 @@ public class Game {
 
     private Board gameBoard;
 
+    private final int freePawnsSearchRange = 2;
+
     /*TODO minmax for computer*/
 
     /**
@@ -41,7 +43,7 @@ public class Game {
         PawnCoordinates bestMoveCoordinates = null;
         int bestCoordsScore = Integer.MIN_VALUE;
 
-        for(PawnCoordinates coords : gameBoard.freeCloseMoves()) {
+        for(PawnCoordinates coords : gameBoard.freeCloseMoves(freePawnsSearchRange)) {
             if(rankComputerMove(coords) > bestCoordsScore)
                 bestMoveCoordinates = coords;
         }

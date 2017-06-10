@@ -4,7 +4,8 @@ import static org.junit.Assert.*;
 
 /**
  * Some tests for instances of game with one Pawn, two Pawns, three Pawns and special
- * configurations to show up "thinking" of estimation functions.
+ * configurations to show up "thinking" of estimation functions. Some tests for functions
+ * finding free positions.
  *
  * Created by Szymon on 07.06.2017.
  */
@@ -181,5 +182,25 @@ public class BoardTest {
         testBoard.setPawn(new Pawn(2),10,10);
         testBoard.setPawn(new Pawn(2),12,13);
         assertEquals(-63,testBoard.rank());
+    }
+
+    @Test
+    public void findCloseMoves() throws Exception {
+        Board testBoard = new Board(15);
+        assertEquals(225,testBoard.freeCloseMoves().size());
+        assertEquals(0,testBoard.freeCloseMoves(2).size());
+
+        testBoard.setPawn(new Pawn(1),9,9);
+        assertEquals(224,testBoard.freeCloseMoves().size());
+        assertEquals(24,testBoard.freeCloseMoves(2).size());
+
+        testBoard.setPawn(new Pawn(2),8,9);
+        assertEquals(223,testBoard.freeCloseMoves().size());
+        assertEquals(10,testBoard.freeCloseMoves(1).size());
+
+        assertEquals(28,testBoard.freeCloseMoves(-1).size());
+        assertEquals(28,testBoard.freeCloseMoves(0).size());
+        assertEquals(28,testBoard.freeCloseMoves(15).size());
+        assertEquals(28,testBoard.freeCloseMoves(16).size());
     }
 }
