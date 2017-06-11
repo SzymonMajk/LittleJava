@@ -23,8 +23,6 @@ class Board {
 
     private final int enemyNextPointRetribution = 10;
 
-    private boolean firstPlayer = true;
-
     private boolean playerPawnInRange(int x, int y, int range) {
         for(int i = x - range; i <= x + range; ++i) {
             for(int j = y - range; j <= y + range; ++j) {
@@ -252,8 +250,8 @@ class Board {
         return result;
     }
 
-    private boolean checkUpSlant(int x, int y, int length) {
-        if(firstPlayer) {
+    private boolean checkUpSlant(int x, int y, int length, boolean currentPlayerFirst) {
+        if(currentPlayerFirst) {
             for(int i = 0, j = 0; i < length; ++i, ++j)
                 if(x-i < 0 || y+j >= board.size() ||
                         !board.get(x-i).get(y+j).isFirstPlayer())
@@ -267,8 +265,8 @@ class Board {
         return true;
     }
 
-    private boolean checkDownSlant(int x, int y, int length) {
-        if(firstPlayer) {
+    private boolean checkDownSlant(int x, int y, int length, boolean currentPlayerFirst) {
+        if(currentPlayerFirst) {
             for(int i = 0, j = 0; i < length; ++i, ++j)
                 if(x+i >= board.size() || y+j >= board.size() ||
                         !board.get(x+i).get(y+j).isFirstPlayer())
@@ -282,8 +280,8 @@ class Board {
         return true;
     }
 
-    private boolean checkRow(int x, int y, int length) {
-        if(firstPlayer) {
+    private boolean checkRow(int x, int y, int length, boolean currentPlayerFirst) {
+        if(currentPlayerFirst) {
             for(int i = 0; i < length; ++i)
                 if(y+i >= board.size() ||
                         !board.get(x).get(y+i).isFirstPlayer())
@@ -298,8 +296,8 @@ class Board {
         return true;
     }
 
-    private boolean checkColumn(int x, int y, int length) {
-        if(firstPlayer) {
+    private boolean checkColumn(int x, int y, int length, boolean currentPlayerFirst) {
+        if(currentPlayerFirst) {
             for(int i = 0; i < length; ++i)
                 if(x+i >= board.size() ||
                         !board.get(x+i).get(y).isFirstPlayer())
@@ -314,35 +312,37 @@ class Board {
         return true;
     }
 
-    private boolean checkPointNeighbor(int x, int y, int length) {
-        return (checkUpSlant(x,y,length) || checkDownSlant(x,y,length) ||
-                checkRow(x,y,length) || checkColumn(x,y,length));
+    private boolean checkPointNeighbor(int x, int y, int length, boolean currentPlayerFirst) {
+        return (checkUpSlant(x,y,length,currentPlayerFirst) ||
+                checkDownSlant(x,y,length,currentPlayerFirst) ||
+                checkRow(x,y,length,currentPlayerFirst) ||
+                checkColumn(x,y,length,currentPlayerFirst));
     }
 
-    private boolean checkIfWin() {
+    private boolean checkIfWin(boolean firstPlayer) {
         if(firstPlayer) {
             for(PawnCoordinates coords : firstPlayerPawns)
-                if(checkPointNeighbor(coords.x,coords.y,5))
+                if(checkPointNeighbor(coords.x,coords.y,5,true))
                     return true;
                 return false;
         } else {
             for(PawnCoordinates coords : secondPlayerPawns)
-                if(checkPointNeighbor(coords.x,coords.y,5))
+                if(checkPointNeighbor(coords.x,coords.y,5,false))
                     return true;
                 return false;
         }
 
     }
 
-    private boolean checkIfLose() {
+    private boolean checkIfLose(boolean firstPlayer) {
         if(firstPlayer) {
             for(PawnCoordinates coords : firstPlayerPawns)
-                if(checkPointNeighbor(coords.x,coords.y,6))
+                if(checkPointNeighbor(coords.x,coords.y,6,true))
                     return true;
             return false;
         } else {
             for(PawnCoordinates coords : secondPlayerPawns)
-                if(checkPointNeighbor(coords.x,coords.y,6))
+                if(checkPointNeighbor(coords.x,coords.y,6,false))
                     return true;
             return false;
         }
@@ -408,30 +408,23 @@ class Board {
     }
 
     /**
-     * Inform if the first player is current player.
-     *
-     * @return True if first player turn, otherwise false.
-     */
-    boolean currentPlayerFirst() {
-        return firstPlayer;
-    }
-
-    /**
-     * Change first player to second and otherwise. Do not check for
-     * win or loose conditions.
-     */
-    void switchPlayer() {
-        firstPlayer = !firstPlayer;
-    }
-
-    /**
-     * Estimates current computer situation depends on gameboard structure.
+     * Estimates current computer situation depends on gameboard structure. If
+     * there is turn of first player and he won, the rank is very bad, but
+     * if there is second player turn, rank is best possible. Draw game also has
+     * bad rank.
      *
      * @return number which value show if the current board is good or bad for
      *      computer player. The bigger number, the better computer situation.
      */
     int rank() {
-        return computerRank() - playerRank();
+        if((checkIfWin(true)) || (checkIfLose(false)))
+            return -10000;
+        else if((checkIfWin(false)) || (checkIfLose(true)))
+            return 10000;
+        else if(!possibleMove())
+            return -5000;
+        else
+            return computerRank() - playerRank();
     }
 
     /**
@@ -446,19 +439,17 @@ class Board {
      *      false.
      */
     boolean endGame() {
-        if(checkIfLose()) {
-            if(firstPlayer)
-                System.out.print("First ");
-            else
-                System.out.print("Second ");
-            System.out.println("player lost.");
+        if(checkIfLose(true)) {
+            System.out.print("First player lost.");
             return true;
-        } else if(checkIfWin()){
-            if(firstPlayer)
-                System.out.print("First ");
-            else
-                System.out.print("Second ");
-            System.out.println("player won.");
+        } else if(checkIfLose(false)) {
+            System.out.print("Second player lost.");
+            return true;
+        } else if(checkIfWin(true)) {
+            System.out.print("Second player won.");
+            return true;
+        } else if(checkIfWin(false)) {
+            System.out.print("Second player won.");
             return true;
         } else if(!possibleMove()) {
             System.out.println("Draw!");
@@ -480,7 +471,7 @@ class Board {
      *          parameter was invalid false returned.
      */
     boolean setPawn(Pawn p, int x, int y) {
-        if(p.isFreeSpace() || x < 0 || y < 0 || x > size || y > size)
+        if(p.isFreeSpace() || x < 0 || y < 0 || x >= size || y >= size)
             return false;
 
         if(!board.get(x).get(y).isFreeSpace())
@@ -491,6 +482,28 @@ class Board {
         else
             secondPlayerPawns.add(new PawnCoordinates(x,y));
         return true;
+    }
+
+    /**
+     * Create new Board with Pawns size and pawns same as in
+     * object that calls this method.
+     *
+     * @return new Board, depth copy of existing board.
+     */
+    Board copyBoard() {
+        Board newBoard = new Board(size());
+        Pawn tmp;
+        for(int i = 0; i < size; ++i) {
+            for(int j = 0; j < size; ++j) {
+                tmp = board.get(i).get(j);
+                if (tmp.isFirstPlayer()) {
+                    newBoard.setPawn(new Pawn(1),i,j);
+                } else if (tmp.isSecondPlayer()) {
+                    newBoard.setPawn(new Pawn(2),i,j);
+                }
+            }
+        }
+        return newBoard;
     }
 
     /**
@@ -517,7 +530,8 @@ class Board {
         }
 
         for(i = 'A'; i < 'A'+board.size(); ++i) {
-            boardBuilder.append(" | " + i);
+            boardBuilder.append(" | ");
+            boardBuilder.append(i);
         }
         boardBuilder.append(" |\n");
 
@@ -546,9 +560,13 @@ class Board {
     }
 }
 
+/**
+ * Little class to encapsule coordinates of Pawn and provide
+ * public fields to check them.
+ */
 class PawnCoordinates {
-    int x;
-    int y;
+    final int x;
+    final int y;
 
     PawnCoordinates(int x, int y) {
         this.x = x;
